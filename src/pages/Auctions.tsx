@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 
 const Auctions = () => {
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [sliderValue, setSliderValue] = useState<number>(200000);
   const [maxMileage, setMaxMileage] = useState<number>(200000);
   const [page, setPage] = useState(0);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -22,6 +23,15 @@ const Auctions = () => {
     page,
     pageSize: 12
   });
+
+  // Debounce mileage slider
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMaxMileage(sliderValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [sliderValue]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -96,11 +106,11 @@ const Auctions = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Max Mileage: {maxMileage.toLocaleString()} mi
+                  Max Mileage: {sliderValue.toLocaleString()} mi
                 </label>
                 <Slider
-                  value={[maxMileage]}
-                  onValueChange={(value) => setMaxMileage(value[0])}
+                  value={[sliderValue]}
+                  onValueChange={(value) => setSliderValue(value[0])}
                   min={0}
                   max={200000}
                   step={5000}
