@@ -12,6 +12,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import MyListings from "./pages/MyListings";
 import ReviewListing from "./pages/ReviewListing";
 import NotFound from "./pages/NotFound";
+import Auctions from "./pages/Auctions";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auctions" element={<Auctions />} />
           <Route path="/vehicle/:id" element={<VehicleDetail />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/sell" element={<CreateListing />} />
