@@ -59,6 +59,9 @@ const Navbar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/my-listings">My Listings</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/watching">Watching</Link>
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />

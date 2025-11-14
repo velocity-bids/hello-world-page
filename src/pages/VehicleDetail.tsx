@@ -13,6 +13,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 
 interface Vehicle {
   id: string;
@@ -46,12 +47,14 @@ const VehicleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [bidAmount, setBidAmount] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
+  const [watching, setWatching] = useState(false);
 
   // Fetch vehicle data
   useEffect(() => {

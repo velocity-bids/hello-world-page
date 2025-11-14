@@ -13,6 +13,7 @@ import MyListings from "./pages/MyListings";
 import ReviewListing from "./pages/ReviewListing";
 import NotFound from "./pages/NotFound";
 import Auctions from "./pages/Auctions";
+import Watching from "./pages/Watching";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/admin/review/:id" element={<ReviewListing />} />
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/my-listings" element={<MyListings />} />
+          <Route path="/watching" element={<Watching />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
