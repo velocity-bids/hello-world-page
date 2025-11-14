@@ -1,30 +1,57 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { BasePage } from "@/components/BasePage";
-import { useVehicles } from "@/hooks/useVehicles";
+import { useFilteredVehicles } from "@/hooks/useFilteredVehicles";
+import { useVehicleBrands } from "@/hooks/useVehicleBrands";
 import VehicleCard from "@/components/VehicleCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 const Auctions = () => {
-  const { vehicles, loading } = useVehicles();
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [maxMileage, setMaxMileage] = useState<number>(200000);
+  const [page, setPage] = useState(0);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Get unique brands from vehicles
-  const brands = useMemo(() => {
-    const uniqueBrands = new Set(vehicles.map(v => v.make));
-    return Array.from(uniqueBrands).sort();
-  }, [vehicles]);
+  const { brands } = useVehicleBrands();
+  const { vehicles, loading, hasMore } = useFilteredVehicles({
+    brand: selectedBrand,
+    maxMileage,
+    page,
+    pageSize: 12
+  });
 
-  // Filter vehicles
-  const filteredVehicles = useMemo(() => {
-    return vehicles.filter(vehicle => {
-      const brandMatch = selectedBrand === "all" || vehicle.make === selectedBrand;
-      const mileageMatch = vehicle.mileage <= maxMileage;
-      return brandMatch && mileageMatch;
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [selectedBrand, maxMileage]);
+
+  // Infinite scroll observer
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const [target] = entries;
+    if (target.isIntersecting && hasMore && !loading) {
+      setPage(prev => prev + 1);
+    }
+  }, [hasMore, loading]);
+
+  useEffect(() => {
+    const element = loadMoreRef.current;
+    if (!element) return;
+
+    observerRef.current = new IntersectionObserver(handleObserver, {
+      threshold: 0.1
     });
-  }, [vehicles, selectedBrand, maxMileage]);
+
+    observerRef.current.observe(element);
+
+    return () => {
+      if (observerRef.current && element) {
+        observerRef.current.unobserve(element);
+      }
+    };
+  }, [handleObserver]);
 
   const calculateTimeLeft = (endTime: string) => {
     const end = new Date(endTime).getTime();
@@ -83,19 +110,19 @@ const Auctions = () => {
             </div>
 
             {/* Results */}
-            {loading ? (
+            {loading && page === 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {[...Array(8)].map((_, i) => (
                   <Skeleton key={i} className="h-96" />
                 ))}
               </div>
-            ) : filteredVehicles.length > 0 ? (
+            ) : vehicles.length > 0 ? (
               <>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {filteredVehicles.length} {filteredVehicles.length === 1 ? 'auction' : 'auctions'} found
+                  {vehicles.length} {vehicles.length === 1 ? 'auction' : 'auctions'} found
                 </p>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredVehicles.map((vehicle) => (
+                  {vehicles.map((vehicle) => (
                     <VehicleCard
                       key={vehicle.id}
                       id={vehicle.id}
@@ -107,6 +134,16 @@ const Auctions = () => {
                       image={vehicle.image_url || "/placeholder.svg"}
                     />
                   ))}
+                </div>
+                
+                {/* Load more trigger */}
+                <div ref={loadMoreRef} className="py-8 flex justify-center">
+                  {loading && (
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  )}
+                  {!hasMore && vehicles.length > 0 && (
+                    <p className="text-sm text-muted-foreground">No more auctions to load</p>
+                  )}
                 </div>
               </>
             ) : (
