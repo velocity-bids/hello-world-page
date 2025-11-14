@@ -10,6 +10,7 @@ import CreateListing from "./pages/CreateListing";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfileSettings from "./pages/ProfileSettings";
 import MyListings from "./pages/MyListings";
+import ReviewListing from "./pages/ReviewListing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/sell" element={<CreateListing />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/review/:id" element={<ReviewListing />} />
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/my-listings" element={<MyListings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
