@@ -68,10 +68,10 @@ export default function CreateListing() {
       return;
     }
 
-    // if (images.length === 0) {
-    //   toast.error("Please upload at least one image");
-    //   return;
-    // }
+    if (fileUrl.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -149,7 +149,18 @@ export default function CreateListing() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Image Upload Section */}
-            <FileUploader onUploadComplete={setFileUrl} />
+            <div className="bg-card rounded-lg p-6 border">
+              <h2 className="text-xl font-semibold mb-4">Vehicle Images *</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload at least one image of your vehicle
+              </p>
+              <FileUploader onUploadComplete={setFileUrl} />
+              {fileUrl.length > 0 && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✓ {fileUrl.length} image{fileUrl.length > 1 ? 's' : ''} uploaded
+                </p>
+              )}
+            </div>
 
             {/* Vehicle Information */}
             <div className="bg-card rounded-lg p-6 border space-y-6">
