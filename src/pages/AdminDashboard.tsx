@@ -183,9 +183,12 @@ const AdminDashboard = () => {
                     />
                   )}
                   <div>
-                    <div className="font-medium">
+                    <button
+                      onClick={() => navigate(`/admin/review/${vehicle.id}`)}
+                      className="font-medium text-primary hover:underline text-left"
+                    >
                       {vehicle.make} {vehicle.model}
-                    </div>
+                    </button>
                     <div className="text-sm text-muted-foreground">ID: {vehicle.id.slice(0, 8)}</div>
                   </div>
                 </div>
