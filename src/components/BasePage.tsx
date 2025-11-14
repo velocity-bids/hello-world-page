@@ -4,18 +4,12 @@ import FeaturedAuctions from "@/components/FeaturedAuctions";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 
-const Index = () => {
+export const BasePage = ({ children }) => {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1">
-        <Hero />
-        <FeaturedAuctions />
-        <HowItWorks />
-      </main>
+      {children}
       <Footer />
     </div>
   );
 };
-
-export default Index;
