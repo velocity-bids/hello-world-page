@@ -143,19 +143,19 @@ export function VehicleGallery({ images, vehicleName }: VehicleGalleryProps) {
 
       {/* Lightbox Dialog */}
       <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-        <DialogContent className="max-w-7xl p-0">
-          <div className="relative">
+        <DialogContent className="max-w-[95vw] sm:max-w-7xl p-0 bg-background/95 backdrop-blur-xl border-border/50 overflow-hidden">
+          <div className="relative bg-black/5 dark:bg-white/5">
             <img
               src={images[selectedIndex]}
               alt={`${vehicleName} - Full size`}
-              className="h-[90vh] w-full object-contain"
+              className="h-[90vh] w-full object-contain transition-opacity duration-300"
             />
             
             {/* Close Button */}
             <Button
-              variant="secondary"
+              variant="ghost"
               size="icon"
-              className="absolute right-4 top-4"
+              className="absolute right-4 top-4 h-10 w-10 rounded-full bg-background/80 backdrop-blur-md hover:bg-background/90 hover:scale-110 transition-all shadow-lg border border-border/50"
               onClick={() => setIsLightboxOpen(false)}
             >
               <X className="h-5 w-5" />
@@ -165,44 +165,44 @@ export function VehicleGallery({ images, vehicleName }: VehicleGalleryProps) {
             {hasMultipleImages && (
               <>
                 <Button
-                  variant="secondary"
+                  variant="ghost"
                   size="icon"
-                  className="absolute left-4 top-1/2 -translate-y-1/2"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-background/80 backdrop-blur-md hover:bg-background/90 hover:scale-110 transition-all shadow-lg border border-border/50"
                   onClick={handlePrevious}
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
                 <Button
-                  variant="secondary"
+                  variant="ghost"
                   size="icon"
-                  className="absolute right-4 top-1/2 -translate-y-1/2"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-background/80 backdrop-blur-md hover:bg-background/90 hover:scale-110 transition-all shadow-lg border border-border/50"
                   onClick={handleNext}
                 >
                   <ChevronRight className="h-6 w-6" />
                 </Button>
 
                 {/* Image Counter in Lightbox */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-background/90 px-4 py-2 text-sm font-medium backdrop-blur-sm">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-background/80 backdrop-blur-md px-4 py-2 text-sm font-medium shadow-lg border border-border/50">
                   {selectedIndex + 1} / {images.length}
                 </div>
 
                 {/* Thumbnail Strip in Lightbox */}
-                <div className="absolute bottom-4 left-1/2 w-full max-w-2xl -translate-x-1/2 px-4">
-                  <div className="flex justify-center gap-2 overflow-x-auto pb-2">
+                <div className="absolute bottom-6 left-1/2 w-full max-w-3xl -translate-x-1/2 px-4">
+                  <div className="flex justify-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {images.map((image, index) => (
                       <button
                         key={index}
                         onClick={() => handleThumbnailClick(index)}
-                        className={`flex-shrink-0 overflow-hidden rounded transition-all ${
+                        className={`flex-shrink-0 overflow-hidden rounded-lg transition-all duration-200 border-2 ${
                           index === selectedIndex
-                            ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                            : "opacity-50 hover:opacity-100"
+                            ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 border-primary shadow-lg"
+                            : "opacity-60 hover:opacity-100 hover:scale-105 border-transparent"
                         }`}
                       >
                         <img
                           src={image}
                           alt={`Thumbnail ${index + 1}`}
-                          className="h-16 w-20 object-cover"
+                          className="h-20 w-24 object-cover"
                         />
                       </button>
                     ))}
