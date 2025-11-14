@@ -26,17 +26,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   };
 
   return (
-    <FileUploaderRegular
-      pubkey={import.meta.env.UPLOAD_CARE_KEY!}
-      // multiple
-      // multipleMin={1}
-      imgOnly
-      multiple
-      onFileUploadSuccess={(props) => {
-        console.log("🚀 ~ FileUploader ~ props:", props);
-      }}
-      apiRef={uploaderRef}
-      onChange={handleChange}
-    />
+    <div className="bg-card rounded-lg p-6 border">
+      <h2 className="text-xl font-semibold mb-4">Vehicle Images</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Upload multiple images of your vehicle
+      </p>
+      <FileUploaderRegular
+        pubkey="f6a66e6c2fd1eee14caf"
+        imgOnly
+        multiple
+        onFileUploadSuccess={(props) => {
+          console.log("🚀 ~ FileUploader ~ props:", props);
+        }}
+        apiRef={uploaderRef}
+        onChange={handleChange}
+      />
+    </div>
   );
 };
