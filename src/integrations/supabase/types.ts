@@ -14,16 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bids: {
+        Row: {
+          amount: number
+          bidder_id: string
+          created_at: string | null
+          id: string
+          vehicle_id: string
+        }
+        Insert: {
+          amount: number
+          bidder_id: string
+          created_at?: string | null
+          id?: string
+          vehicle_id: string
+        }
+        Update: {
+          amount?: number
+          bidder_id?: string
+          created_at?: string | null
+          id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          date_of_birth: string | null
+          display_name: string | null
+          id: string
+          id_document_url: string | null
+          member_since: string
+          rating: number | null
+          updated_at: string
+          user_id: string
+          vehicles_sold: number | null
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          display_name?: string | null
+          id?: string
+          id_document_url?: string | null
+          member_since?: string
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+          vehicles_sold?: number | null
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          display_name?: string | null
+          id?: string
+          id_document_url?: string | null
+          member_since?: string
+          rating?: number | null
+          updated_at?: string
+          user_id?: string
+          vehicles_sold?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          admin_notes: string | null
+          approval_status: string | null
+          auction_end_time: string
+          bid_count: number | null
+          created_at: string | null
+          current_bid: number | null
+          description: string | null
+          id: string
+          image_url: string | null
+          images: string[] | null
+          make: string
+          mileage: number
+          model: string
+          reserve_price: number | null
+          seller_id: string
+          status: string | null
+          updated_at: string | null
+          vin: string | null
+          year: number
+        }
+        Insert: {
+          admin_notes?: string | null
+          approval_status?: string | null
+          auction_end_time: string
+          bid_count?: number | null
+          created_at?: string | null
+          current_bid?: number | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          images?: string[] | null
+          make: string
+          mileage: number
+          model: string
+          reserve_price?: number | null
+          seller_id: string
+          status?: string | null
+          updated_at?: string | null
+          vin?: string | null
+          year: number
+        }
+        Update: {
+          admin_notes?: string | null
+          approval_status?: string | null
+          auction_end_time?: string
+          bid_count?: number | null
+          created_at?: string | null
+          current_bid?: number | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          images?: string[] | null
+          make?: string
+          mileage?: number
+          model?: string
+          reserve_price?: number | null
+          seller_id?: string
+          status?: string | null
+          updated_at?: string | null
+          vin?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          member_since: string | null
+          rating: number | null
+          user_id: string | null
+          vehicles_sold: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          member_since?: string | null
+          rating?: number | null
+          user_id?: string | null
+          vehicles_sold?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          member_since?: string | null
+          rating?: number | null
+          user_id?: string | null
+          vehicles_sold?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      place_bid: {
+        Args: { p_amount: number; p_vehicle_id: string }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +358,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
