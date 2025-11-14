@@ -402,7 +402,9 @@ const VehicleDetail = () => {
                       <p className="text-xs text-muted-foreground">
                         Minimum bid: ${minBid.toLocaleString()}
                       </p>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full" onClick={() => {
+                        addToWatchlist(id);
+                      }}>
                         Watch Auction
                       </Button>
                     </div>
