@@ -68,7 +68,14 @@ const CreateVehicleForm = () => {
       }
 
       // Insert vehicle listing into the database
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData.user) {
+        throw new Error("You must be logged in to create a listing");
+      }
+
       const { error } = await supabase.from("vehicles").insert({
+        seller_id: userData.user.id,
         make: formData.make,
         model: formData.model,
         year: parseInt(formData.year, 10),
@@ -79,7 +86,8 @@ const CreateVehicleForm = () => {
           ? parseFloat(formData.reservePrice)
           : null,
         auction_end_time: formData.auctionEndTime,
-        image_urls: imageUrls, 
+        images: imageUrls,
+        image_url: imageUrls[0] || null,
         status: "active",
       });
 
