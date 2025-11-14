@@ -75,14 +75,14 @@ const VehicleCard = ({
           </div>
         </div>
       </Link>
-      
-      <div className="border-t border-border px-4 pb-4">
+
+      <div className="px-4 pb-4 pt-2">
         <Button
           onClick={(e) => {
             e.preventDefault();
             navigate(`/vehicle/${id}`);
           }}
-          className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold transition-all duration-300"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 shadow-sm"
           aria-label={`View auction for ${title}`}
         >
           View Auction
@@ -91,5 +91,4 @@ const VehicleCard = ({
     </Card>
   );
 };
-// ...existing code...
 export default VehicleCard;
