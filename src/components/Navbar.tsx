@@ -25,7 +25,7 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link to="/auctions" className="text-sm font-medium transition-colors hover:text-primary">
             Auctions
           </Link>
           <Link to="/sell" className="text-sm font-medium transition-colors hover:text-primary">
