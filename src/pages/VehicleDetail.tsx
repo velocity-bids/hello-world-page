@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { VehicleGallery } from "@/components/VehicleGallery";
+import { CommentSection } from "@/components/CommentSection";
 import { Clock, Gauge, Calendar, MapPin, Eye, Heart, User, TrendingUp } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,7 +80,7 @@ const VehicleDetail = () => {
     fetchVehicle();
   }, [id, navigate]);
 
-  // Fetch bids
+  // Fetch bids (latest 3 only)
   useEffect(() => {
     if (!id) return;
 
@@ -89,7 +90,7 @@ const VehicleDetail = () => {
         .select("*")
         .eq("vehicle_id", id)
         .order("amount", { ascending: false })
-        .limit(10);
+        .limit(3);
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -168,7 +169,7 @@ const VehicleDetail = () => {
             profiles: profileData,
           };
 
-          setBids((prev) => [newBid, ...prev].slice(0, 10));
+          setBids((prev) => [newBid, ...prev].slice(0, 3));
           toast.success("New bid placed!", {
             description: `$${(payload.new as any).amount.toLocaleString()}`,
           });
@@ -334,52 +335,14 @@ const VehicleDetail = () => {
                 </Card>
               )}
 
-              {/* Bid History */}
-              <Card className="p-6">
-                <h2 className="mb-4 text-2xl font-semibold">Bid History</h2>
-                {bids.length === 0 ? (
-                  <p className="text-center text-muted-foreground">No bids yet. Be the first!</p>
-                ) : (
-                  <div className="space-y-3">
-                    {bids.map((bid, index) => (
-                      <div key={bid.id}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                              <User className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <div className="font-medium">
-                                {bid.profiles?.display_name || "Anonymous Bidder"}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {new Date(bid.created_at).toLocaleString()}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {index === 0 && (
-                              <Badge variant="outline" className="bg-accent/10">
-                                <TrendingUp className="mr-1 h-3 w-3" />
-                                High Bid
-                              </Badge>
-                            )}
-                            <span className="text-lg font-bold text-bid-active">
-                              ${bid.amount.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                        {index < bids.length - 1 && <Separator className="mt-3" />}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
+              {/* Comment Section */}
+              <CommentSection vehicleId={vehicle.id} />
             </div>
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-20 space-y-6">
+                {/* Bidding Card */}
                 <Card className="p-6">
                   <div className="mb-6 space-y-4">
                     <div>
@@ -439,6 +402,47 @@ const VehicleDetail = () => {
                       <Button variant="outline" className="w-full">
                         Watch Auction
                       </Button>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Recent Bids - Latest 3 */}
+                <Card className="p-6">
+                  <h2 className="mb-4 text-xl font-semibold">Recent Bids</h2>
+                  {bids.length === 0 ? (
+                    <p className="text-center text-sm text-muted-foreground">No bids yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {bids.map((bid, index) => (
+                        <div key={bid.id} className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                                <User className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-medium">
+                                  {bid.profiles?.display_name || "Anonymous"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {new Date(bid.created_at).toLocaleTimeString()}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end flex-shrink-0">
+                              {index === 0 && (
+                                <Badge variant="outline" className="mb-1 bg-accent/10 text-xs">
+                                  High
+                                </Badge>
+                              )}
+                              <span className="text-sm font-bold text-bid-active whitespace-nowrap">
+                                ${bid.amount.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          {index < bids.length - 1 && <Separator />}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </Card>
