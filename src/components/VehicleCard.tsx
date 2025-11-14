@@ -1,10 +1,19 @@
-// ...existing code...
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Clock, Gauge, Calendar } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-// ...existing code...
+
+interface VehicleCardProps {
+  id: string;
+  title: string;
+  year: number;
+  mileage: number;
+  currentBid: number;
+  timeLeft: string;
+  image: string;
+  featured?: boolean;
+}
 
 const VehicleCard = ({
   id,
