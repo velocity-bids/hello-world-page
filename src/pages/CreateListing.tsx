@@ -149,10 +149,7 @@ export default function CreateListing() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Image Upload Section */}
-            {/* <div className="bg-card rounded-lg p-6 border">
-              <h2 className="text-xl font-semibold mb-4">Vehicle Images</h2> */}
-              <FileUploader onUploadComplete={setFileUrl} />
-            {/* </div> */}
+            <FileUploader onUploadComplete={setFileUrl} />
 
             {/* Vehicle Information */}
             <div className="bg-card rounded-lg p-6 border space-y-6">
