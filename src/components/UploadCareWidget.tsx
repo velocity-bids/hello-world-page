@@ -1,4 +1,6 @@
 import {
+  FileUploaderInline,
+  FileUploaderMinimal,
   FileUploaderRegular,
   UploadCtxProvider,
 } from "@uploadcare/react-uploader";
@@ -26,8 +28,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   };
 
   return (
-    <FileUploaderRegular
-      pubkey={import.meta.env.UPLOAD_CARE_KEY!}
+    <FileUploaderInline
+      pubkey={"f6a66e6c2fd1eee14caf"}
+      
       // multiple
       // multipleMin={1}
       imgOnly

@@ -3,11 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Form,
   FormControl,
@@ -18,8 +25,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { FileUploader } from "@/components/UploadCareWidget";
+import { cn } from "@/lib/utils";
 
 const listingSchema = z.object({
   make: z.string().min(1, "Make is required").max(50),
@@ -35,6 +43,9 @@ const listingSchema = z.object({
     .min(10, "Description must be at least 10 characters")
     .max(2000),
   reservePrice: z.number().min(0),
+  auctionEndDate: z.date({
+    required_error: "Auction end date is required",
+  }),
   auctionEndTime: z.string().min(1, "Auction end time is required"),
 });
 
@@ -57,7 +68,7 @@ export default function CreateListing() {
       vin: "",
       description: "",
       reservePrice: 0,
-      auctionEndTime: "",
+      auctionEndTime: "12:00",
     },
   });
 
@@ -68,34 +79,18 @@ export default function CreateListing() {
       return;
     }
 
-    // if (images.length === 0) {
-    //   toast.error("Please upload at least one image");
-    //   return;
-    // }
+    if (fileUrl.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
-      // Upload images to storage
-      // const imageUrls: string[] = [];
-      // for (let i = 0; i < images.length; i++) {
-      //   const file = images[i];
-      //   const fileExt = file.name.split(".").pop();
-      //   const fileName = `${user.id}/${Date.now()}-${i}.${fileExt}`;
-
-      //   const { error: uploadError } = await supabase.storage
-      //     .from("vehicle-images")
-      //     .upload(fileName, file);
-
-      //   if (uploadError) throw uploadError;
-
-      //   const {
-      //     data: { publicUrl },
-      //   } = supabase.storage.from("vehicle-images").getPublicUrl(fileName);
-
-      //   imageUrls.push(publicUrl);
-      // }
-
+      // Combine date and time into ISO string
+      const [hours, minutes] = data.auctionEndTime.split(':');
+      const auctionDateTime = new Date(data.auctionEndDate);
+      auctionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
       // Create vehicle listing (defaults to pending approval)
       const { error: insertError } = await supabase.from("vehicles").insert({
@@ -107,7 +102,7 @@ export default function CreateListing() {
         vin: data.vin || null,
         description: data.description,
         reserve_price: data.reservePrice,
-        auction_end_time: new Date(data.auctionEndTime).toISOString(),
+        auction_end_time: auctionDateTime.toISOString(),
         images: fileUrl,
         image_url: fileUrl[0], // Set first image as primary
         status: "active",
@@ -149,10 +144,18 @@ export default function CreateListing() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Image Upload Section */}
-            {/* <div className="bg-card rounded-lg p-6 border">
-              <h2 className="text-xl font-semibold mb-4">Vehicle Images</h2> */}
+            <div className="bg-card rounded-lg p-6 border">
+              <h2 className="text-xl font-semibold mb-4">Vehicle Images *</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload at least one image of your vehicle
+              </p>
               <FileUploader onUploadComplete={setFileUrl} />
-            {/* </div> */}
+              {fileUrl.length > 0 && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✓ {fileUrl.length} image{fileUrl.length > 1 ? 's' : ''} uploaded
+                </p>
+              )}
+            </div>
 
             {/* Vehicle Information */}
             <div className="bg-card rounded-lg p-6 border space-y-6">
@@ -302,15 +305,61 @@ export default function CreateListing() {
 
                 <FormField
                   control={form.control}
+                  name="auctionEndDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Auction End Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date(new Date().setHours(0, 0, 0, 0))
+                            }
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select the date when the auction should end
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="auctionEndTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Auction End Date & Time</FormLabel>
+                      <FormLabel>Auction End Time</FormLabel>
                       <FormControl>
-                        <Input type="datetime-local" {...field} />
+                        <Input type="time" {...field} />
                       </FormControl>
                       <FormDescription>
-                        When should the auction end?
+                        Select the time when the auction should end
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

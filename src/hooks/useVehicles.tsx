@@ -24,6 +24,7 @@ export const useVehicles = () => {
         .from("vehicles")
         .select("*")
         .eq("status", "active")
+        .eq("approval_status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) {
