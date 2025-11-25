@@ -1,15 +1,15 @@
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import FeaturedAuctions from "@/components/FeaturedAuctions";
+import PremiumHero from "@/components/PremiumHero";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
+import FeaturedAuctions from "@/components/FeaturedAuctions";
 
 const Index = () => {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <Hero />
+        <PremiumHero />
         <FeaturedAuctions />
         <HowItWorks />
       </main>
