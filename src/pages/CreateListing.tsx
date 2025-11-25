@@ -164,7 +164,7 @@ export default function CreateListing() {
     }
   };
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -236,7 +236,7 @@ export default function CreateListing() {
         {/* Stepper */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex items-center flex-1">
                 <div className={cn(
                   "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
@@ -246,7 +246,7 @@ export default function CreateListing() {
                 )}>
                   {step}
                 </div>
-                {step < 4 && (
+                {step < 5 && (
                   <div className={cn(
                     "flex-1 h-1 mx-2 transition-colors",
                     currentStep > step ? "bg-primary" : "bg-muted"
@@ -260,6 +260,7 @@ export default function CreateListing() {
             <span>Specifications</span>
             <span>History</span>
             <span>Auction</span>
+            <span>Review</span>
           </div>
         </div>
 
@@ -738,6 +739,158 @@ export default function CreateListing() {
                     </FormItem>
                   )}
                 />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Review & Summary */}
+            {currentStep === 5 && (
+              <div className="space-y-8 animate-in fade-in-50 duration-500">
+                <div className="bg-card rounded-lg p-6 border space-y-8">
+                  <h2 className="text-2xl font-semibold mb-4">Review Your Listing</h2>
+                  
+                  {/* Images */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-primary">Images</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {fileUrl.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Vehicle ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Basic Information */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-primary">Basic Information</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Make:</span>
+                        <p className="font-medium">{form.getValues("make")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Model:</span>
+                        <p className="font-medium">{form.getValues("model")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Year:</span>
+                        <p className="font-medium">{form.getValues("year")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Mileage:</span>
+                        <p className="font-medium">{form.getValues("mileage").toLocaleString()} km</p>
+                      </div>
+                      {form.getValues("vin") && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">VIN:</span>
+                          <p className="font-medium">{form.getValues("vin")}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Specifications */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-primary">Specifications</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Exterior Color:</span>
+                        <p className="font-medium">{form.getValues("exteriorColor")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Interior Color:</span>
+                        <p className="font-medium">{form.getValues("interiorColor")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Fuel Type:</span>
+                        <p className="font-medium">{form.getValues("fuelType")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Transmission:</span>
+                        <p className="font-medium">{form.getValues("transmission")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Doors:</span>
+                        <p className="font-medium">{form.getValues("doors")}</p>
+                      </div>
+                      {form.getValues("horsepower") && (
+                        <div>
+                          <span className="text-muted-foreground">Horsepower:</span>
+                          <p className="font-medium">{form.getValues("horsepower")} HP</p>
+                        </div>
+                      )}
+                      {form.getValues("engineDisplacement") && (
+                        <div>
+                          <span className="text-muted-foreground">Engine:</span>
+                          <p className="font-medium">{form.getValues("engineDisplacement")} cm³</p>
+                        </div>
+                      )}
+                      {form.getValues("engineType") && (
+                        <div>
+                          <span className="text-muted-foreground">Engine Type:</span>
+                          <p className="font-medium">{form.getValues("engineType")}</p>
+                        </div>
+                      )}
+                    </div>
+                    {form.getValues("description") && (
+                      <div className="mt-4">
+                        <span className="text-muted-foreground">Description:</span>
+                        <p className="font-medium mt-1 whitespace-pre-wrap">{form.getValues("description")}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* History & Condition */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-primary">History & Condition</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Imported:</span>
+                        <p className="font-medium">{form.getValues("imported") ? "Yes" : "No"}</p>
+                      </div>
+                      {form.getValues("imported") && form.getValues("importCountry") && (
+                        <div>
+                          <span className="text-muted-foreground">Import Country:</span>
+                          <p className="font-medium">{form.getValues("importCountry")}</p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">Maintenance Book:</span>
+                        <p className="font-medium">{form.getValues("maintenanceBook") ? "Yes" : "No"}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Smoker:</span>
+                        <p className="font-medium">{form.getValues("smoker") ? "Yes" : "No"}</p>
+                      </div>
+                      {form.getValues("numberOfOwners") && (
+                        <div>
+                          <span className="text-muted-foreground">Number of Owners:</span>
+                          <p className="font-medium">{form.getValues("numberOfOwners")}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Auction Details */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-primary">Auction Details</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Reserve Price:</span>
+                        <p className="font-medium">€{form.getValues("reservePrice").toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Auction Ends:</span>
+                        <p className="font-medium">
+                          {form.getValues("auctionEndDate") && format(form.getValues("auctionEndDate"), "PPP")} at {form.getValues("auctionEndTime")}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
