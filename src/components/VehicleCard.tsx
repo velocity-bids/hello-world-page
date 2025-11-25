@@ -42,21 +42,22 @@ const VehicleCard = ({
               Featured
             </Badge>
           )}
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg bg-background/95 px-3 py-2 backdrop-blur">
-            <div className="flex items-center gap-1 text-sm">
-              <Clock className="h-4 w-4 text-timer-warning" />
-              <span className="font-medium">{timeLeft}</span>
-            </div>
-            <div className="text-sm font-medium">
-              <span className="text-muted-foreground">Current Bid:</span>{" "}
-              <span className="text-bid-active">
-                ${currentBid.toLocaleString()}
-              </span>
-            </div>
+        </div>
+
+        <div className="mx-4 mt-4 flex items-center justify-between rounded-lg border bg-card px-3 py-2">
+          <div className="flex items-center gap-1 text-sm">
+            <Clock className="h-4 w-4 text-timer-warning" />
+            <span className="font-medium">{timeLeft}</span>
+          </div>
+          <div className="text-sm font-medium">
+            <span className="text-muted-foreground">Current Bid:</span>{" "}
+            <span className="text-bid-active">
+              ${currentBid.toLocaleString()}
+            </span>
           </div>
         </div>
 
-        <div className="space-y-3 p-4">
+        <div className="space-y-3 p-4 pt-3">
           <div>
             <h3 className="font-semibold transition-colors group-hover:text-accent">
               {year} {title}
