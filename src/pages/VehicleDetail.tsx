@@ -13,7 +13,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
+// import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 
 interface Vehicle {
   id: string;
@@ -47,7 +47,7 @@ const VehicleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
+  // const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [bidAmount, setBidAmount] = useState("");
@@ -188,16 +188,16 @@ const VehicleDetail = () => {
   }, [id]);
 
   // Check if watching
-  useEffect(() => {
-    if (!id) return;
+  // useEffect(() => {
+  //   if (!id) return;
     
-    const checkWatchStatus = async () => {
-      const status = await isWatching(id);
-      setWatching(status);
-    };
+  //   const checkWatchStatus = async () => {
+  //     const status = await isWatching(id);
+  //     setWatching(status);
+  //   };
     
-    checkWatchStatus();
-  }, [id, isWatching]);
+  //   checkWatchStatus();
+  // }, [id, isWatching]);
 
   // Calculate time left
   useEffect(() => {
@@ -268,31 +268,31 @@ const VehicleDetail = () => {
     setSubmitting(false);
   };
 
-  const handleWatchToggle = async () => {
-    if (!user) {
-      toast.error("Please sign in to watch auctions");
-      navigate("/auth");
-      return;
-    }
+  // const handleWatchToggle = async () => {
+  //   if (!user) {
+  //     toast.error("Please sign in to watch auctions");
+  //     navigate("/auth");
+  //     return;
+  //   }
 
-    if (!id) return;
+  //   if (!id) return;
 
-    setWatchLoading(true);
+  //   setWatchLoading(true);
     
-    if (watching) {
-      const success = await removeFromWatchlist(id);
-      if (success) {
-        setWatching(false);
-      }
-    } else {
-      const success = await addToWatchlist(id);
-      if (success) {
-        setWatching(true);
-      }
-    }
+  //   if (watching) {
+  //     const success = await removeFromWatchlist(id);
+  //     if (success) {
+  //       setWatching(false);
+  //     }
+  //   } else {
+  //     const success = await addToWatchlist(id);
+  //     if (success) {
+  //       setWatching(true);
+  //     }
+  //   }
     
-    setWatchLoading(false);
-  };
+  //   setWatchLoading(false);
+  // };
 
   if (loading) {
     return (
@@ -453,7 +453,9 @@ const VehicleDetail = () => {
                       <Button 
                         variant={watching ? "default" : "outline"} 
                         className="w-full" 
-                        onClick={handleWatchToggle}
+                        onClick={() => {
+                          console.log('is watching')
+                        }}
                         disabled={watchLoading}
                       >
                         <Heart className={`h-4 w-4 mr-2 ${watching ? "fill-current" : ""}`} />
