@@ -6,6 +6,8 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import CreateListingNavbar from "@/components/CreateListingNavbar";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -223,9 +225,11 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Create Vehicle Listing</h1>
+    <div className="flex min-h-screen flex-col">
+      <CreateListingNavbar currentStep={currentStep} totalSteps={totalSteps} />
+      <div className="flex-1 bg-background py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-8">Create Vehicle Listing</h1>
         
         {/* Stepper */}
         <div className="mb-8">
@@ -948,5 +952,7 @@ export default function CreateListing() {
         </Form>
       </div>
     </div>
+    <Footer />
+  </div>
   );
 }
