@@ -9,22 +9,13 @@ interface VehicleGalleryProps {
 }
 
 export function VehicleGallery({
-  images: images2,
+  images,
   vehicleName,
 }: VehicleGalleryProps) {
+  console.log("🚀 ~ VehicleGallery ~ images:", images)
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  const images = [
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-8J0ZotE/edit/aYejF.jpg?t=174552918421",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-3LqQ4HZ/edit/puKi2.jpg?t=174552929403",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/6ecff324d6a35c8b07adf7704b062aa5f7d497a5/photos/application/s-9Z2bMpG/edit/MvoeX.jpg?t=174457953308",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-OhTbWtq/edit/TQV3B.jpg?t=174552906606",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-U02TUOc/edit/dH6h-.jpg?t=174552891238",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-JPFoimY/edit/Qme_5.jpg?t=174552895560",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-bGgI2Qo/edit/jhQ4q.jpg?t=174553285896",
-    "https://media.carsandbids.com/cdn-cgi/image/width=542,quality=70/d32c8dde23a1411d0ef2e05bea168897e96c369b/photos/application/s-NXOU5dw/edit/cXtdJ.jpg?t=174552862741",
-  ];
   const hasMultipleImages = images.length > 1;
   const MAX_THUMBNAILS = 5;
   const remainingImages = images.length - MAX_THUMBNAILS;
@@ -56,12 +47,11 @@ export function VehicleGallery({
         >
           <div className="relative aspect-[4/3]">
             <img
-              src={images[selectedIndex] || "/placeholder.svg"}
+              src={`${images[selectedIndex]}/-/resize/911x/`}
               alt={`${vehicleName} - Image ${selectedIndex + 1}`}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
 
-            {/* Zoom Button */}
             <Button
               variant="secondary"
               size="icon"
