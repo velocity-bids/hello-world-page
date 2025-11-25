@@ -311,6 +311,7 @@ const VehicleDetail = () => {
 
   if (!vehicle) return null;
 
+  const isOwnListing = user?.id === vehicle.seller_id;
   const reserveMet = vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : false;
   const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : 100;
 
@@ -425,22 +426,30 @@ const VehicleDetail = () => {
 
                   {vehicle.status === "active" && timeLeft !== "Auction Ended" && (
                     <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder={`Min: $${minBid.toLocaleString()}`}
-                          type="number"
-                          value={bidAmount}
-                          onChange={(e) => setBidAmount(e.target.value)}
-                          min={minBid}
-                          step="100"
-                        />
-                        <Button onClick={handlePlaceBid} disabled={submitting}>
-                          {submitting ? "Placing..." : "Bid"}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Minimum bid: ${minBid.toLocaleString()}
-                      </p>
+                      {isOwnListing ? (
+                        <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
+                          You cannot bid on your own listing
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder={`Min: $${minBid.toLocaleString()}`}
+                              type="number"
+                              value={bidAmount}
+                              onChange={(e) => setBidAmount(e.target.value)}
+                              min={minBid}
+                              step="100"
+                            />
+                            <Button onClick={handlePlaceBid} disabled={submitting}>
+                              {submitting ? "Placing..." : "Bid"}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Minimum bid: ${minBid.toLocaleString()}
+                          </p>
+                        </>
+                      )}
                       <Button 
                         variant={watching ? "default" : "outline"} 
                         className="w-full" 
