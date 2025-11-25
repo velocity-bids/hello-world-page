@@ -55,6 +55,7 @@ const VehicleDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [watching, setWatching] = useState(false);
+  const [watchLoading, setWatchLoading] = useState(false);
 
   // Fetch vehicle data
   useEffect(() => {
@@ -186,6 +187,18 @@ const VehicleDetail = () => {
     };
   }, [id]);
 
+  // Check if watching
+  useEffect(() => {
+    if (!id) return;
+    
+    const checkWatchStatus = async () => {
+      const status = await isWatching(id);
+      setWatching(status);
+    };
+    
+    checkWatchStatus();
+  }, [id, isWatching]);
+
   // Calculate time left
   useEffect(() => {
     if (!vehicle) return;
@@ -253,6 +266,32 @@ const VehicleDetail = () => {
     }
 
     setSubmitting(false);
+  };
+
+  const handleWatchToggle = async () => {
+    if (!user) {
+      toast.error("Please sign in to watch auctions");
+      navigate("/auth");
+      return;
+    }
+
+    if (!id) return;
+
+    setWatchLoading(true);
+    
+    if (watching) {
+      const success = await removeFromWatchlist(id);
+      if (success) {
+        setWatching(false);
+      }
+    } else {
+      const success = await addToWatchlist(id);
+      if (success) {
+        setWatching(true);
+      }
+    }
+    
+    setWatchLoading(false);
   };
 
   if (loading) {
@@ -402,10 +441,14 @@ const VehicleDetail = () => {
                       <p className="text-xs text-muted-foreground">
                         Minimum bid: ${minBid.toLocaleString()}
                       </p>
-                      <Button variant="outline" className="w-full" onClick={() => {
-                        addToWatchlist(id);
-                      }}>
-                        Watch Auction
+                      <Button 
+                        variant={watching ? "default" : "outline"} 
+                        className="w-full" 
+                        onClick={handleWatchToggle}
+                        disabled={watchLoading}
+                      >
+                        <Heart className={`h-4 w-4 mr-2 ${watching ? "fill-current" : ""}`} />
+                        {watchLoading ? "Loading..." : watching ? "Watching" : "Watch Auction"}
                       </Button>
                     </div>
                   )}
