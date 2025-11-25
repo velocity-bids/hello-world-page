@@ -201,12 +201,17 @@ export type Database = {
           id: string
           image_url: string | null
           images: string[] | null
+          import_country: string | null
+          imported: boolean | null
           interior_color: string | null
+          maintenance_book: boolean | null
           make: string
           mileage: number
           model: string
+          number_of_owners: number | null
           reserve_price: number | null
           seller_id: string
+          smoker: boolean | null
           status: string | null
           transmission: string | null
           updated_at: string | null
@@ -230,12 +235,17 @@ export type Database = {
           id?: string
           image_url?: string | null
           images?: string[] | null
+          import_country?: string | null
+          imported?: boolean | null
           interior_color?: string | null
+          maintenance_book?: boolean | null
           make: string
           mileage: number
           model: string
+          number_of_owners?: number | null
           reserve_price?: number | null
           seller_id: string
+          smoker?: boolean | null
           status?: string | null
           transmission?: string | null
           updated_at?: string | null
@@ -259,12 +269,17 @@ export type Database = {
           id?: string
           image_url?: string | null
           images?: string[] | null
+          import_country?: string | null
+          imported?: boolean | null
           interior_color?: string | null
+          maintenance_book?: boolean | null
           make?: string
           mileage?: number
           model?: string
+          number_of_owners?: number | null
           reserve_price?: number | null
           seller_id?: string
+          smoker?: boolean | null
           status?: string | null
           transmission?: string | null
           updated_at?: string | null
