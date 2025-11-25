@@ -47,6 +47,14 @@ const listingSchema = z.object({
     required_error: "Auction end date is required",
   }),
   auctionEndTime: z.string().min(1, "Auction end time is required"),
+  horsepower: z.number().min(0).optional(),
+  engineType: z.string().optional(),
+  exteriorColor: z.string().min(1, "Exterior color is required"),
+  interiorColor: z.string().min(1, "Interior color is required"),
+  engineDisplacement: z.number().min(0).optional(),
+  fuelType: z.string().min(1, "Fuel type is required"),
+  transmission: z.string().min(1, "Transmission is required"),
+  doors: z.number().min(2).max(6),
 });
 
 type ListingForm = z.infer<typeof listingSchema>;
@@ -69,6 +77,14 @@ export default function CreateListing() {
       description: "",
       reservePrice: 0,
       auctionEndTime: "12:00",
+      horsepower: 0,
+      engineType: "",
+      exteriorColor: "",
+      interiorColor: "",
+      engineDisplacement: 0,
+      fuelType: "",
+      transmission: "",
+      doors: 4,
     },
   });
 
@@ -106,6 +122,14 @@ export default function CreateListing() {
         images: fileUrl,
         image_url: fileUrl[0], // Set first image as primary
         status: "active",
+        horsepower: data.horsepower || null,
+        engine_type: data.engineType || null,
+        exterior_color: data.exteriorColor,
+        interior_color: data.interiorColor,
+        engine_displacement: data.engineDisplacement || null,
+        fuel_type: data.fuelType,
+        transmission: data.transmission,
+        doors: data.doors,
         // approval_status defaults to 'pending' in database
       });
 
@@ -243,6 +267,140 @@ export default function CreateListing() {
                         <Input
                           placeholder="Vehicle Identification Number"
                           {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="exteriorColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Exterior Color</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Black" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="interiorColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Interior Color</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Beige" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="horsepower"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Horsepower (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 250"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="engineDisplacement"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Engine Displacement (cm³) (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 2000"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="engineType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Engine Type (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., V6, Inline-4" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fuelType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fuel Type</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Gasoline, Diesel, Electric" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="transmission"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Transmission</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Automatic, Manual" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="doors"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Doors</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="2"
+                          max="6"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
