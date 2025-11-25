@@ -25,7 +25,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { FileUploader } from "@/components/UploadCareWidget";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +57,11 @@ const listingSchema = z.object({
   fuelType: z.string().min(1, "Fuel type is required"),
   transmission: z.string().min(1, "Transmission is required"),
   doors: z.number().min(2).max(6),
+  imported: z.boolean(),
+  importCountry: z.string().optional(),
+  maintenanceBook: z.boolean(),
+  smoker: z.boolean(),
+  numberOfOwners: z.number().min(1).optional(),
 });
 
 type ListingForm = z.infer<typeof listingSchema>;
@@ -63,7 +70,7 @@ export default function CreateListing() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [fileUrl, setFileUrl] = useState<string[]>([]);
-  console.log("🚀 ~ CreateListing ~ fileUrl:", fileUrl)
+  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ListingForm>({
@@ -85,6 +92,11 @@ export default function CreateListing() {
       fuelType: "",
       transmission: "",
       doors: 4,
+      imported: false,
+      importCountry: "",
+      maintenanceBook: false,
+      smoker: false,
+      numberOfOwners: 1,
     },
   });
 
@@ -130,6 +142,11 @@ export default function CreateListing() {
         fuel_type: data.fuelType,
         transmission: data.transmission,
         doors: data.doors,
+        imported: data.imported,
+        import_country: data.imported ? data.importCountry : null,
+        maintenance_book: data.maintenanceBook,
+        smoker: data.smoker,
+        number_of_owners: data.numberOfOwners || null,
         // approval_status defaults to 'pending' in database
       });
 
@@ -144,6 +161,57 @@ export default function CreateListing() {
       toast.error("Failed to create listing. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const totalSteps = 4;
+
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const validateStep = () => {
+    const fieldsToValidate: (keyof ListingForm)[] = [];
+    
+    if (currentStep === 1) {
+      if (fileUrl.length < 5) {
+        toast.error("Please upload at least 5 images");
+        return false;
+      }
+      fieldsToValidate.push("make", "model", "year", "mileage");
+    } else if (currentStep === 2) {
+      fieldsToValidate.push("exteriorColor", "interiorColor", "fuelType", "transmission", "doors", "description");
+    } else if (currentStep === 3) {
+      // History fields are mostly optional, just validate if imported then country is required
+      const imported = form.getValues("imported");
+      if (imported && !form.getValues("importCountry")) {
+        toast.error("Please specify the import country");
+        return false;
+      }
+    } else if (currentStep === 4) {
+      fieldsToValidate.push("reservePrice", "auctionEndDate", "auctionEndTime");
+    }
+
+    // Trigger validation for specific fields
+    return fieldsToValidate.every(field => {
+      const value = form.getValues(field);
+      return value !== undefined && value !== "" && value !== null;
+    });
+  };
+
+  const handleNext = () => {
+    if (validateStep()) {
+      nextStep();
+    } else {
+      toast.error("Please complete all required fields");
     }
   };
 
@@ -164,279 +232,426 @@ export default function CreateListing() {
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Create Vehicle Listing</h1>
+        
+        {/* Stepper */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {[1, 2, 3, 4].map((step) => (
+              <div key={step} className="flex items-center flex-1">
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
+                  currentStep >= step 
+                    ? "bg-primary border-primary text-primary-foreground" 
+                    : "border-muted-foreground text-muted-foreground"
+                )}>
+                  {step}
+                </div>
+                {step < 4 && (
+                  <div className={cn(
+                    "flex-1 h-1 mx-2 transition-colors",
+                    currentStep > step ? "bg-primary" : "bg-muted"
+                  )} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <span>Images & Basic</span>
+            <span>Specifications</span>
+            <span>History</span>
+            <span>Auction</span>
+          </div>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Image Upload Section */}
-            <div className="bg-card rounded-lg p-6 border">
-              <h2 className="text-xl font-semibold mb-4">Vehicle Images *</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Upload at least 5 images of your vehicle
-              </p>
-              <FileUploader onUploadComplete={setFileUrl} />
-              {fileUrl.length > 0 && (
-                <p className={cn("text-sm mt-2", fileUrl.length >= 5 ? "text-green-600" : "text-amber-600")}>
-                  {fileUrl.length >= 5 ? '✓' : '⚠'} {fileUrl.length} of 5 minimum images uploaded
-                </p>
-              )}
-            </div>
-
-            {/* Vehicle Information */}
-            <div className="bg-card rounded-lg p-6 border space-y-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Vehicle Information
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="make"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Make</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Toyota" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+            {/* Step 1: Images & Basic Information */}
+            {currentStep === 1 && (
+              <div className="space-y-8 animate-in fade-in-50 duration-500">
+                <div className="bg-card rounded-lg p-6 border">
+                  <h2 className="text-xl font-semibold mb-4">Vehicle Images *</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Upload at least 5 images of your vehicle
+                  </p>
+                  <FileUploader onUploadComplete={setFileUrl} />
+                  {fileUrl.length > 0 && (
+                    <p className={cn("text-sm mt-2", fileUrl.length >= 5 ? "text-green-600" : "text-amber-600")}>
+                      {fileUrl.length >= 5 ? '✓' : '⚠'} {fileUrl.length} of 5 minimum images uploaded
+                    </p>
                   )}
-                />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="model"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Model</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Camry" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Year</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="mileage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mileage</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="e.g., 50000"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="vin"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>VIN (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Vehicle Identification Number"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="exteriorColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Exterior Color</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Black" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="interiorColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Interior Color</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Beige" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="horsepower"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horsepower (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="e.g., 250"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="engineDisplacement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Engine Displacement (cm³) (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="e.g., 2000"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="engineType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Engine Type (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., V6, Inline-4" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="fuelType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fuel Type</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Gasoline, Diesel, Electric" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="transmission"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transmission</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Automatic, Manual" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="doors"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Doors</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="2"
-                          max="6"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="bg-card rounded-lg p-6 border space-y-6">
+                  <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="make"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Make</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Toyota" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="model"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Model</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Camry" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mileage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mileage</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 50000"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="vin"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>VIN (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Vehicle Identification Number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
+            )}
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the vehicle's condition, features, history..."
-                        className="min-h-[150px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Provide detailed information to help buyers make informed
-                      decisions
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Step 2: Specifications */}
+            {currentStep === 2 && (
+              <div className="space-y-8 animate-in fade-in-50 duration-500">
+                <div className="bg-card rounded-lg p-6 border space-y-6">
+                  <h2 className="text-xl font-semibold mb-4">Vehicle Specifications</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="exteriorColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Exterior Color</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Black" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="interiorColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Interior Color</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Beige" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="horsepower"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Horsepower (Optional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 250"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="engineDisplacement"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Engine Displacement (cm³) (Optional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 2000"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="engineType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Engine Type (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., V6, Inline-4" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fuelType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fuel Type</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Gasoline, Diesel, Electric" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="transmission"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Transmission</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Automatic, Manual" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="doors"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Number of Doors</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="2"
+                              max="6"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe the vehicle's condition, features, history..."
+                            className="min-h-[150px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Provide detailed information to help buyers make informed decisions
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
 
-            {/* Auction Details */}
-            <div className="bg-card rounded-lg p-6 border space-y-6">
-              <h2 className="text-xl font-semibold mb-4">Auction Details</h2>
+            {/* Step 3: History & Condition */}
+            {currentStep === 3 && (
+              <div className="space-y-8 animate-in fade-in-50 duration-500">
+                <div className="bg-card rounded-lg p-6 border space-y-6">
+                  <h2 className="text-xl font-semibold mb-4">Vehicle History & Condition</h2>
+                  
+                  <FormField
+                    control={form.control}
+                    name="imported"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Is this vehicle imported?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => field.onChange(value === "true")}
+                            value={field.value ? "true" : "false"}
+                            className="flex gap-4"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="false" id="not-imported" />
+                              <Label htmlFor="not-imported">No</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="true" id="imported" />
+                              <Label htmlFor="imported">Yes</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {form.watch("imported") && (
+                    <FormField
+                      control={form.control}
+                      name="importCountry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Import Country</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Germany, Japan" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="maintenanceBook"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Does it have maintenance book (livro de revisões)?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => field.onChange(value === "true")}
+                            value={field.value ? "true" : "false"}
+                            className="flex gap-4"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="false" id="no-book" />
+                              <Label htmlFor="no-book">No</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="true" id="has-book" />
+                              <Label htmlFor="has-book">Yes</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="smoker"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Was the owner a smoker?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => field.onChange(value === "true")}
+                            value={field.value ? "true" : "false"}
+                            className="flex gap-4"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="false" id="non-smoker" />
+                              <Label htmlFor="non-smoker">No</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="true" id="smoker" />
+                              <Label htmlFor="smoker">Yes</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="numberOfOwners"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Known Owners (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="e.g., 1"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Auction Details */}
+            {currentStep === 4 && (
+              <div className="space-y-8 animate-in fade-in-50 duration-500">
+                <div className="bg-card rounded-lg p-6 border space-y-6">
+                  <h2 className="text-xl font-semibold mb-4">Auction Details</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="reservePrice"
@@ -523,23 +738,52 @@ export default function CreateListing() {
                     </FormItem>
                   )}
                 />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex gap-4">
-              <Button type="submit" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Listing...
-                  </>
-                ) : (
-                  "Create Listing"
-                )}
-              </Button>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between gap-4">
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={prevStep}
+                  disabled={isSubmitting}
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </Button>
+              )}
+              
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleNext}
+                  className={cn(currentStep === 1 && "ml-auto")}
+                >
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button type="submit" size="lg" disabled={isSubmitting} className="ml-auto">
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Listing...
+                    </>
+                  ) : (
+                    "Create Listing"
+                  )}
+                </Button>
+              )}
+              
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="lg"
                 onClick={() => navigate("/")}
                 disabled={isSubmitting}
