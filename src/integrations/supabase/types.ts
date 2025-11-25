@@ -192,15 +192,23 @@ export type Database = {
           created_at: string | null
           current_bid: number | null
           description: string | null
+          doors: number | null
+          engine_displacement: number | null
+          engine_type: string | null
+          exterior_color: string | null
+          fuel_type: string | null
+          horsepower: number | null
           id: string
           image_url: string | null
           images: string[] | null
+          interior_color: string | null
           make: string
           mileage: number
           model: string
           reserve_price: number | null
           seller_id: string
           status: string | null
+          transmission: string | null
           updated_at: string | null
           vin: string | null
           year: number
@@ -213,15 +221,23 @@ export type Database = {
           created_at?: string | null
           current_bid?: number | null
           description?: string | null
+          doors?: number | null
+          engine_displacement?: number | null
+          engine_type?: string | null
+          exterior_color?: string | null
+          fuel_type?: string | null
+          horsepower?: number | null
           id?: string
           image_url?: string | null
           images?: string[] | null
+          interior_color?: string | null
           make: string
           mileage: number
           model: string
           reserve_price?: number | null
           seller_id: string
           status?: string | null
+          transmission?: string | null
           updated_at?: string | null
           vin?: string | null
           year: number
@@ -234,15 +250,23 @@ export type Database = {
           created_at?: string | null
           current_bid?: number | null
           description?: string | null
+          doors?: number | null
+          engine_displacement?: number | null
+          engine_type?: string | null
+          exterior_color?: string | null
+          fuel_type?: string | null
+          horsepower?: number | null
           id?: string
           image_url?: string | null
           images?: string[] | null
+          interior_color?: string | null
           make?: string
           mileage?: number
           model?: string
           reserve_price?: number | null
           seller_id?: string
           status?: string | null
+          transmission?: string | null
           updated_at?: string | null
           vin?: string | null
           year?: number
