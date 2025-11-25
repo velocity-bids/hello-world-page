@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Autoplay from "embla-carousel-autoplay";
 
 interface FeaturedVehicle {
   id: string;
@@ -120,6 +121,12 @@ const PremiumHero = () => {
               align: "start",
               loop: true,
             }}
+            plugins={[
+              Autoplay({
+                delay: 3000,
+                stopOnInteraction: true,
+              }),
+            ]}
             className="w-full"
           >
             <CarouselContent className="-ml-4">
