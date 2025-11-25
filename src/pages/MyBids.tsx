@@ -26,16 +26,18 @@ interface BidWithVehicle {
 }
 
 const MyBids = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [bids, setBids] = useState<BidWithVehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       navigate("/auth");
       return;
     }
+
+    if (!user) return;
 
     const fetchMyBids = async () => {
       const { data, error } = await supabase
@@ -67,7 +69,7 @@ const MyBids = () => {
     };
 
     fetchMyBids();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const isWinning = (bid: BidWithVehicle) => {
     return bid.amount === bid.vehicle.current_bid;
@@ -77,7 +79,7 @@ const MyBids = () => {
     return new Date(endTime) < new Date();
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <BasePage>
         <div className="container mx-auto px-4 py-8">
