@@ -1,10 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, TrendingUp, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Card } from "@/components/ui/card";
 import heroImage from "@/assets/hero-car.jpg";
+
+interface FeaturedVehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  image_url: string | null;
+  current_bid: number | null;
+}
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>([]);
+
+  useEffect(() => {
+    const fetchFeaturedVehicles = async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, make, model, year, image_url, current_bid")
+        .eq("status", "active")
+        .eq("approval_status", "approved")
+        .order("current_bid", { ascending: false })
+        .limit(6);
+
+      if (!error && data) {
+        setFeaturedVehicles(data);
+      }
+    };
+
+    fetchFeaturedVehicles();
+  }, []);
 
   return (
     <section className="relative min-h-[85vh] w-full overflow-hidden">
@@ -92,6 +130,54 @@ const Hero = () => {
           </div>
         </div>
       </div>
+
+      {/* Featured Vehicles Carousel */}
+      {featuredVehicles.length > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 pb-12">
+          <div className="container mx-auto px-4">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {featuredVehicles.map((vehicle) => (
+                  <CarouselItem key={vehicle.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <Card
+                      onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                      className="group cursor-pointer overflow-hidden border-automotive-light/20 bg-background/10 backdrop-blur-md hover:border-accent/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-elegant"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={vehicle.image_url || "/placeholder.svg"}
+                          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-automotive-dark/90 to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <h3 className="text-lg font-bold text-automotive-light mb-1">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </h3>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-automotive-light/70">Current Bid</span>
+                            <span className="text-xl font-bold text-accent">
+                              ${(vehicle.current_bid || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-4 bg-background/20 backdrop-blur-md border-automotive-light/30 text-automotive-light hover:bg-background/40" />
+              <CarouselNext className="right-4 bg-background/20 backdrop-blur-md border-automotive-light/30 text-automotive-light hover:bg-background/40" />
+            </Carousel>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
