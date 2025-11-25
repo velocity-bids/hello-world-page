@@ -235,32 +235,38 @@ export default function CreateListing() {
         
         {/* Stepper */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {[1, 2, 3, 4, 5].map((step) => (
-              <div key={step} className="flex items-center flex-1">
-                <div className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
-                  currentStep >= step 
-                    ? "bg-primary border-primary text-primary-foreground" 
-                    : "border-muted-foreground text-muted-foreground"
-                )}>
-                  {step}
-                </div>
-                {step < 5 && (
+          <div className="flex items-start justify-between">
+            {[
+              { num: 1, label: "Images & Basic" },
+              { num: 2, label: "Specifications" },
+              { num: 3, label: "History" },
+              { num: 4, label: "Auction" },
+              { num: 5, label: "Review" }
+            ].map((step, index) => (
+              <div key={step.num} className="flex flex-col items-center flex-1">
+                <div className="flex items-center w-full">
                   <div className={cn(
-                    "flex-1 h-1 mx-2 transition-colors",
-                    currentStep > step ? "bg-primary" : "bg-muted"
-                  )} />
-                )}
+                    "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors mx-auto",
+                    currentStep >= step.num 
+                      ? "bg-primary border-primary text-primary-foreground" 
+                      : "border-muted-foreground text-muted-foreground"
+                  )}>
+                    {step.num}
+                  </div>
+                </div>
+                <span className="mt-2 text-xs text-muted-foreground text-center">
+                  {step.label}
+                </span>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            <span>Images & Basic</span>
-            <span>Specifications</span>
-            <span>History</span>
-            <span>Auction</span>
-            <span>Review</span>
+          <div className="flex items-center mt-6 -mx-4">
+            {[1, 2, 3, 4].map((step) => (
+              <div key={step} className={cn(
+                "flex-1 h-1 mx-2 transition-colors",
+                currentStep > step ? "bg-primary" : "bg-muted"
+              )} />
+            ))}
           </div>
         </div>
 
