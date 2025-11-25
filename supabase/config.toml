@@ -1,1 +1,4 @@
 project_id = "qvctkrnfkxblwffyefty"
+
+[functions.check-auction-endings]
+verify_jwt = false

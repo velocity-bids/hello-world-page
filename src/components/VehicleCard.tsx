@@ -32,7 +32,7 @@ const VehicleCard = ({
       <Link to={`/vehicle/${id}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={image}
+            src={`${image}-/resize/322x/`}
             alt={title}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
