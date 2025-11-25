@@ -30,7 +30,7 @@ const VehicleCard = ({
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-elevated">
       <Link to={`/vehicle/${id}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <img
             src={image}
             alt={title}
