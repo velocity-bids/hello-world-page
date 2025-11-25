@@ -36,13 +36,22 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <Link to="/auctions" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link
+            to="/auctions"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
             Auctions
           </Link>
-          <Link to="/sell" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link
+            to="/sell"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
             Sell
           </Link>
-          <Link to="/about" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link
+            to="/about"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
             About
           </Link>
         </div>
@@ -59,11 +68,11 @@ const Navbar = () => {
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
+                      <Badge
+                        variant="destructive"
                         className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                       >
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                        {unreadCount > 9 ? "9+" : unreadCount}
                       </Badge>
                     )}
                   </Button>
@@ -94,7 +103,7 @@ const Navbar = () => {
                           <div
                             key={notification.id}
                             className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
-                              !notification.is_read ? 'bg-primary/5' : ''
+                              !notification.is_read ? "bg-primary/5" : ""
                             }`}
                             onClick={() => {
                               markAsRead(notification.id);
@@ -103,11 +112,18 @@ const Navbar = () => {
                           >
                             <div className="flex items-start gap-3">
                               <div className="flex-1">
-                                <p className={`text-sm ${!notification.is_read ? 'font-semibold' : ''}`}>
+                                <p
+                                  className={`text-sm ${
+                                    !notification.is_read ? "font-semibold" : ""
+                                  }`}
+                                >
                                   {notification.message}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                  {formatDistanceToNow(
+                                    new Date(notification.created_at),
+                                    { addSuffix: true }
+                                  )}
                                 </p>
                               </div>
                               {!notification.is_read && (
@@ -134,7 +150,9 @@ const Navbar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/profile">Profile Settings</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>My Bids</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link to="/my-bids">My Bids</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/my-listings">My Listings</Link>
                   </DropdownMenuItem>
