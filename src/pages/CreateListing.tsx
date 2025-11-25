@@ -178,40 +178,34 @@ export default function CreateListing() {
     }
   };
 
-  const validateStep = () => {
-    const fieldsToValidate: (keyof ListingForm)[] = [];
+  const handleNext = async () => {
+    let fieldsToValidate: (keyof ListingForm)[] = [];
     
     if (currentStep === 1) {
       if (fileUrl.length < 5) {
         toast.error("Please upload at least 5 images");
-        return false;
+        return;
       }
-      fieldsToValidate.push("make", "model", "year", "mileage");
+      fieldsToValidate = ["make", "model", "year", "mileage"];
     } else if (currentStep === 2) {
-      fieldsToValidate.push("exteriorColor", "interiorColor", "fuelType", "transmission", "doors", "description");
+      fieldsToValidate = ["exteriorColor", "interiorColor", "fuelType", "transmission", "doors", "description"];
     } else if (currentStep === 3) {
-      // History fields are mostly optional, just validate if imported then country is required
       const imported = form.getValues("imported");
       if (imported && !form.getValues("importCountry")) {
         toast.error("Please specify the import country");
-        return false;
+        return;
       }
     } else if (currentStep === 4) {
-      fieldsToValidate.push("reservePrice", "auctionEndDate", "auctionEndTime");
+      fieldsToValidate = ["reservePrice", "auctionEndDate", "auctionEndTime"];
     }
 
-    // Trigger validation for specific fields
-    return fieldsToValidate.every(field => {
-      const value = form.getValues(field);
-      return value !== undefined && value !== "" && value !== null;
-    });
-  };
-
-  const handleNext = () => {
-    if (validateStep()) {
+    // Trigger validation for the current step's fields
+    const isValid = await form.trigger(fieldsToValidate);
+    
+    if (isValid) {
       nextStep();
     } else {
-      toast.error("Please complete all required fields");
+      toast.error("Please complete all required fields correctly");
     }
   };
 
