@@ -79,8 +79,8 @@ export default function CreateListing() {
       return;
     }
 
-    if (fileUrl.length === 0) {
-      toast.error("Please upload at least one image");
+    if (fileUrl.length < 5) {
+      toast.error("Please upload at least 5 images");
       return;
     }
 
@@ -147,12 +147,12 @@ export default function CreateListing() {
             <div className="bg-card rounded-lg p-6 border">
               <h2 className="text-xl font-semibold mb-4">Vehicle Images *</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Upload at least one image of your vehicle
+                Upload at least 5 images of your vehicle
               </p>
               <FileUploader onUploadComplete={setFileUrl} />
               {fileUrl.length > 0 && (
-                <p className="text-sm text-green-600 mt-2">
-                  ✓ {fileUrl.length} image{fileUrl.length > 1 ? 's' : ''} uploaded
+                <p className={cn("text-sm mt-2", fileUrl.length >= 5 ? "text-green-600" : "text-amber-600")}>
+                  {fileUrl.length >= 5 ? '✓' : '⚠'} {fileUrl.length} of 5 minimum images uploaded
                 </p>
               )}
             </div>
