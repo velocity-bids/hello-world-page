@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +6,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import CreateListingNavbar from "@/components/CreateListingNavbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -70,10 +71,17 @@ type ListingForm = z.infer<typeof listingSchema>;
 
 export default function CreateListing() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { openLoginModal } = useAuthModal();
   const [fileUrl, setFileUrl] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      openLoginModal();
+    }
+  }, [user, authLoading, openLoginModal]);
 
   const form = useForm<ListingForm>({
     resolver: zodResolver(listingSchema),
@@ -105,7 +113,7 @@ export default function CreateListing() {
   const onSubmit = async (data: ListingForm) => {
     if (!user) {
       toast.error("You must be logged in to create a listing");
-      navigate("/auth");
+      openLoginModal();
       return;
     }
 
@@ -211,15 +219,10 @@ export default function CreateListing() {
     }
   };
 
-  if (!user) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            Please log in to create a listing
-          </h2>
-          <Button onClick={() => navigate("/auth")}>Go to Login</Button>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
