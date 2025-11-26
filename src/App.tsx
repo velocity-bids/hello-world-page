@@ -33,7 +33,7 @@ const App = () => (
           <BrowserRouter basename="/hello-world-page/">
             <LoginModal />
             <Routes>
-              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/callback*" element={<AuthCallback />} />
               <Route path="/" element={<Index />} />
               <Route path="/auctions" element={<Auctions />} />
               <Route path="/vehicle/:id" element={<VehicleDetail />} />
