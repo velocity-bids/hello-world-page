@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,15 +30,15 @@ interface Vehicle {
 
 const MyListings = () => {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { openLoginModal } = useAuthModal();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      openLoginModal();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, openLoginModal]);
 
   useEffect(() => {
     if (user) {

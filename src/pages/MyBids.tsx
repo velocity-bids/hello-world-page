@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { BasePage } from "@/components/BasePage";
 import { BidCard } from "@/components/BidCard";
 import { BidFilters } from "@/components/BidFilters";
@@ -29,6 +30,7 @@ interface BidWithVehicle {
 const MyBids = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { openLoginModal } = useAuthModal();
   const [bids, setBids] = useState<BidWithVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -36,7 +38,7 @@ const MyBids = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      openLoginModal();
       return;
     }
 
@@ -72,7 +74,7 @@ const MyBids = () => {
     };
 
     fetchMyBids();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, openLoginModal, navigate]);
 
   const getFilteredAndSortedBids = () => {
     let filtered = [...bids];
