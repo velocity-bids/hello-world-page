@@ -56,7 +56,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
   return (
     <FileUploaderInline
-      pubkey={"f6a66e6c2fd1eee14caf"}
+      pubkey={import.meta.env.VITE_UPLOAD_CARE_KEY}
       imgOnly
       multiple
       apiRef={uploaderRef}
