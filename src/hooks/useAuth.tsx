@@ -84,6 +84,7 @@ export const useAuth = () => {
       if (error) throw error;
       
       toast.success("Signed out successfully");
+      window.location.href = "/";
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
     }
@@ -91,10 +92,11 @@ export const useAuth = () => {
 
   const signInWithGoogle = async () => {
     try {
+      console.log("🚀 ~ signInWithGoogle ~ window.location.origin:", window.location.origin)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

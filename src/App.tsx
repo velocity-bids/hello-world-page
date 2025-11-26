@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
 import { LoginModal } from "@/components/LoginModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import VehicleDetail from "./pages/VehicleDetail";
 import Auth from "./pages/Auth";
@@ -18,37 +19,40 @@ import Auctions from "./pages/Auctions";
 import Watching from "./pages/Watching";
 import About from "./pages/About";
 import MyBids from "./pages/MyBids";
+import AuthCallback from "./components/AuthCallback";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthModalProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter basename="/hello-world-page/">
-          <LoginModal />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auctions" element={<Auctions />} />
-            <Route path="/vehicle/:id" element={<VehicleDetail />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/sell" element={<CreateListing />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/review/:id" element={<ReviewListing />} />
-            <Route path="/profile" element={<ProfileSettings />} />
-            <Route path="/my-listings" element={<MyListings />} />
-            <Route path="/my-bids" element={<MyBids />} />
-            <Route path="/watching" element={<Watching />} />
-            <Route path="/about" element={<About />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthModalProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthModalProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter basename="/hello-world-page/">
+            <LoginModal />
+            <Routes>
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/auctions" element={<Auctions />} />
+              <Route path="/vehicle/:id" element={<VehicleDetail />} />
+              <Route path="/sell" element={<CreateListing />} />
+              <Route path="/review-listing" element={<ReviewListing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/my-bids" element={<MyBids />} />
+              <Route path="/profile" element={<ProfileSettings />} />
+              <Route path="/my-listings" element={<MyListings />} />
+              <Route path="/watching" element={<Watching />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthModalProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
