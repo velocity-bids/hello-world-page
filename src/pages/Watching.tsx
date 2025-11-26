@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { Eye, Mail, Bell, Trash2 } from "lucide-react";
 
 const Watching = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { openLoginModal } = useAuthModal();
   const {
     watchedVehicles,
     loading,
@@ -24,9 +26,9 @@ const Watching = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      openLoginModal();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, openLoginModal]);
 
   const calculateTimeLeft = (auctionEndTime: string) => {
     const now = new Date();

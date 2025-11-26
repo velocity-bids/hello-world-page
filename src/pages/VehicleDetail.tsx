@@ -12,6 +12,7 @@ import { Clock, Gauge, Calendar, MapPin, Eye, Heart, User, TrendingUp } from "lu
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { toast } from "sonner";
 // import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 
@@ -47,6 +48,7 @@ const VehicleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openLoginModal } = useAuthModal();
   // const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
@@ -230,7 +232,7 @@ const VehicleDetail = () => {
   const handlePlaceBid = async () => {
     if (!user) {
       toast.error("Please sign in to place a bid");
-      navigate("/auth");
+      openLoginModal();
       return;
     }
 

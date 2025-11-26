@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Loader2, Upload } from "lucide-react";
 
 const ProfileSettings = () => {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { openLoginModal } = useAuthModal();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -26,9 +26,9 @@ const ProfileSettings = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      openLoginModal();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, openLoginModal]);
 
   useEffect(() => {
     if (user) {
