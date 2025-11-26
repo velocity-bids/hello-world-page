@@ -93,10 +93,14 @@ export const useAuth = () => {
   const signInWithGoogle = async () => {
     try {
       console.log("🚀 ~ signInWithGoogle ~ window.location.origin:", window.location.origin)
+      const callbackUrl = import.meta.env.DEV
+        ? "http://localhost:8080/auth/callback"
+        : "https://velocity-bids.github.io/hello-world-page/#/auth/callback";
+
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
         },
       });
 
