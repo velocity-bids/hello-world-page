@@ -19,7 +19,7 @@ import Auctions from "./pages/Auctions";
 import Watching from "./pages/Watching";
 import About from "./pages/About";
 import MyBids from "./pages/MyBids";
-import AuthCallback from "./components/AuthCallback";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -30,10 +30,10 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter basename="/hello-world-page/">
+          <BrowserRouter basename="/hello-world-page">
             <LoginModal />
             <Routes>
-              <Route path="/auth/callback*" element={<AuthCallback />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/" element={<Index />} />
               <Route path="/auctions" element={<Auctions />} />
               <Route path="/vehicle/:id" element={<VehicleDetail />} />

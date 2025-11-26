@@ -5,7 +5,7 @@ export default function AuthCallback() {
   useEffect(() => {
     supabase.auth
       .exchangeCodeForSession(window.location.href)
-      .then(() => window.location.replace("/"));
+      .then(() => window.location.replace("/hello-world-page/"));
   }, []);
 
   return <div>Signing you in…</div>;

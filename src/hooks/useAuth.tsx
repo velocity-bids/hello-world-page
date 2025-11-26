@@ -84,7 +84,7 @@ export const useAuth = () => {
       if (error) throw error;
       
       toast.success("Signed out successfully");
-      window.location.href = "/";
+      window.location.href = "/hello-world-page";
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
     }
@@ -94,8 +94,9 @@ export const useAuth = () => {
     try {
       console.log("🚀 ~ signInWithGoogle ~ window.location.origin:", window.location.origin)
       const callbackUrl = import.meta.env.DEV
-        ? "http://localhost:8080/auth/callback"
-        : "https://velocity-bids.github.io/hello-world-page/#/auth/callback";
+        ? "http://localhost:8080/hello-world-page/auth/callback"
+        : "https://velocity-bids.github.io/hello-world-page/auth/callback";
+      console.log("🚀 ~ signInWithGoogle ~ callbackUrl:", callbackUrl)
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
