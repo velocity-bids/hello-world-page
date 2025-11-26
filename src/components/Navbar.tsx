@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,7 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { openLoginModal } = useAuthModal();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -183,12 +185,8 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/auth">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link to="/auth">
-                <Button className="hidden sm:inline-flex">Get Started</Button>
-              </Link>
+              <Button variant="ghost" onClick={openLoginModal}>Sign In</Button>
+              <Button className="hidden sm:inline-flex" onClick={openLoginModal}>Get Started</Button>
             </>
           )}
 

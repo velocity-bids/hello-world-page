@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { toast } from "sonner";
+import { BidHistoryModal } from "@/components/BidHistoryModal";
 // import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 
 interface Vehicle {
@@ -58,6 +59,7 @@ const VehicleDetail = () => {
   const [timeLeft, setTimeLeft] = useState("");
   const [watching, setWatching] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
+  const [showBidHistory, setShowBidHistory] = useState(false);
 
   // Fetch vehicle data
   useEffect(() => {
@@ -447,6 +449,31 @@ const VehicleDetail = () => {
                               {submitting ? "Placing..." : "Bid"}
                             </Button>
                           </div>
+                          
+                          <div className="grid grid-cols-3 gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setBidAmount(String((vehicle?.current_bid || 0) + 100))}
+                            >
+                              +$100
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setBidAmount(String((vehicle?.current_bid || 0) + 500))}
+                            >
+                              +$500
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setBidAmount(String((vehicle?.current_bid || 0) + 1000))}
+                            >
+                              +$1000
+                            </Button>
+                          </div>
+                          
                           <p className="text-xs text-muted-foreground">
                             Minimum bid: ${minBid.toLocaleString()}
                           </p>
@@ -469,7 +496,18 @@ const VehicleDetail = () => {
 
                 {/* Recent Bids - Latest 3 */}
                 <Card className="p-6">
-                  <h2 className="mb-4 text-xl font-semibold">Recent Bids</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold">Recent Bids</h2>
+                    {bids.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowBidHistory(true)}
+                      >
+                        View All
+                      </Button>
+                    )}
+                  </div>
                   {bids.length === 0 ? (
                     <p className="text-center text-sm text-muted-foreground">No bids yet</p>
                   ) : (
@@ -514,6 +552,11 @@ const VehicleDetail = () => {
       </main>
 
       <Footer />
+      <BidHistoryModal 
+        vehicleId={vehicle.id} 
+        isOpen={showBidHistory} 
+        onClose={() => setShowBidHistory(false)} 
+      />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,8 @@ export const LoginModal = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [address, setAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
   const { isOpen, closeLoginModal } = useAuthModal();
@@ -99,17 +102,80 @@ export const LoginModal = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password reset email sent! Check your inbox.");
+      setShowResetPassword(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset email");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={closeLoginModal}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setShowResetPassword(false);
+        setResetEmail("");
+      }
+      closeLoginModal();
+    }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Welcome to BidWheels</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            {showResetPassword ? "Reset Password" : "Welcome to BidWheels"}
+          </DialogTitle>
           <DialogDescription>
-            Sign in to your account or create a new one to continue
+            {showResetPassword 
+              ? "Enter your email to receive a password reset link"
+              : "Sign in to your account or create a new one to continue"
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="login" className="w-full">
+        {showResetPassword ? (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="your@email.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setShowResetPassword(false)}
+                disabled={isLoading}
+              >
+                Back
+              </Button>
+              <Button type="submit" className="flex-1" disabled={isLoading}>
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -195,6 +261,14 @@ export const LoginModal = () => {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => setShowResetPassword(true)}
+                className="text-sm text-primary hover:underline w-full text-center mt-2"
+              >
+                Forgot password?
+              </button>
             </form>
           </TabsContent>
 
@@ -326,6 +400,7 @@ export const LoginModal = () => {
             </form>
           </TabsContent>
         </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );

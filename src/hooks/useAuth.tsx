@@ -84,6 +84,7 @@ export const useAuth = () => {
       if (error) throw error;
       
       toast.success("Signed out successfully");
+      window.location.href = "/";
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
     }
