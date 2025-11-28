@@ -19,6 +19,7 @@ interface Profile {
   member_since: string;
   rating: number | null;
   vehicles_sold: number;
+  verified: boolean;
 }
 
 interface Feedback {
@@ -60,7 +61,7 @@ const UserProfile = () => {
         // Fetch profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("display_name, avatar_url, bio, member_since, rating, vehicles_sold")
+          .select("display_name, avatar_url, bio, member_since, rating, vehicles_sold, verified")
           .eq("user_id", userId)
           .single();
 
@@ -181,6 +182,7 @@ const UserProfile = () => {
             displayName={profile.display_name}
             memberSince={profile.member_since}
             bio={profile.bio}
+            verified={profile.verified}
           />
 
           {/* Stats and Reputation */}

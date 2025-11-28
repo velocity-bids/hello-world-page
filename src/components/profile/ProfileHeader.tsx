@@ -2,15 +2,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface ProfileHeaderProps {
   avatarUrl?: string | null;
   displayName: string;
   memberSince: string;
   bio?: string | null;
+  verified?: boolean;
 }
 
-export const ProfileHeader = ({ avatarUrl, displayName, memberSince, bio }: ProfileHeaderProps) => {
+export const ProfileHeader = ({ avatarUrl, displayName, memberSince, bio, verified }: ProfileHeaderProps) => {
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -30,7 +32,10 @@ export const ProfileHeader = ({ avatarUrl, displayName, memberSince, bio }: Prof
           </Avatar>
           
           <div className="flex-1 space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{displayName}</h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{displayName}</h1>
+              {verified && <VerifiedBadge size="lg" showText />}
+            </div>
             
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />

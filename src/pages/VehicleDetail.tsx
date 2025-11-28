@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { VehicleGallery } from "@/components/VehicleGallery";
 import { CommentSection } from "@/components/CommentSection";
 import { Clock, Gauge, Calendar, MapPin, Eye, Heart, User, TrendingUp } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ interface Vehicle {
   seller_id: string;
   profiles?: {
     display_name: string | null;
+    verified: boolean | null;
   } | null;
 }
 
@@ -45,6 +47,7 @@ interface Bid {
   bidder_id: string;
   profiles?: {
     display_name: string | null;
+    verified: boolean | null;
   } | null;
 }
 
@@ -87,7 +90,7 @@ const VehicleDetail = () => {
       // Fetch seller profile
       const { data: sellerProfile } = await supabase
         .from("public_profiles")
-        .select("display_name")
+        .select("display_name, verified")
         .eq("user_id", data.seller_id)
         .maybeSingle();
 
@@ -125,7 +128,7 @@ const VehicleDetail = () => {
         (data || []).map(async (bid) => {
           const { data: profileData } = await supabase
             .from("public_profiles")
-            .select("display_name")
+            .select("display_name, verified")
             .eq("user_id", bid.bidder_id)
             .maybeSingle();
 
@@ -181,7 +184,7 @@ const VehicleDetail = () => {
           // Fetch the bidder's public profile info
           const { data: profileData } = await supabase
             .from("public_profiles")
-            .select("display_name")
+            .select("display_name, verified")
             .eq("user_id", (payload.new as any).bidder_id)
             .maybeSingle();
 
@@ -517,9 +520,12 @@ const VehicleDetail = () => {
                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-muted">
                        <User className="h-6 w-6" />
                      </div>
-                     <div>
-                       <div className="font-medium hover:text-accent transition-colors">
-                         {vehicle.profiles?.display_name || "Anonymous User"}
+                     <div className="flex-1">
+                       <div className="flex items-center gap-2">
+                         <div className="font-medium hover:text-accent transition-colors">
+                           {vehicle.profiles?.display_name || "Anonymous User"}
+                         </div>
+                         {vehicle.profiles?.verified && <VerifiedBadge size="sm" />}
                        </div>
                        <div className="text-sm text-muted-foreground">
                          View Profile →
@@ -554,12 +560,15 @@ const VehicleDetail = () => {
                                 <User className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
-                                <Link
-                                  to={`/user/${bid.bidder_id}`}
-                                  className="truncate text-sm font-medium hover:text-accent transition-colors hover:underline block"
-                                >
-                                  {bid.profiles?.display_name || "Anonymous"}
-                                </Link>
+                                <div className="flex items-center gap-1">
+                                  <Link
+                                    to={`/user/${bid.bidder_id}`}
+                                    className="truncate text-sm font-medium hover:text-accent transition-colors hover:underline block"
+                                  >
+                                    {bid.profiles?.display_name || "Anonymous"}
+                                  </Link>
+                                  {bid.profiles?.verified && <VerifiedBadge size="sm" />}
+                                </div>
                                 <div className="text-xs text-muted-foreground">
                                   {new Date(bid.created_at).toLocaleTimeString()}
                                 </div>
