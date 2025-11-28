@@ -20,6 +20,7 @@ import Watching from "./pages/Watching";
 import About from "./pages/About";
 import MyBids from "./pages/MyBids";
 import AuthCallback from "./pages/AuthCallback";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/watching" element={<Watching />} />
               <Route path="/about" element={<About />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
