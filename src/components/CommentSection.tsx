@@ -6,6 +6,7 @@ import { User, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface Comment {
   id: string;
@@ -198,9 +199,12 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
                     <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="font-medium">
+                    <Link 
+                      to={`/user/${comment.user_id}`}
+                      className="font-medium hover:text-accent transition-colors hover:underline"
+                    >
                       {comment.profiles?.display_name || "Anonymous User"}
-                    </div>
+                    </Link>
                     <div className="text-xs text-muted-foreground">
                       {new Date(comment.created_at).toLocaleString()}
                     </div>
