@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import { VehicleGallery } from "@/components/VehicleGallery";
 import { CommentSection } from "@/components/CommentSection";
 import { Clock, Gauge, Calendar, MapPin, Eye, Heart, User, TrendingUp } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -33,6 +33,9 @@ interface Vehicle {
   auction_end_time: string;
   status: string;
   seller_id: string;
+  profiles?: {
+    display_name: string | null;
+  } | null;
 }
 
 interface Bid {
@@ -81,7 +84,17 @@ const VehicleDetail = () => {
         return;
       }
 
-      setVehicle(data);
+      // Fetch seller profile
+      const { data: sellerProfile } = await supabase
+        .from("public_profiles")
+        .select("display_name")
+        .eq("user_id", data.seller_id)
+        .maybeSingle();
+
+      setVehicle({
+        ...data,
+        profiles: sellerProfile,
+      });
       setLoading(false);
     };
 
@@ -490,12 +503,33 @@ const VehicleDetail = () => {
                         <Heart className={`h-4 w-4 mr-2 ${watching ? "fill-current" : ""}`} />
                         {watchLoading ? "Loading..." : watching ? "Watching" : "Watch Auction"}
                       </Button>
-                    </div>
-                  )}
-                </Card>
+                     </div>
+                   )}
+                 </Card>
 
-                {/* Recent Bids - Latest 3 */}
-                <Card className="p-6">
+                 {/* Seller Info */}
+                 <Card className="p-6">
+                   <h2 className="text-xl font-semibold mb-4">Seller</h2>
+                   <Link 
+                     to={`/user/${vehicle.seller_id}`}
+                     className="flex items-center gap-3 hover:bg-muted/50 p-3 rounded-lg transition-colors"
+                   >
+                     <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                       <User className="h-6 w-6" />
+                     </div>
+                     <div>
+                       <div className="font-medium hover:text-accent transition-colors">
+                         {vehicle.profiles?.display_name || "Anonymous User"}
+                       </div>
+                       <div className="text-sm text-muted-foreground">
+                         View Profile →
+                       </div>
+                     </div>
+                   </Link>
+                 </Card>
+
+                 {/* Recent Bids - Latest 3 */}
+                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold">Recent Bids</h2>
                     {bids.length > 0 && (
@@ -520,9 +554,12 @@ const VehicleDetail = () => {
                                 <User className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
-                                <div className="truncate text-sm font-medium">
+                                <Link
+                                  to={`/user/${bid.bidder_id}`}
+                                  className="truncate text-sm font-medium hover:text-accent transition-colors hover:underline block"
+                                >
                                   {bid.profiles?.display_name || "Anonymous"}
-                                </div>
+                                </Link>
                                 <div className="text-xs text-muted-foreground">
                                   {new Date(bid.created_at).toLocaleTimeString()}
                                 </div>

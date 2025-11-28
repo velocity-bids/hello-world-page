@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface Bid {
   id: string;
@@ -107,9 +108,12 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <div className="truncate font-medium">
+                        <Link
+                          to={`/user/${bid.bidder_id}`}
+                          className="truncate font-medium hover:text-accent transition-colors hover:underline"
+                        >
                           {bid.profiles?.display_name || "Anonymous"}
-                        </div>
+                        </Link>
                         {index === 0 && (
                           <Badge variant="outline" className="bg-accent/10">
                             Highest
