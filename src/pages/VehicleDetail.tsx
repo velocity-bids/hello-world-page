@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { VehicleGallery } from "@/components/VehicleGallery";
 import { CommentSection } from "@/components/CommentSection";
+import { FeedbackForm } from "@/components/FeedbackForm";
 import { Clock, Gauge, Calendar, MapPin, Eye, Heart, User, TrendingUp } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -59,6 +60,7 @@ const VehicleDetail = () => {
   // const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
+  const [winningBidderId, setWinningBidderId] = useState<string | null>(null);
   const [bidAmount, setBidAmount] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -104,7 +106,7 @@ const VehicleDetail = () => {
     fetchVehicle();
   }, [id, navigate]);
 
-  // Fetch bids (latest 3 only)
+  // Fetch bids (latest 3 only) and winning bidder
   useEffect(() => {
     if (!id) return;
 
@@ -121,6 +123,11 @@ const VehicleDetail = () => {
           console.error("Error fetching bids:", error);
         }
         return;
+      }
+
+      // Set winning bidder (highest bid)
+      if (data && data.length > 0) {
+        setWinningBidderId(data[0].bidder_id);
       }
 
       // Fetch public profiles separately for each bid
@@ -334,6 +341,8 @@ const VehicleDetail = () => {
   const isOwnListing = user?.id === vehicle.seller_id;
   const reserveMet = vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : false;
   const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : 100;
+  const auctionEnded = timeLeft === "Auction Ended";
+  const canShowFeedback = auctionEnded && winningBidderId && (user?.id === vehicle.seller_id || user?.id === winningBidderId);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -533,6 +542,15 @@ const VehicleDetail = () => {
                      </div>
                    </Link>
                  </Card>
+
+                 {/* Feedback Form - shown after auction ends */}
+                 {canShowFeedback && (
+                   <FeedbackForm
+                     vehicleId={vehicle.id}
+                     sellerId={vehicle.seller_id}
+                     winningBidderId={winningBidderId}
+                   />
+                 )}
 
                  {/* Recent Bids - Latest 3 */}
                  <Card className="p-6">
