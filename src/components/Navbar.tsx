@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
             <Search className="h-5 w-5" />
           </Button>

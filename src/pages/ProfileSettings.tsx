@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Loader2, Upload } from "lucide-react";
+import { AvatarUpload } from "@/components/AvatarUpload";
 
 const ProfileSettings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -24,6 +25,7 @@ const ProfileSettings = () => {
   const [address, setAddress] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [idDocumentUrl, setIdDocumentUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -49,6 +51,7 @@ const ProfileSettings = () => {
         setAddress(data.address || "");
         setDateOfBirth(data.date_of_birth || "");
         setIdDocumentUrl(data.id_document_url || "");
+        setAvatarUrl((data as any).avatar_url || "");
       }
     } catch (error: unknown) {
       toast.error("Failed to load profile");
@@ -122,6 +125,7 @@ const ProfileSettings = () => {
           address: address,
           date_of_birth: dateOfBirth || null,
           id_document_url: idDocumentUrl || null,
+          avatar_url: avatarUrl || null,
         })
         .eq("user_id", user?.id);
 
@@ -155,6 +159,16 @@ const ProfileSettings = () => {
 
           <Card className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label>Profile Photo</Label>
+                <AvatarUpload
+                  userId={user?.id || ""}
+                  currentAvatarUrl={avatarUrl}
+                  displayName={displayName}
+                  onAvatarChange={setAvatarUrl}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
                 <Input
