@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, HashRouter } from "react-router-dom";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
+import { IdVerificationProvider } from "@/contexts/IdVerificationContext";
 import { LoginModal } from "@/components/LoginModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
@@ -29,35 +30,37 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthModalProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter basename="/hello-world-page">
-            <LoginModal />
-            <Routes>
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/auctions" element={<Auctions />} />
-              <Route path="/vehicle/:id" element={<VehicleDetail />} />
-              <Route path="/sell" element={<CreateListing />} />
-              <Route path="/edit-listing/:id" element={<EditListing />} />
-              <Route path="/review-listing" element={<ReviewListing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/my-bids" element={<MyBids />} />
-              <Route path="/profile" element={<ProfileSettings />} />
-              <Route path="/settings" element={<ProfileSettings />} />
-              <Route path="/my-listings" element={<MyListings />} />
-              <Route path="/watching" element={<Watching />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/user/:userId" element={<UserProfilePage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <IdVerificationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter basename="/hello-world-page">
+              <LoginModal />
+              <Routes>
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/auctions" element={<Auctions />} />
+                <Route path="/vehicle/:id" element={<VehicleDetail />} />
+                <Route path="/sell" element={<CreateListing />} />
+                <Route path="/edit-listing/:id" element={<EditListing />} />
+                <Route path="/review-listing" element={<ReviewListing />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/my-bids" element={<MyBids />} />
+                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/settings" element={<ProfileSettings />} />
+                <Route path="/my-listings" element={<MyListings />} />
+                <Route path="/watching" element={<Watching />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/user/:userId" element={<UserProfilePage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </IdVerificationProvider>
       </AuthModalProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
 
 export default App;
