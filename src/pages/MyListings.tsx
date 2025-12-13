@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehiclesBySeller } from "@/db/queries";
+import { deleteVehicle } from "@/db/mutations";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,13 +78,11 @@ const MyListings = () => {
   };
 
   const handleDeleteListing = async (vehicleId: string, vehicleTitle: string) => {
+    if (!user?.id) return;
+    
     setDeletingId(vehicleId);
     try {
-      const { error } = await supabase
-        .from("vehicles")
-        .delete()
-        .eq("id", vehicleId)
-        .eq("seller_id", user?.id); // Extra safety check
+      const { error } = await deleteVehicle(vehicleId, user.id);
 
       if (error) throw error;
 

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { supabase } from '@/integrations/supabase/client';
 import { getAllVehiclesAdmin } from '@/db/queries';
-import { getAllUsers, setUserRole, type AdminUser } from '@/db/queries/users';
-import { getReports, updateReportStatus, type Report } from '@/db/queries/reports';
+import { getAllUsers, type AdminUser } from '@/db/queries/users';
+import { getReports, type Report } from '@/db/queries/reports';
+import { updateVehicleApprovalStatus, updateReportStatus, setUserRole } from '@/db/mutations';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,13 +101,7 @@ const AdminDashboard = () => {
       status: string;
       notes?: string;
     }) => {
-      const { error } = await supabase
-        .from('vehicles')
-        .update({
-          approval_status: status,
-          admin_notes: notes || null,
-        })
-        .eq('id', vehicleId);
+      const { error } = await updateVehicleApprovalStatus(vehicleId, status, notes);
 
       if (error) throw error;
     },

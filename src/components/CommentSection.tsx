@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getCommentsForVehicle, enrichWithProfiles, fetchUserProfile } from "@/db/queries";
+import { createComment, deleteComment } from "@/db/mutations";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/common";
@@ -71,7 +72,7 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
     }
 
     setSubmitting(true);
-    const { error } = await supabase.from("comments").insert({
+    const { error } = await createComment({
       vehicle_id: vehicleId,
       user_id: user.id,
       content: newComment.trim(),
@@ -87,7 +88,7 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
   };
 
   const handleDelete = async (commentId: string) => {
-    const { error } = await supabase.from("comments").delete().eq("id", commentId);
+    const { error } = await deleteComment(commentId);
     if (error) {
       toast.error("Failed to delete comment");
     } else {

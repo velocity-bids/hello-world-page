@@ -4,10 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { getVehicleById } from "@/db/queries";
+import { updateVehicle } from "@/db/mutations";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -245,10 +245,7 @@ export default function EditListing() {
         };
       }
 
-      const { error } = await supabase
-        .from("vehicles")
-        .update(updateData)
-        .eq("id", vehicle.id);
+      const { error } = await updateVehicle(vehicle.id, updateData);
 
       if (error) throw error;
 

@@ -4,10 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useIdVerification } from "@/contexts/IdVerificationContext";
+import { createVehicle } from "@/db/mutations";
 import { IdVerificationModal } from "@/components/IdVerificationModal";
 import CreateListingNavbar from "@/components/CreateListingNavbar";
 import Footer from "@/components/Footer";
@@ -142,7 +142,7 @@ export default function CreateListing() {
       auctionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
       // Create vehicle listing (defaults to pending approval)
-      const { error: insertError } = await supabase.from("vehicles").insert({
+      const { error: insertError } = await createVehicle({
         seller_id: user.id,
         make: data.make,
         model: data.model,
@@ -169,7 +169,6 @@ export default function CreateListing() {
         maintenance_book: data.maintenanceBook,
         smoker: data.smoker,
         number_of_owners: data.numberOfOwners || null,
-        // approval_status defaults to 'pending' in database
       });
 
       if (insertError) throw insertError;
