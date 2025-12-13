@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { Loader2, CheckCircle, XCircle, Clock, ArrowLeft, Users, Flag, Car, Shield, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { TablePagination } from '@/components/common';
 import {
   Table,
   TableBody,
@@ -44,6 +45,8 @@ type AdminVehicle = Vehicle & {
   admin_notes: string | null;
 };
 
+const PAGE_SIZE = 10;
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -55,6 +58,13 @@ const AdminDashboard = () => {
   const [dialogAction, setDialogAction] = useState<'approve' | 'decline' | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [reportFilter, setReportFilter] = useState<string>('pending');
+  
+  // Pagination state
+  const [pendingPage, setPendingPage] = useState(1);
+  const [approvedPage, setApprovedPage] = useState(1);
+  const [declinedPage, setDeclinedPage] = useState(1);
+  const [usersPage, setUsersPage] = useState(1);
+  const [reportsPage, setReportsPage] = useState(1);
 
   // Fetch vehicles
   const { data: vehicles, isLoading: vehiclesLoading } = useQuery({
@@ -195,10 +205,29 @@ const AdminDashboard = () => {
   const approvedVehicles = vehicles?.filter((v) => v.approval_status === 'approved') || [];
   const declinedVehicles = vehicles?.filter((v) => v.approval_status === 'declined') || [];
 
-  const filteredUsers = users?.filter((u) =>
-    u.display_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-    u.user_id.toLowerCase().includes(userSearch.toLowerCase())
-  ) || [];
+  const filteredUsers = useMemo(() => {
+    const filtered = users?.filter((u) =>
+      u.display_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.user_id.toLowerCase().includes(userSearch.toLowerCase())
+    ) || [];
+    // Reset to page 1 when search changes
+    return filtered;
+  }, [users, userSearch]);
+
+  // Paginated data helpers
+  const paginateData = <T,>(data: T[], page: number): T[] => {
+    const start = (page - 1) * PAGE_SIZE;
+    return data.slice(start, start + PAGE_SIZE);
+  };
+
+  const getTotalPages = (totalItems: number): number => Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+
+  // Paginated lists
+  const paginatedPending = paginateData<AdminVehicle>(pendingVehicles, pendingPage);
+  const paginatedApproved = paginateData<AdminVehicle>(approvedVehicles, approvedPage);
+  const paginatedDeclined = paginateData<AdminVehicle>(declinedVehicles, declinedPage);
+  const paginatedUsers = paginateData<AdminUser>(filteredUsers, usersPage);
+  const paginatedReports = paginateData<Report>(reports || [], reportsPage);
 
   const renderVehicleTable = (vehicleList: AdminVehicle[], showActions: boolean) => (
     <Table>
@@ -345,7 +374,16 @@ const AdminDashboard = () => {
                         <Loader2 className="h-8 w-8 animate-spin" />
                       </div>
                     ) : (
-                      renderVehicleTable(pendingVehicles, true)
+                      <>
+                        {renderVehicleTable(paginatedPending, true)}
+                        <TablePagination
+                          currentPage={pendingPage}
+                          totalPages={getTotalPages(pendingVehicles.length)}
+                          totalItems={pendingVehicles.length}
+                          pageSize={PAGE_SIZE}
+                          onPageChange={setPendingPage}
+                        />
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -362,7 +400,16 @@ const AdminDashboard = () => {
                         <Loader2 className="h-8 w-8 animate-spin" />
                       </div>
                     ) : (
-                      renderVehicleTable(approvedVehicles, false)
+                      <>
+                        {renderVehicleTable(paginatedApproved, false)}
+                        <TablePagination
+                          currentPage={approvedPage}
+                          totalPages={getTotalPages(approvedVehicles.length)}
+                          totalItems={approvedVehicles.length}
+                          pageSize={PAGE_SIZE}
+                          onPageChange={setApprovedPage}
+                        />
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -379,7 +426,16 @@ const AdminDashboard = () => {
                         <Loader2 className="h-8 w-8 animate-spin" />
                       </div>
                     ) : (
-                      renderVehicleTable(declinedVehicles, false)
+                      <>
+                        {renderVehicleTable(paginatedDeclined, false)}
+                        <TablePagination
+                          currentPage={declinedPage}
+                          totalPages={getTotalPages(declinedVehicles.length)}
+                          totalItems={declinedVehicles.length}
+                          pageSize={PAGE_SIZE}
+                          onPageChange={setDeclinedPage}
+                        />
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -411,89 +467,98 @@ const AdminDashboard = () => {
                     <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Member Since</TableHead>
-                        <TableHead>Verified</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Sales</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.length === 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground">
-                            No users found
-                          </TableCell>
+                          <TableHead>User</TableHead>
+                          <TableHead>Member Since</TableHead>
+                          <TableHead>Verified</TableHead>
+                          <TableHead>Rating</TableHead>
+                          <TableHead>Sales</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
-                      ) : (
-                        filteredUsers.map((u) => (
-                          <TableRow key={u.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={u.avatar_url || undefined} />
-                                  <AvatarFallback>
-                                    {u.display_name?.charAt(0) || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <button
-                                    onClick={() => navigate(`/user/${u.user_id}`)}
-                                    className="font-medium text-primary hover:underline text-left"
-                                  >
-                                    {u.display_name || 'Anonymous'}
-                                  </button>
-                                  <div className="text-xs text-muted-foreground">
-                                    {u.user_id.slice(0, 8)}...
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(u.member_since).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              {u.verified ? (
-                                <Badge variant="default">Verified</Badge>
-                              ) : (
-                                <Badge variant="secondary">Unverified</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>{u.rating?.toFixed(1) || '-'}</TableCell>
-                            <TableCell>{u.vehicles_sold || 0}</TableCell>
-                            <TableCell>
-                              <Badge variant={u.role === 'admin' ? 'default' : 'outline'}>
-                                {u.role === 'admin' && <Shield className="mr-1 h-3 w-3" />}
-                                {u.role}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={u.role || 'user'}
-                                onValueChange={(role: 'admin' | 'user') => {
-                                  updateUserRoleMutation.mutate({ userId: u.user_id, role });
-                                }}
-                                disabled={u.user_id === user?.id}
-                              >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="user">User</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                              </Select>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedUsers.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center text-muted-foreground">
+                              No users found
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : (
+                          paginatedUsers.map((u) => (
+                            <TableRow key={u.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={u.avatar_url || undefined} />
+                                    <AvatarFallback>
+                                      {u.display_name?.charAt(0) || 'U'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <button
+                                      onClick={() => navigate(`/user/${u.user_id}`)}
+                                      className="font-medium text-primary hover:underline text-left"
+                                    >
+                                      {u.display_name || 'Anonymous'}
+                                    </button>
+                                    <div className="text-xs text-muted-foreground">
+                                      {u.user_id.slice(0, 8)}...
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(u.member_since).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                {u.verified ? (
+                                  <Badge variant="default">Verified</Badge>
+                                ) : (
+                                  <Badge variant="secondary">Unverified</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>{u.rating?.toFixed(1) || '-'}</TableCell>
+                              <TableCell>{u.vehicles_sold || 0}</TableCell>
+                              <TableCell>
+                                <Badge variant={u.role === 'admin' ? 'default' : 'outline'}>
+                                  {u.role === 'admin' && <Shield className="mr-1 h-3 w-3" />}
+                                  {u.role}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={u.role || 'user'}
+                                  onValueChange={(role: 'admin' | 'user') => {
+                                    updateUserRoleMutation.mutate({ userId: u.user_id, role });
+                                  }}
+                                  disabled={u.user_id === user?.id}
+                                >
+                                  <SelectTrigger className="w-24">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="user">User</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                    <TablePagination
+                      currentPage={usersPage}
+                      totalPages={getTotalPages(filteredUsers.length)}
+                      totalItems={filteredUsers.length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setUsersPage}
+                    />
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -528,94 +593,103 @@ const AdminDashboard = () => {
                     <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Vehicle ID</TableHead>
-                        <TableHead>Reason</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Reported</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {!reports || reports.length === 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground">
-                            No reports found
-                          </TableCell>
+                          <TableHead>Vehicle ID</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Reported</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
-                      ) : (
-                        reports.map((report) => (
-                          <TableRow key={report.id}>
-                            <TableCell>
-                              <button
-                                onClick={() => navigate(`/vehicle/${report.vehicle_id}`)}
-                                className="font-medium text-primary hover:underline"
-                              >
-                                {report.vehicle_id.slice(0, 8)}...
-                              </button>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="capitalize">
-                                {report.reason}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="max-w-[200px] truncate">
-                              {report.description || '-'}
-                            </TableCell>
-                            <TableCell>
-                              {new Date(report.created_at).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  report.status === 'pending'
-                                    ? 'secondary'
-                                    : report.status === 'resolved'
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                              >
-                                {report.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {report.status === 'pending' && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() =>
-                                      updateReportMutation.mutate({
-                                        reportId: report.id,
-                                        status: 'resolved',
-                                      })
-                                    }
-                                  >
-                                    Resolve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      updateReportMutation.mutate({
-                                        reportId: report.id,
-                                        status: 'dismissed',
-                                      })
-                                    }
-                                  >
-                                    Dismiss
-                                  </Button>
-                                </div>
-                              )}
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedReports.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground">
+                              No reports found
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : (
+                          paginatedReports.map((report) => (
+                            <TableRow key={report.id}>
+                              <TableCell>
+                                <button
+                                  onClick={() => navigate(`/vehicle/${report.vehicle_id}`)}
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  {report.vehicle_id.slice(0, 8)}...
+                                </button>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="capitalize">
+                                  {report.reason}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate">
+                                {report.description || '-'}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(report.created_at).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    report.status === 'pending'
+                                      ? 'secondary'
+                                      : report.status === 'resolved'
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                >
+                                  {report.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {report.status === 'pending' && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() =>
+                                        updateReportMutation.mutate({
+                                          reportId: report.id,
+                                          status: 'resolved',
+                                        })
+                                      }
+                                    >
+                                      Resolve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() =>
+                                        updateReportMutation.mutate({
+                                          reportId: report.id,
+                                          status: 'dismissed',
+                                        })
+                                      }
+                                    >
+                                      Dismiss
+                                    </Button>
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                    <TablePagination
+                      currentPage={reportsPage}
+                      totalPages={getTotalPages((reports || []).length)}
+                      totalItems={(reports || []).length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setReportsPage}
+                    />
+                  </>
                 )}
               </CardContent>
             </Card>
