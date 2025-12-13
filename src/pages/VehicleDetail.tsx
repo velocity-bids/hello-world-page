@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { VehicleGallery } from "@/components/VehicleGallery";
@@ -12,12 +15,15 @@ import { ReportModal } from "@/components/ReportModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehicleById, getRecentBidsForVehicle, fetchUserProfile, enrichWithProfiles } from "@/db/queries";
+import { updateVehicleApprovalStatus } from "@/db/mutations";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 import { toast } from "sonner";
 import { BidHistoryModal } from "@/components/BidHistoryModal";
+import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
 import type { Vehicle as VehicleType, Bid, UserProfile } from "@/types";
 
 interface VehicleWithProfile extends VehicleType {
@@ -28,6 +34,7 @@ const VehicleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { openLoginModal } = useAuthModal();
   const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
   
@@ -40,6 +47,8 @@ const VehicleDetail = () => {
   const [watching, setWatching] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const [showBidHistory, setShowBidHistory] = useState(false);
+  const [adminNotes, setAdminNotes] = useState("");
+  const [adminSubmitting, setAdminSubmitting] = useState(false);
 
   const { timeLeft, isEnded } = useCountdown(vehicle?.auction_end_time || null);
 
@@ -217,6 +226,22 @@ const VehicleDetail = () => {
     setWatchLoading(false);
   };
 
+  const handleAdminAction = async (action: 'approved' | 'declined') => {
+    if (!vehicle) return;
+    
+    setAdminSubmitting(true);
+    const { error } = await updateVehicleApprovalStatus(vehicle.id, action, adminNotes || null);
+    
+    if (error) {
+      toast.error(`Failed to ${action === 'approved' ? 'approve' : 'decline'} listing`);
+    } else {
+      toast.success(`Listing ${action === 'approved' ? 'approved' : 'declined'} successfully`);
+      setVehicle(prev => prev ? { ...prev, approval_status: action, admin_notes: adminNotes } : null);
+      setAdminNotes("");
+    }
+    setAdminSubmitting(false);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -238,6 +263,8 @@ const VehicleDetail = () => {
   const canShowFeedback = isEnded && winningBidderId && (user?.id === vehicle.seller_id || user?.id === winningBidderId);
   const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
   const vehicleUrl = typeof window !== "undefined" ? window.location.href : "";
+  const showAdminPanel = isAdmin && !isOwnListing;
+  const approvalStatus = (vehicle as any).approval_status || 'pending';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -311,6 +338,85 @@ const VehicleDetail = () => {
                 />
 
                 <SellerCard sellerId={vehicle.seller_id} profile={vehicle.profiles} />
+
+                {/* Admin Actions Panel */}
+                {showAdminPanel && (
+                  <Card className="border-primary/20 bg-primary/5 p-6">
+                    <div className="mb-4 flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold">Admin Actions</h3>
+                    </div>
+                    
+                    <div className="mb-4 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Status:</span>
+                      <Badge 
+                        variant={
+                          approvalStatus === 'approved' ? 'default' : 
+                          approvalStatus === 'declined' ? 'destructive' : 
+                          'secondary'
+                        }
+                      >
+                        {approvalStatus.charAt(0).toUpperCase() + approvalStatus.slice(1)}
+                      </Badge>
+                    </div>
+
+                    {(vehicle as any).admin_notes && (
+                      <div className="mb-4 rounded-md bg-muted p-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Admin Notes:</p>
+                        <p className="text-sm">{(vehicle as any).admin_notes}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <Textarea
+                        placeholder="Add admin notes..."
+                        value={adminNotes}
+                        onChange={(e) => setAdminNotes(e.target.value)}
+                        rows={3}
+                        className="bg-background"
+                      />
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleAdminAction('approved')}
+                          disabled={adminSubmitting || approvalStatus === 'approved'}
+                          className="flex-1"
+                          size="sm"
+                        >
+                          {adminSubmitting ? (
+                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="mr-1 h-4 w-4" />
+                          )}
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={() => handleAdminAction('declined')}
+                          disabled={adminSubmitting || approvalStatus === 'declined'}
+                          variant="destructive"
+                          className="flex-1"
+                          size="sm"
+                        >
+                          {adminSubmitting ? (
+                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="mr-1 h-4 w-4" />
+                          )}
+                          Decline
+                        </Button>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => navigate('/admin')}
+                      >
+                        Back to Dashboard
+                      </Button>
+                    </div>
+                  </Card>
+                )}
 
                 {canShowFeedback && (
                   <FeedbackForm

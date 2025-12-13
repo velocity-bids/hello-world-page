@@ -205,6 +205,7 @@ const AdminDashboard = () => {
       <TableHeader>
         <TableRow>
           <TableHead>Vehicle</TableHead>
+          <TableHead>Seller</TableHead>
           <TableHead>Year</TableHead>
           <TableHead>Mileage</TableHead>
           <TableHead>Reserve Price</TableHead>
@@ -215,7 +216,7 @@ const AdminDashboard = () => {
       <TableBody>
         {vehicleList.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={showActions ? 6 : 5} className="text-center text-muted-foreground">
+            <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground">
               No vehicles found
             </TableCell>
           </TableRow>
@@ -233,14 +234,22 @@ const AdminDashboard = () => {
                   )}
                   <div>
                     <button
-                      onClick={() => navigate(`/admin/review/${vehicle.id}`)}
+                      onClick={() => navigate(`/vehicle/${vehicle.id}`)}
                       className="font-medium text-primary hover:underline text-left"
                     >
                       {vehicle.make} {vehicle.model}
                     </button>
-                    <div className="text-sm text-muted-foreground">ID: {vehicle.id.slice(0, 8)}</div>
+                    <div className="text-xs text-muted-foreground">ID: {vehicle.id.slice(0, 8)}</div>
                   </div>
                 </div>
+              </TableCell>
+              <TableCell>
+                <button
+                  onClick={() => navigate(`/user/${vehicle.seller_id}`)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  View Profile
+                </button>
               </TableCell>
               <TableCell>{vehicle.year}</TableCell>
               <TableCell>{vehicle.mileage.toLocaleString()} mi</TableCell>
