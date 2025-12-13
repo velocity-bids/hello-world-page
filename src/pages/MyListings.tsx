@@ -7,9 +7,20 @@ import { getVehiclesBySeller } from "@/db/queries";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import Navbar from "@/components/Navbar";
 import { PageLoader, EmptyState } from "@/components/common";
-import { Clock, DollarSign, Gavel, Eye, AlertCircle, Pencil } from "lucide-react";
+import { Clock, DollarSign, Gavel, Eye, AlertCircle, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import type { Vehicle } from "@/types";
@@ -23,6 +34,7 @@ const MyListings = () => {
   const { openLoginModal } = useAuthModal();
   const [vehicles, setVehicles] = useState<VehicleWithApproval[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -62,6 +74,33 @@ const MyListings = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
+  };
+
+  const handleDeleteListing = async (vehicleId: string, vehicleTitle: string) => {
+    setDeletingId(vehicleId);
+    try {
+      const { error } = await supabase
+        .from("vehicles")
+        .delete()
+        .eq("id", vehicleId)
+        .eq("seller_id", user?.id); // Extra safety check
+
+      if (error) throw error;
+
+      toast.success(`"${vehicleTitle}" has been deleted`);
+      // Remove from local state immediately
+      setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      toast.error("Failed to delete listing. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const canDeleteListing = (vehicle: VehicleWithApproval) => {
+    // Can only delete if no bids have been placed
+    return (vehicle.bid_count || 0) === 0;
   };
 
   const getStatusBadge = (status: string) => {
@@ -144,74 +183,120 @@ const MyListings = () => {
           />
         ) : (
           <div className="space-y-4">
-            {vehicles.map((vehicle) => (
-              <Card key={vehicle.id} className="overflow-hidden">
-                <div className="flex flex-col md:flex-row">
-                  <div className="relative h-48 w-full md:h-auto md:w-64">
-                    <img
-                      src={vehicle.images?.[0] || vehicle.image_url || "/placeholder.svg"}
-                      alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <h3 className="text-xl font-bold">{vehicle.year} {vehicle.make} {vehicle.model}</h3>
-                        <p className="text-sm text-muted-foreground">{vehicle.mileage.toLocaleString()} miles</p>
-                      </div>
-                      <div className="flex gap-2">
-                        {getStatusBadge(vehicle.status || "active")}
-                        {getApprovalBadge(vehicle.approval_status)}
-                      </div>
+            {vehicles.map((vehicle) => {
+              const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+              const canDelete = canDeleteListing(vehicle);
+              const isDeleting = deletingId === vehicle.id;
+
+              return (
+                <Card key={vehicle.id} className="overflow-hidden">
+                  <div className="flex flex-col md:flex-row">
+                    <div className="relative h-48 w-full md:h-auto md:w-64">
+                      <img
+                        src={vehicle.images?.[0] || vehicle.image_url || "/placeholder.svg"}
+                        alt={vehicleTitle}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="mb-4 grid gap-4 md:grid-cols-3">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Current Bid</p>
-                        <p className="text-lg font-bold">${vehicle.current_bid?.toLocaleString() || 0}</p>
+                    <div className="flex flex-1 flex-col p-6">
+                      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <h3 className="text-xl font-bold">{vehicleTitle}</h3>
+                          <p className="text-sm text-muted-foreground">{vehicle.mileage.toLocaleString()} miles</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {getStatusBadge(vehicle.status || "active")}
+                          {getApprovalBadge(vehicle.approval_status)}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Number of Bids</p>
-                        <p className="text-lg font-bold">{vehicle.bid_count || 0}</p>
+                      <div className="mb-4 grid gap-4 md:grid-cols-3">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Current Bid</p>
+                          <p className="text-lg font-bold">${vehicle.current_bid?.toLocaleString() || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Number of Bids</p>
+                          <p className="text-lg font-bold">{vehicle.bid_count || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Time Remaining</p>
+                          <p className="text-lg font-bold">{getTimeRemaining(vehicle.auction_end_time)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Time Remaining</p>
-                        <p className="text-lg font-bold">{getTimeRemaining(vehicle.auction_end_time)}</p>
-                      </div>
-                    </div>
-                    {vehicle.reserve_price && (
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground">Reserve Price</p>
-                        <p className="font-semibold">
-                          ${vehicle.reserve_price.toLocaleString()}
-                          {vehicle.current_bid >= vehicle.reserve_price && (
-                            <Badge variant="default" className="ml-2">Reserve Met</Badge>
-                          )}
-                        </p>
-                      </div>
-                    )}
-                    <div className="mt-auto flex gap-2">
-                      <Link to={`/vehicle/${vehicle.id}`}>
-                        <Button variant="outline">
-                          <Eye className="mr-2 h-4 w-4" />View Listing
-                        </Button>
-                      </Link>
-                      {/* Show Edit button for pending listings OR active listings with no bids */}
-                      {(vehicle.approval_status === "pending" || 
-                        (vehicle.status === "active" && (vehicle.bid_count || 0) === 0) ||
-                        (vehicle.status === "active" && (vehicle.bid_count || 0) > 0)) && (
+                      {vehicle.reserve_price && (
+                        <div className="mb-4">
+                          <p className="text-sm text-muted-foreground">Reserve Price</p>
+                          <p className="font-semibold">
+                            ${vehicle.reserve_price.toLocaleString()}
+                            {vehicle.current_bid >= vehicle.reserve_price && (
+                              <Badge variant="default" className="ml-2">Reserve Met</Badge>
+                            )}
+                          </p>
+                        </div>
+                      )}
+                      <div className="mt-auto flex flex-wrap gap-2">
+                        <Link to={`/vehicle/${vehicle.id}`}>
+                          <Button variant="outline">
+                            <Eye className="mr-2 h-4 w-4" />View
+                          </Button>
+                        </Link>
+                        
+                        {/* Edit button */}
                         <Link to={`/edit-listing/${vehicle.id}`}>
                           <Button variant="outline">
                             <Pencil className="mr-2 h-4 w-4" />
                             {(vehicle.bid_count || 0) > 0 ? "Edit (Limited)" : "Edit"}
                           </Button>
                         </Link>
-                      )}
+
+                        {/* Delete button with confirmation */}
+                        {canDelete ? (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" className="text-destructive hover:text-destructive" disabled={isDeleting}>
+                                {isDeleting ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                )}
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{vehicleTitle}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteListing(vehicle.id, vehicleTitle)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            disabled
+                            className="text-muted-foreground cursor-not-allowed"
+                            title="Cannot delete listings with bids"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>
