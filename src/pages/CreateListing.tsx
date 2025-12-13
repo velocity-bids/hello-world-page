@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useIdVerification } from "@/contexts/IdVerificationContext";
+import { IdVerificationModal } from "@/components/IdVerificationModal";
 import CreateListingNavbar from "@/components/CreateListingNavbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -28,7 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { CalendarIcon, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarIcon, Loader2, ChevronLeft, ChevronRight, ShieldCheck, ShieldAlert, Clock } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { FileUploader } from "@/components/UploadCareWidget";
@@ -74,6 +76,8 @@ export default function CreateListing() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { openLoginModal } = useAuthModal();
+  const { isVerified, timeRemaining } = useIdVerification();
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [fileUrl, setFileUrl] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,6 +122,12 @@ export default function CreateListing() {
       return;
     }
 
+    // Gate auction creation behind ID verification (mock)
+    if (!isVerified) {
+      toast.error("Please verify your ID before creating an auction");
+      setVerificationModalOpen(true);
+      return;
+    }
     if (fileUrl.length < 5) {
       toast.error("Please upload at least 5 images");
       return;
@@ -232,9 +242,63 @@ export default function CreateListing() {
   return (
     <div className="flex min-h-screen flex-col">
       <CreateListingNavbar currentStep={currentStep} totalSteps={totalSteps} />
+      
+      {/* ID Verification Modal (mock) */}
+      <IdVerificationModal 
+        open={verificationModalOpen} 
+        onOpenChange={setVerificationModalOpen} 
+      />
+      
       <div className="flex-1 bg-background py-12 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8">Create Vehicle Listing</h1>
+          <h1 className="text-4xl font-bold mb-4">Create Vehicle Listing</h1>
+          
+          {/* ID Verification Status Banner */}
+          <div className={cn(
+            "mb-6 p-4 rounded-lg border flex items-center gap-3",
+            isVerified 
+              ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" 
+              : "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800"
+          )}>
+            {isVerified ? (
+              <>
+                <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                    ID Verified
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-500">
+                    You can create auctions. {timeRemaining > 0 && (
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Expires in {timeRemaining}s (demo)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                    ID Verification Required
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    You must verify your identity before creating an auction.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setVerificationModalOpen(true)}
+                  className="shrink-0"
+                >
+                  Upload ID
+                </Button>
+              </>
+            )}
+          </div>
         
         {/* Stepper */}
         <div className="mb-8">
