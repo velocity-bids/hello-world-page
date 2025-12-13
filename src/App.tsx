@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import VehicleDetail from "./pages/VehicleDetail";
 import Auth from "./pages/Auth";
 import CreateListing from "./pages/CreateListing";
+import EditListing from "./pages/EditListing";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfileSettings from "./pages/ProfileSettings";
 import MyListings from "./pages/MyListings";
@@ -39,10 +40,12 @@ const App = () => (
               <Route path="/auctions" element={<Auctions />} />
               <Route path="/vehicle/:id" element={<VehicleDetail />} />
               <Route path="/sell" element={<CreateListing />} />
+              <Route path="/edit-listing/:id" element={<EditListing />} />
               <Route path="/review-listing" element={<ReviewListing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/my-bids" element={<MyBids />} />
               <Route path="/profile" element={<ProfileSettings />} />
+              <Route path="/settings" element={<ProfileSettings />} />
               <Route path="/my-listings" element={<MyListings />} />
               <Route path="/watching" element={<Watching />} />
               <Route path="/about" element={<About />} />

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { PageLoader, EmptyState } from "@/components/common";
-import { Clock, DollarSign, Gavel, Eye, AlertCircle } from "lucide-react";
+import { Clock, DollarSign, Gavel, Eye, AlertCircle, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import type { Vehicle } from "@/types";
@@ -196,6 +196,17 @@ const MyListings = () => {
                           <Eye className="mr-2 h-4 w-4" />View Listing
                         </Button>
                       </Link>
+                      {/* Show Edit button for pending listings OR active listings with no bids */}
+                      {(vehicle.approval_status === "pending" || 
+                        (vehicle.status === "active" && (vehicle.bid_count || 0) === 0) ||
+                        (vehicle.status === "active" && (vehicle.bid_count || 0) > 0)) && (
+                        <Link to={`/edit-listing/${vehicle.id}`}>
+                          <Button variant="outline">
+                            <Pencil className="mr-2 h-4 w-4" />
+                            {(vehicle.bid_count || 0) > 0 ? "Edit (Limited)" : "Edit"}
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
