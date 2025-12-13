@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * User type for admin dashboard queries
+ * Note: Mutations are in src/db/mutations/user-roles.ts
+ */
 export interface AdminUser {
   id: string;
   user_id: string;
@@ -13,6 +17,9 @@ export interface AdminUser {
   role?: string;
 }
 
+/**
+ * Fetch all users with their roles (admin only)
+ */
 export async function getAllUsers() {
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
@@ -41,5 +48,3 @@ export async function getAllUsers() {
 
   return { data: usersWithRoles as AdminUser[] | null, error: null };
 }
-
-// Note: setUserRole mutation has been moved to src/db/mutations/user-roles.ts
