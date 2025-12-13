@@ -7,12 +7,15 @@ import { CommentSection } from "@/components/CommentSection";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { BiddingCard, RecentBidsCard, SellerCard, VehicleInfo } from "@/components/vehicle";
 import { PageLoader } from "@/components/common";
+import { ShareButtons } from "@/components/ShareButtons";
+import { ReportModal } from "@/components/ReportModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehicleById, getRecentBidsForVehicle, fetchUserProfile, enrichWithProfiles } from "@/db/queries";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useCountdown } from "@/hooks/useCountdown";
+import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 import { toast } from "sonner";
 import { BidHistoryModal } from "@/components/BidHistoryModal";
 import type { Vehicle as VehicleType, Bid, UserProfile } from "@/types";
@@ -26,6 +29,7 @@ const VehicleDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { openLoginModal } = useAuthModal();
+  const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
   
   const [vehicle, setVehicle] = useState<VehicleWithProfile | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
@@ -38,6 +42,21 @@ const VehicleDetail = () => {
   const [showBidHistory, setShowBidHistory] = useState(false);
 
   const { timeLeft, isEnded } = useCountdown(vehicle?.auction_end_time || null);
+
+  // Check if user is watching this vehicle
+  useEffect(() => {
+    if (!id || !user) {
+      setWatching(false);
+      return;
+    }
+
+    const checkWatchStatus = async () => {
+      const isWatched = await isWatching(id);
+      setWatching(isWatched);
+    };
+
+    checkWatchStatus();
+  }, [id, user, isWatching]);
 
   // Fetch vehicle data
   useEffect(() => {
@@ -145,7 +164,8 @@ const VehicleDetail = () => {
     if (!bidAmount || !vehicle) return;
 
     const amount = parseFloat(bidAmount);
-    const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : 100;
+    const startingBid = (vehicle as any).starting_bid || 0;
+    const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : Math.max(startingBid, 100);
     
     if (amount < minBid) {
       toast.error(`Minimum bid is $${minBid.toLocaleString()}`);
@@ -175,6 +195,28 @@ const VehicleDetail = () => {
     setBidAmount(String((vehicle?.current_bid || 0) + increment));
   };
 
+  const handleWatchToggle = async () => {
+    if (!user) {
+      toast.error("Please sign in to watch auctions");
+      openLoginModal();
+      return;
+    }
+
+    if (!id) return;
+
+    setWatchLoading(true);
+    
+    if (watching) {
+      const success = await removeFromWatchlist(id);
+      if (success) setWatching(false);
+    } else {
+      const success = await addToWatchlist(id);
+      if (success) setWatching(true);
+    }
+    
+    setWatchLoading(false);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -191,8 +233,11 @@ const VehicleDetail = () => {
 
   const isOwnListing = user?.id === vehicle.seller_id;
   const reserveMet = vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : false;
-  const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : 100;
+  const startingBid = (vehicle as any).starting_bid || 0;
+  const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : Math.max(startingBid, 100);
   const canShowFeedback = isEnded && winningBidderId && (user?.id === vehicle.seller_id || user?.id === winningBidderId);
+  const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  const vehicleUrl = typeof window !== "undefined" ? window.location.href : "";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -209,21 +254,29 @@ const VehicleDetail = () => {
                     ? vehicle.images 
                     : [vehicle.image_url || "/placeholder.svg"]
                   }
-                  vehicleName={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                  vehicleName={vehicleTitle}
                 />
               </div>
 
+              {/* Share and Report buttons */}
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <ShareButtons
+                  url={vehicleUrl}
+                  title={vehicleTitle}
+                  description={vehicle.description || `Check out this ${vehicleTitle} auction!`}
+                />
+                {user && !isOwnListing && (
+                  <ReportModal vehicleId={vehicle.id} vehicleTitle={vehicleTitle} />
+                )}
+              </div>
+
               <VehicleInfo
-                year={vehicle.year}
-                make={vehicle.make}
-                model={vehicle.model}
-                mileage={vehicle.mileage}
-                vin={vehicle.vin}
+                vehicle={vehicle}
                 isActive={vehicle.status === "active"}
               />
 
               {vehicle.description && (
-                <Card className="mb-6 p-6">
+                <Card className="my-6 p-6">
                   <h2 className="mb-4 text-2xl font-semibold">Description</h2>
                   <p className="whitespace-pre-wrap text-muted-foreground">
                     {vehicle.description}
@@ -249,7 +302,7 @@ const VehicleDetail = () => {
                   onBidAmountChange={setBidAmount}
                   onPlaceBid={handlePlaceBid}
                   onQuickBid={handleQuickBid}
-                  onWatchToggle={() => console.log("watch toggle")}
+                  onWatchToggle={handleWatchToggle}
                   submitting={submitting}
                   watching={watching}
                   watchLoading={watchLoading}

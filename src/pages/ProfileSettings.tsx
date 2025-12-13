@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Loader2, Upload } from "lucide-react";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { isAtLeastAge } from "@/lib/age-utils";
 
 const ProfileSettings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -93,23 +94,11 @@ const ProfileSettings = () => {
     }
   };
 
-  const calculateAge = (dob: string) => {
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (dateOfBirth) {
-      const age = calculateAge(dateOfBirth);
-      if (age < 18) {
+      if (!isAtLeastAge(dateOfBirth, 18)) {
         toast.error("You must be at least 18 years old");
         return;
       }
