@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Report type for query results
+ * Note: Mutations are in src/db/mutations/reports.ts
+ */
 export interface Report {
   id: string;
   reporter_id: string;
@@ -12,6 +16,9 @@ export interface Report {
   updated_at: string;
 }
 
+/**
+ * Fetch reports with optional status filter
+ */
 export async function getReports(status?: string) {
   let query = supabase
     .from("reports")
@@ -24,22 +31,4 @@ export async function getReports(status?: string) {
 
   const { data, error } = await query;
   return { data: data as Report[] | null, error };
-}
-
-export async function updateReportStatus(
-  reportId: string,
-  status: string,
-  adminNotes?: string
-) {
-  const { data, error } = await supabase
-    .from("reports")
-    .update({
-      status,
-      admin_notes: adminNotes || null,
-    })
-    .eq("id", reportId)
-    .select()
-    .single();
-
-  return { data: data as Report | null, error };
 }
