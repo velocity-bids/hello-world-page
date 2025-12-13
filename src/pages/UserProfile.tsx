@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { getFullProfile, getFeedbackForUser, getActiveVehiclesBySeller, getPastVehiclesBySeller, getProfileDisplayInfo } from "@/db/queries";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -11,15 +11,12 @@ import { ListingGrid } from "@/components/profile/ListingGrid";
 import { PageLoader } from "@/components/common";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import type { Vehicle, UserProfile as UserProfileType, FeedbackWithReviewer } from "@/types";
-
-interface FeedbackWithReviewerLocal extends FeedbackWithReviewer {
-  reviewer: { display_name: string; avatar_url: string | null };
-}
+import type { Vehicle, FeedbackWithReviewer } from "@/types";
+import type { FullProfile } from "@/db/queries/profiles";
 
 const UserProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
-  const [profile, setProfile] = useState<UserProfileType & { bio: string | null } | null>(null);
+  const [profile, setProfile] = useState<FullProfile | null>(null);
   const [feedback, setFeedback] = useState<FeedbackWithReviewer[]>([]);
   const [activeListings, setActiveListings] = useState<Vehicle[]>([]);
   const [pastListings, setPastListings] = useState<Vehicle[]>([]);
@@ -30,30 +27,18 @@ const UserProfilePage = () => {
       if (!userId) return;
 
       try {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("display_name, avatar_url, bio, member_since, rating, vehicles_sold, verified")
-          .eq("user_id", userId)
-          .single();
+        const { data: profileData, error: profileError } = await getFullProfile(userId);
 
         if (profileError) throw profileError;
         setProfile(profileData);
 
-        const { data: feedbackData, error: feedbackError } = await supabase
-          .from("feedback")
-          .select("id, rating, comment, created_at, reviewer_id")
-          .eq("reviewee_id", userId)
-          .order("created_at", { ascending: false });
+        const { data: feedbackData, error: feedbackError } = await getFeedbackForUser(userId);
 
         if (feedbackError) throw feedbackError;
 
         const feedbackWithReviewers = await Promise.all(
           (feedbackData || []).map(async (fb) => {
-            const { data: reviewerProfile } = await supabase
-              .from("profiles")
-              .select("display_name, avatar_url")
-              .eq("user_id", fb.reviewer_id)
-              .single();
+            const { data: reviewerProfile } = await getProfileDisplayInfo(fb.reviewer_id);
 
             return {
               ...fb,
@@ -67,22 +52,10 @@ const UserProfilePage = () => {
 
         setFeedback(feedbackWithReviewers);
 
-        const { data: activeData } = await supabase
-          .from("vehicles")
-          .select("*")
-          .eq("seller_id", userId)
-          .eq("status", "active")
-          .order("created_at", { ascending: false });
-
+        const { data: activeData } = await getActiveVehiclesBySeller(userId);
         setActiveListings(activeData || []);
 
-        const { data: pastData } = await supabase
-          .from("vehicles")
-          .select("*")
-          .eq("seller_id", userId)
-          .neq("status", "active")
-          .order("auction_end_time", { ascending: false });
-
+        const { data: pastData } = await getPastVehiclesBySeller(userId);
         setPastListings(pastData || []);
       } catch (error) {
         toast.error("Failed to load user profile");

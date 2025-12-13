@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Vehicle } from "./useVehicles";
+import { getFilteredVehicles } from "@/db/queries";
+import type { Vehicle } from "@/types";
 
 interface FilterParams {
   brand?: string;
@@ -18,20 +18,7 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
     const fetchVehicles = async () => {
       setLoading(true);
       
-      let query = supabase
-        .from("vehicles")
-        .select("*")
-        .eq("status", "active")
-        .eq("approval_status", "approved")
-        .lte("mileage", maxMileage)
-        .order("created_at", { ascending: false })
-        .range(page * pageSize, (page + 1) * pageSize - 1);
-
-      if (brand && brand !== "all") {
-        query = query.eq("make", brand);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await getFilteredVehicles({ brand, maxMileage, page, pageSize });
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -40,11 +27,11 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
         setHasMore(false);
       } else {
         if (page === 0) {
-          setVehicles(data || []);
+          setVehicles(data);
         } else {
-          setVehicles(prev => [...prev, ...(data || [])]);
+          setVehicles(prev => [...prev, ...data]);
         }
-        setHasMore(data && data.length === pageSize);
+        setHasMore(data.length === pageSize);
       }
       setLoading(false);
     };

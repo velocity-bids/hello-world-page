@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getVehiclesBySeller } from "@/db/queries";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,14 +40,10 @@ const MyListings = () => {
 
   const fetchVehicles = async () => {
     try {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("seller_id", user?.id)
-        .order("created_at", { ascending: false });
+      const { data, error } = await getVehiclesBySeller(user?.id || "");
 
       if (error) throw error;
-      setVehicles(data || []);
+      setVehicles((data as VehicleWithApproval[]) || []);
     } catch {
       toast.error("Failed to load your listings");
     } finally {

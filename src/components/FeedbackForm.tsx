@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { checkExistingFeedback } from "@/db/queries";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -29,25 +30,18 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
   const revieweeId = isSeller ? winningBidderId : sellerId;
 
   useEffect(() => {
-    const checkExistingFeedback = async () => {
+    const checkFeedback = async () => {
       if (!user || !revieweeId) {
         setLoading(false);
         return;
       }
 
-      const { data } = await supabase
-        .from("feedback")
-        .select("id")
-        .eq("reviewer_id", user.id)
-        .eq("reviewee_id", revieweeId)
-        .eq("vehicle_id", vehicleId)
-        .maybeSingle();
-
+      const { data } = await checkExistingFeedback(user.id, revieweeId, vehicleId);
       setExistingFeedback(!!data);
       setLoading(false);
     };
 
-    checkExistingFeedback();
+    checkFeedback();
   }, [user, revieweeId, vehicleId]);
 
   const handleSubmit = async () => {
@@ -77,13 +71,7 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
     setSubmitting(false);
   };
 
-  if (loading) {
-    return null;
-  }
-
-  if (!canLeaveFeedback) {
-    return null;
-  }
+  if (loading || !canLeaveFeedback) return null;
 
   if (existingFeedback) {
     return (
@@ -105,7 +93,6 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
         Share your experience with this {isSeller ? "buyer" : "seller"} to help the community.
       </p>
 
-      {/* Star Rating */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Rating</label>
         <div className="flex gap-1">
@@ -117,7 +104,6 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
               onMouseEnter={() => setHoverRating(star)}
               onMouseLeave={() => setHoverRating(0)}
               className="p-1 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-              aria-label={`Rate ${star} stars`}
             >
               <Star
                 className={cn(
@@ -130,18 +116,8 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
             </button>
           ))}
         </div>
-        {rating > 0 && (
-          <p className="text-sm text-muted-foreground mt-1">
-            {rating === 1 && "Poor"}
-            {rating === 2 && "Fair"}
-            {rating === 3 && "Good"}
-            {rating === 4 && "Very Good"}
-            {rating === 5 && "Excellent"}
-          </p>
-        )}
       </div>
 
-      {/* Comment */}
       <div className="mb-4">
         <label htmlFor="feedback-comment" className="block text-sm font-medium mb-2">
           Comment (optional)
@@ -154,9 +130,7 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
           rows={3}
           maxLength={500}
         />
-        <p className="text-xs text-muted-foreground mt-1">
-          {comment.length}/500 characters
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">{comment.length}/500 characters</p>
       </div>
 
       <Button onClick={handleSubmit} disabled={submitting || rating === 0} className="w-full">

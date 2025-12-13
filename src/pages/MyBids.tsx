@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { BasePage } from "@/components/BasePage";
@@ -8,6 +7,7 @@ import { BidCard } from "@/components/BidCard";
 import { BidFilters } from "@/components/BidFilters";
 import { Button } from "@/components/ui/button";
 import { PageLoader, EmptyState } from "@/components/common";
+import { getBidsByUser } from "@/db/queries";
 import { Gavel } from "lucide-react";
 import type { BidWithVehicle } from "@/types";
 
@@ -29,31 +29,12 @@ const MyBids = () => {
     if (!user) return;
 
     const fetchMyBids = async () => {
-      const { data, error } = await supabase
-        .from("bids")
-        .select(`
-          id,
-          amount,
-          created_at,
-          bidder_id,
-          vehicle:vehicles (
-            id,
-            make,
-            model,
-            year,
-            image_url,
-            current_bid,
-            auction_end_time,
-            status
-          )
-        `)
-        .eq("bidder_id", user.id)
-        .order("created_at", { ascending: false });
+      const { data, error } = await getBidsByUser(user.id);
 
       if (error) {
         console.error("Error fetching bids:", error);
       } else {
-        setBids(data as BidWithVehicle[]);
+        setBids(data);
       }
       setLoading(false);
     };
