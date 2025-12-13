@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Menu, Search, User, LogOut, Shield, Bell } from "lucide-react";
+import { Car, Menu, Search, User, LogOut, Shield, Bell, X, Gavel, Eye, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -18,6 +19,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
@@ -29,6 +37,17 @@ const Navbar = () => {
   const { isAdmin } = useIsAdmin();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { openLoginModal } = useAuthModal();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleMobileNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
+
+  const handleMobileSignOut = async () => {
+    await signOut();
+    setMobileMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,7 +88,7 @@ const Navbar = () => {
             <>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
+                  <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                       <Badge
@@ -106,7 +125,7 @@ const Navbar = () => {
                         {notifications.map((notification) => (
                           <div
                             key={notification.id}
-                            className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                            className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
                               !notification.is_read ? "bg-primary/5" : ""
                             }`}
                             onClick={() => {
@@ -114,26 +133,12 @@ const Navbar = () => {
                               navigate(`/vehicle/${notification.vehicle_id}`);
                             }}
                           >
-                            <div className="flex items-start gap-3">
-                              <div className="flex-1">
-                                <p
-                                  className={`text-sm ${
-                                    !notification.is_read ? "font-semibold" : ""
-                                  }`}
-                                >
-                                  {notification.message}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {formatDistanceToNow(
-                                    new Date(notification.created_at),
-                                    { addSuffix: true }
-                                  )}
-                                </p>
-                              </div>
-                              {!notification.is_read && (
-                                <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
-                              )}
-                            </div>
+                            <p className="text-sm">{notification.message}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {formatDistanceToNow(new Date(notification.created_at), {
+                                addSuffix: true,
+                              })}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -144,24 +149,42 @@ const Navbar = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/profile">Profile Settings</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link to="/my-bids">My Bids</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/my-listings">My Listings</Link>
+                    <Link to={`/user/${user.id}`}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/watching">Watching</Link>
+                    <Link to="/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-listings">
+                      <Car className="mr-2 h-4 w-4" />
+                      My Listings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-bids">
+                      <Gavel className="mr-2 h-4 w-4" />
+                      My Bids
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/watching">
+                      <Eye className="mr-2 h-4 w-4" />
+                      Watching
+                    </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <>
@@ -187,14 +210,129 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={openLoginModal}>Sign In</Button>
+              <Button variant="ghost" onClick={openLoginModal} className="hidden sm:inline-flex">Sign In</Button>
               <Button className="hidden sm:inline-flex" onClick={openLoginModal}>Get Started</Button>
             </>
           )}
 
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  BidWheels
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 flex flex-col gap-4">
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleMobileNavigation("/auctions")}
+                >
+                  <Gavel className="mr-2 h-4 w-4" />
+                  Auctions
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleMobileNavigation("/sell")}
+                >
+                  <Car className="mr-2 h-4 w-4" />
+                  Sell a Vehicle
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleMobileNavigation("/about")}
+                >
+                  About
+                </Button>
+
+                {user ? (
+                  <>
+                    <div className="my-2 h-px bg-border" />
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => handleMobileNavigation(`/user/${user.id}`)}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      My Profile
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => handleMobileNavigation("/settings")}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => handleMobileNavigation("/my-listings")}
+                    >
+                      <Car className="mr-2 h-4 w-4" />
+                      My Listings
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => handleMobileNavigation("/my-bids")}
+                    >
+                      <Gavel className="mr-2 h-4 w-4" />
+                      My Bids
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => handleMobileNavigation("/watching")}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Watching
+                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        onClick={() => handleMobileNavigation("/admin")}
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Button>
+                    )}
+                    <div className="my-2 h-px bg-border" />
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-destructive"
+                      onClick={handleMobileSignOut}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="my-2 h-px bg-border" />
+                    <Button
+                      onClick={() => {
+                        openLoginModal();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
