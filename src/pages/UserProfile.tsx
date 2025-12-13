@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getFullProfile, getFeedbackForUser, getActiveVehiclesBySeller, getPastVehiclesBySeller, getProfileDisplayInfo } from "@/db/queries";
+import { getFullProfile, getFeedbackForUser, getActiveVehiclesBySeller, getPastVehiclesBySeller, getProfileDisplayInfo, type FullProfile } from "@/db/queries";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -12,7 +12,6 @@ import { PageLoader } from "@/components/common";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { Vehicle, FeedbackWithReviewer } from "@/types";
-import type { FullProfile } from "@/db/queries/profiles";
 
 const UserProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
