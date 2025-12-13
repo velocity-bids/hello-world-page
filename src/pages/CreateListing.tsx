@@ -48,6 +48,7 @@ const listingSchema = z.object({
     .min(10, "Description must be at least 10 characters")
     .max(2000),
   reservePrice: z.number().min(0),
+  startingBid: z.number().min(0).optional(),
   auctionEndDate: z.date({
     required_error: "Auction end date is required",
   }),
@@ -140,6 +141,7 @@ export default function CreateListing() {
         vin: data.vin || null,
         description: data.description,
         reserve_price: data.reservePrice,
+        starting_bid: data.startingBid || 0,
         auction_end_time: auctionDateTime.toISOString(),
         images: fileUrl,
         image_url: fileUrl[0], // Set first image as primary
@@ -678,6 +680,30 @@ export default function CreateListing() {
                       </FormControl>
                       <FormDescription>
                         The minimum price you're willing to accept
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="startingBid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Starting Bid (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Minimum first bid amount"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
+                          }
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The minimum amount for the first bid (defaults to $0)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

@@ -206,6 +206,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -256,6 +300,7 @@ export type Database = {
           reserve_price: number | null
           seller_id: string
           smoker: boolean | null
+          starting_bid: number | null
           status: string | null
           transmission: string | null
           updated_at: string | null
@@ -290,6 +335,7 @@ export type Database = {
           reserve_price?: number | null
           seller_id: string
           smoker?: boolean | null
+          starting_bid?: number | null
           status?: string | null
           transmission?: string | null
           updated_at?: string | null
@@ -324,6 +370,7 @@ export type Database = {
           reserve_price?: number | null
           seller_id?: string
           smoker?: boolean | null
+          starting_bid?: number | null
           status?: string | null
           transmission?: string | null
           updated_at?: string | null
