@@ -89,7 +89,19 @@ export interface Feedback {
   reviewee_id: string;
   vehicle_id?: string | null;
   rating: number;
-  comment?: string | null;
+  comment: string | null;
   created_at: string;
   reviewer_profile?: UserProfile | null;
+}
+
+// Feedback with reviewer info for display
+export interface FeedbackWithReviewer {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  reviewer: {
+    display_name: string;
+    avatar_url: string | null;
+  };
 }
