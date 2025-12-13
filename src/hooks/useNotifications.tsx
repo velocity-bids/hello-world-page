@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getNotificationsForUser } from "@/db/queries";
 import { toast } from "sonner";
 
 interface Notification {
@@ -9,7 +10,7 @@ interface Notification {
   message: string;
   is_read: boolean;
   created_at: string;
-  metadata: any;
+  metadata: unknown;
 }
 
 export const useNotifications = () => {
@@ -27,20 +28,14 @@ export const useNotifications = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(20);
+      const { data, error } = await getNotificationsForUser(user.id);
 
       if (error) throw error;
       
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.is_read).length);
     } catch (error) {
       console.error("Error fetching notifications:", error);
-      // toast.error("Failed to load notifications");
     } finally {
       setLoading(false);
     }

@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getCommentsForVehicle, enrichWithProfiles, fetchUserProfile } from "@/db/queries";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/common";
-import { enrichWithProfiles, fetchUserProfile } from "@/lib/profile-service";
 import type { Comment } from "@/types";
 
 interface CommentSectionProps {
@@ -22,18 +22,14 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
 
   useEffect(() => {
     const fetchComments = async () => {
-      const { data, error } = await supabase
-        .from("comments")
-        .select("*")
-        .eq("vehicle_id", vehicleId)
-        .order("created_at", { ascending: false });
+      const { data, error } = await getCommentsForVehicle(vehicleId);
 
       if (error) {
         if (import.meta.env.DEV) console.error("Error fetching comments:", error);
         return;
       }
 
-      const commentsWithProfiles = await enrichWithProfiles(data || [], (c) => c.user_id);
+      const commentsWithProfiles = await enrichWithProfiles(data, (c) => c.user_id);
       setComments(commentsWithProfiles);
     };
 

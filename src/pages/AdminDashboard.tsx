@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
+import { getAllVehiclesAdmin } from '@/db/queries';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,21 +29,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import type { Vehicle } from '@/types';
 
-type Vehicle = {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  mileage: number;
-  current_bid: number;
-  reserve_price: number;
-  approval_status: string;
+type AdminVehicle = Vehicle & {
   admin_notes: string | null;
-  created_at: string;
-  images: string[];
-  seller_id: string;
-  description: string;
 };
 
 const AdminDashboard = () => {
@@ -50,7 +40,7 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const queryClient = useQueryClient();
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<AdminVehicle | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogAction, setDialogAction] = useState<'approve' | 'decline' | null>(null);
@@ -58,13 +48,9 @@ const AdminDashboard = () => {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['admin-vehicles'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await getAllVehiclesAdmin();
       if (error) throw error;
-      return data as Vehicle[];
+      return data as AdminVehicle[];
     },
     enabled: !!user && isAdmin,
   });
@@ -102,7 +88,7 @@ const AdminDashboard = () => {
     },
   });
 
-  const handleAction = (vehicle: Vehicle, action: 'approve' | 'decline') => {
+  const handleAction = (vehicle: AdminVehicle, action: 'approve' | 'decline') => {
     setSelectedVehicle(vehicle);
     setAdminNotes(vehicle.admin_notes || '');
     setDialogAction(action);
@@ -151,7 +137,7 @@ const AdminDashboard = () => {
   const approvedVehicles = vehicles?.filter((v) => v.approval_status === 'approved') || [];
   const declinedVehicles = vehicles?.filter((v) => v.approval_status === 'declined') || [];
 
-  const renderVehicleTable = (vehicleList: Vehicle[], showActions: boolean) => (
+  const renderVehicleTable = (vehicleList: AdminVehicle[], showActions: boolean) => (
     <Table>
       <TableHeader>
         <TableRow>
@@ -196,7 +182,7 @@ const AdminDashboard = () => {
               <TableCell>{vehicle.year}</TableCell>
               <TableCell>{vehicle.mileage.toLocaleString()} mi</TableCell>
               <TableCell>${vehicle.reserve_price?.toLocaleString()}</TableCell>
-              <TableCell>{new Date(vehicle.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(vehicle.created_at || '').toLocaleDateString()}</TableCell>
               {showActions && (
                 <TableCell>
                   <div className="flex gap-2">

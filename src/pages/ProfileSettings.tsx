@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getOwnProfile } from "@/db/queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,11 +39,7 @@ const ProfileSettings = () => {
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user?.id)
-        .single();
+      const { data, error } = await getOwnProfile(user?.id || "");
 
       if (error) throw error;
 
@@ -53,7 +50,7 @@ const ProfileSettings = () => {
         setDateOfBirth(data.date_of_birth || "");
         setIdDocumentUrl(data.id_document_url || "");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to load profile");
     } finally {
       setLoading(false);
@@ -86,7 +83,7 @@ const ProfileSettings = () => {
 
       setIdDocumentUrl(data.publicUrl);
       toast.success("ID document uploaded successfully");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to upload ID document");
     } finally {
       setUploading(false);
@@ -131,7 +128,7 @@ const ProfileSettings = () => {
       if (error) throw error;
 
       toast.success("Profile updated successfully");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to update profile");
     } finally {
       setSaving(false);

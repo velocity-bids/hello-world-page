@@ -9,10 +9,10 @@ import { BiddingCard, RecentBidsCard, SellerCard, VehicleInfo } from "@/componen
 import { PageLoader } from "@/components/common";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getVehicleById, getRecentBidsForVehicle, fetchUserProfile, enrichWithProfiles } from "@/db/queries";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useCountdown } from "@/hooks/useCountdown";
-import { fetchUserProfile, enrichWithProfiles } from "@/lib/profile-service";
 import { toast } from "sonner";
 import { BidHistoryModal } from "@/components/BidHistoryModal";
 import type { Vehicle as VehicleType, Bid, UserProfile } from "@/types";
@@ -44,13 +44,9 @@ const VehicleDetail = () => {
     if (!id) return;
 
     const fetchVehicle = async () => {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await getVehicleById(id);
 
-      if (error) {
+      if (error || !data) {
         if (import.meta.env.DEV) {
           console.error("Error fetching vehicle:", error);
         }
@@ -72,12 +68,7 @@ const VehicleDetail = () => {
     if (!id) return;
 
     const fetchBids = async () => {
-      const { data, error } = await supabase
-        .from("bids")
-        .select("*")
-        .eq("vehicle_id", id)
-        .order("amount", { ascending: false })
-        .limit(3);
+      const { data, error } = await getRecentBidsForVehicle(id, 3);
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -90,7 +81,7 @@ const VehicleDetail = () => {
         setWinningBidderId(data[0].bidder_id);
       }
 
-      const bidsWithProfiles = await enrichWithProfiles(data || [], (bid) => bid.bidder_id);
+      const bidsWithProfiles = await enrichWithProfiles(data, (bid) => bid.bidder_id);
       setBids(bidsWithProfiles);
     };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { checkUserIsAdmin } from '@/db/queries';
 import { useAuth } from './useAuth';
 
 // Note: This is a UX convenience check only.
@@ -19,30 +19,17 @@ export const useIsAdmin = () => {
         return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+      const { data, error } = await checkUserIsAdmin(user.id);
 
-        if (error) {
-          if (import.meta.env.DEV) {
-            console.error('Error checking admin status:', error);
-          }
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data);
-        }
-      } catch (error) {
+      if (error) {
         if (import.meta.env.DEV) {
           console.error('Error checking admin status:', error);
         }
         setIsAdmin(false);
-      } finally {
-        setLoading(false);
+      } else {
+        setIsAdmin(data);
       }
+      setLoading(false);
     };
 
     checkAdminStatus();
