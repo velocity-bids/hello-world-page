@@ -42,26 +42,4 @@ export async function getAllUsers() {
   return { data: usersWithRoles as AdminUser[] | null, error: null };
 }
 
-export async function setUserRole(userId: string, role: "admin" | "user") {
-  // Check if user already has a role entry
-  const { data: existing } = await supabase
-    .from("user_roles")
-    .select("id")
-    .eq("user_id", userId)
-    .single();
-
-  if (existing) {
-    // Update existing role
-    const { error } = await supabase
-      .from("user_roles")
-      .update({ role })
-      .eq("user_id", userId);
-    return { error };
-  } else {
-    // Insert new role
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: userId, role });
-    return { error };
-  }
-}
+// Note: setUserRole mutation has been moved to src/db/mutations/user-roles.ts

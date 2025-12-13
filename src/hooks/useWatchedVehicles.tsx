@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getWatchedVehiclesForUser, isVehicleWatched, type WatchedVehicle } from "@/db/queries";
+import { 
+  addToWatchlist as addToWatchlistMutation, 
+  removeFromWatchlist as removeFromWatchlistMutation,
+  updateWatchlistPreferences 
+} from "@/db/mutations";
 import { toast } from "sonner";
 
 export type { WatchedVehicle };
@@ -62,15 +67,13 @@ export const useWatchedVehicles = () => {
         return false;
       }
 
-      const { error } = await supabase
-        .from("watched_vehicles")
-        .insert({
-          user_id: user.id,
-          vehicle_id: vehicleId,
-        });
+      const { error } = await addToWatchlistMutation({
+        user_id: user.id,
+        vehicle_id: vehicleId,
+      });
 
       if (error) {
-        if (error.code === "23505") {
+        if ((error as Error & { code?: string }).message?.includes("23505")) {
           toast.error("Already watching this auction");
         } else {
           throw error;
@@ -92,11 +95,7 @@ export const useWatchedVehicles = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { error } = await supabase
-        .from("watched_vehicles")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("vehicle_id", vehicleId);
+      const { error } = await removeFromWatchlistMutation(user.id, vehicleId);
 
       if (error) throw error;
 
@@ -118,14 +117,12 @@ export const useWatchedVehicles = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { error } = await supabase
-        .from("watched_vehicles")
-        .update({
-          notify_on_sale: notifyOnSale,
-          notify_on_bid: notifyOnBid,
-        })
-        .eq("user_id", user.id)
-        .eq("vehicle_id", vehicleId);
+      const { error } = await updateWatchlistPreferences(
+        user.id,
+        vehicleId,
+        notifyOnSale,
+        notifyOnBid
+      );
 
       if (error) throw error;
 

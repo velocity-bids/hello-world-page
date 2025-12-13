@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
+import { updateVehicleApprovalStatus } from "@/db/mutations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BasePage } from "@/components/BasePage";
 import { Button } from "@/components/ui/button";
@@ -102,13 +103,7 @@ const ReviewListing = () => {
       status: string;
       notes?: string;
     }) => {
-      const { error } = await supabase
-        .from("vehicles")
-        .update({
-          approval_status: status,
-          admin_notes: notes || null,
-        })
-        .eq("id", id);
+      const { error } = await updateVehicleApprovalStatus(id!, status, notes);
 
       if (error) throw error;
     },

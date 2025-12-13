@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { createReport } from "@/db/mutations";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -56,7 +56,7 @@ export function ReportModal({ vehicleId, vehicleTitle }: ReportModalProps) {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("reports").insert({
+      const { error } = await createReport({
         reporter_id: user.id,
         vehicle_id: vehicleId,
         reason,

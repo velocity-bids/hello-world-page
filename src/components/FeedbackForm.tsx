@@ -3,8 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, CheckCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { checkExistingFeedback } from "@/db/queries";
+import { createFeedback } from "@/db/mutations";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ export const FeedbackForm = ({ vehicleId, sellerId, winningBidderId }: FeedbackF
 
     setSubmitting(true);
 
-    const { error } = await supabase.from("feedback").insert({
+    const { error } = await createFeedback({
       reviewer_id: user.id,
       reviewee_id: revieweeId,
       vehicle_id: vehicleId,

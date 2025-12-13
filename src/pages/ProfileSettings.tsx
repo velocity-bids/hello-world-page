@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getOwnProfile } from "@/db/queries";
+import { updateProfile } from "@/db/mutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,17 +107,14 @@ const ProfileSettings = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          display_name: displayName,
-          bio: bio,
-          address: address,
-          date_of_birth: dateOfBirth || null,
-          id_document_url: idDocumentUrl || null,
-          avatar_url: avatarUrl || null,
-        })
-        .eq("user_id", user?.id);
+      const { error } = await updateProfile(user?.id || "", {
+        display_name: displayName,
+        bio: bio,
+        address: address,
+        date_of_birth: dateOfBirth || null,
+        id_document_url: idDocumentUrl || null,
+        avatar_url: avatarUrl || null,
+      });
 
       if (error) throw error;
 

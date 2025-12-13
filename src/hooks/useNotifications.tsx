@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getNotificationsForUser } from "@/db/queries";
+import { markNotificationAsRead, markAllNotificationsAsRead } from "@/db/mutations";
 import { toast } from "sonner";
 
 interface Notification {
@@ -67,10 +68,7 @@ export const useNotifications = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", notificationId);
+      const { error } = await markNotificationAsRead(notificationId);
 
       if (error) throw error;
 
@@ -88,11 +86,7 @@ export const useNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
+      const { error } = await markAllNotificationsAsRead(user.id);
 
       if (error) throw error;
 
