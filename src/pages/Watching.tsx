@@ -7,42 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader, EmptyState } from "@/components/common";
 import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { formatTimeRemaining } from "@/hooks/useCountdown";
 import { Eye, Mail, Bell, Trash2 } from "lucide-react";
 
 const Watching = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { openLoginModal } = useAuthModal();
-  const {
-    watchedVehicles,
-    loading,
-    removeFromWatchlist,
-    updateNotificationPreferences,
-  } = useWatchedVehicles();
+  const { watchedVehicles, loading, removeFromWatchlist, updateNotificationPreferences } = useWatchedVehicles();
 
   useEffect(() => {
     if (!authLoading && !user) {
       openLoginModal();
     }
   }, [user, authLoading, openLoginModal]);
-
-  const calculateTimeLeft = (auctionEndTime: string) => {
-    const now = new Date();
-    const end = new Date(auctionEndTime);
-    const diff = end.getTime() - now.getTime();
-
-    if (diff <= 0) return "Ended";
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-    if (days > 0) return `${days}d ${hours}h`;
-    return `${hours}h`;
-  };
 
   if (loading || authLoading) {
     return (
@@ -51,17 +33,7 @@ const Watching = () => {
         <main className="flex-1 bg-background">
           <div className="container mx-auto px-4 py-8">
             <h1 className="mb-8 text-3xl font-bold">Watching</h1>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <Skeleton className="h-48 w-full" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <PageLoader />
           </div>
         </main>
         <Footer />
@@ -87,21 +59,17 @@ const Watching = () => {
           </div>
 
           {watchedVehicles.length === 0 ? (
-            <Card className="p-12 text-center">
-              <Eye className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-semibold mb-2">No watched auctions yet</h2>
-              <p className="text-muted-foreground mb-6">
-                Start watching auctions to get notified about updates
-              </p>
-              <Button onClick={() => navigate("/auctions")}>
-                Browse Auctions
-              </Button>
-            </Card>
+            <EmptyState
+              icon={Eye}
+              title="No watched auctions yet"
+              description="Start watching auctions to get notified about updates"
+              action={{ label: "Browse Auctions", onClick: () => navigate("/auctions") }}
+            />
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {watchedVehicles.map((watched) => {
                 const vehicle = watched.vehicles;
-                const timeLeft = calculateTimeLeft(vehicle.auction_end_time);
+                const timeLeft = formatTimeRemaining(vehicle.auction_end_time);
                 const isEnded = timeLeft === "Ended";
 
                 return (
@@ -112,10 +80,7 @@ const Watching = () => {
                         alt={`${vehicle.make} ${vehicle.model}`}
                         className="h-48 w-full object-cover transition-transform group-hover:scale-105"
                       />
-                      <Badge
-                        variant={isEnded ? "secondary" : "default"}
-                        className="absolute top-2 right-2"
-                      >
+                      <Badge variant={isEnded ? "secondary" : "default"} className="absolute top-2 right-2">
                         {timeLeft}
                       </Badge>
                     </div>
@@ -143,11 +108,7 @@ const Watching = () => {
                             id={`notify-sale-${watched.id}`}
                             checked={watched.notify_on_sale}
                             onCheckedChange={(checked) =>
-                              updateNotificationPreferences(
-                                vehicle.id,
-                                checked,
-                                watched.notify_on_bid
-                              )
+                              updateNotificationPreferences(vehicle.id, checked, watched.notify_on_bid)
                             }
                           />
                         </div>
@@ -160,28 +121,17 @@ const Watching = () => {
                             id={`notify-bid-${watched.id}`}
                             checked={watched.notify_on_bid}
                             onCheckedChange={(checked) =>
-                              updateNotificationPreferences(
-                                vehicle.id,
-                                watched.notify_on_sale,
-                                checked
-                              )
+                              updateNotificationPreferences(vehicle.id, watched.notify_on_sale, checked)
                             }
                           />
                         </div>
                       </div>
 
                       <div className="flex gap-2">
-                        <Button
-                          className="flex-1"
-                          onClick={() => navigate(`/vehicle/${vehicle.id}`)}
-                        >
+                        <Button className="flex-1" onClick={() => navigate(`/vehicle/${vehicle.id}`)}>
                           View Auction
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFromWatchlist(vehicle.id)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => removeFromWatchlist(vehicle.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
