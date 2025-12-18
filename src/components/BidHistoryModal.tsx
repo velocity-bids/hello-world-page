@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface Bid {
   id: string;
@@ -19,6 +21,7 @@ interface Bid {
   bidder_id: string;
   profiles?: {
     display_name: string | null;
+    verified: boolean | null;
   } | null;
 }
 
@@ -57,7 +60,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
         (data || []).map(async (bid) => {
           const { data: profileData } = await supabase
             .from("public_profiles")
-            .select("display_name")
+            .select("display_name, verified")
             .eq("user_id", bid.bidder_id)
             .maybeSingle();
 
@@ -106,10 +109,14 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
                       <User className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="truncate font-medium">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          to={`/user/${bid.bidder_id}`}
+                          className="truncate font-medium hover:text-accent transition-colors hover:underline"
+                        >
                           {bid.profiles?.display_name || "Anonymous"}
-                        </div>
+                        </Link>
+                        {bid.profiles?.verified && <VerifiedBadge size="sm" />}
                         {index === 0 && (
                           <Badge variant="outline" className="bg-accent/10">
                             Highest

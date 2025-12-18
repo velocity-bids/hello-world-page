@@ -6,6 +6,8 @@ import { User, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface Comment {
   id: string;
@@ -14,6 +16,7 @@ interface Comment {
   created_at: string;
   profiles?: {
     display_name: string | null;
+    verified: boolean | null;
   } | null;
 }
 
@@ -48,7 +51,7 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
         (data || []).map(async (comment) => {
           const { data: profileData } = await supabase
             .from("public_profiles")
-            .select("display_name")
+            .select("display_name, verified")
             .eq("user_id", comment.user_id)
             .maybeSingle();
 
@@ -80,7 +83,7 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
         async (payload) => {
           const { data: profileData } = await supabase
             .from("public_profiles")
-            .select("display_name")
+            .select("display_name, verified")
             .eq("user_id", (payload.new as any).user_id)
             .maybeSingle();
 
@@ -198,8 +201,14 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
                     <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="font-medium">
-                      {comment.profiles?.display_name || "Anonymous User"}
+                    <div className="flex items-center gap-2">
+                      <Link 
+                        to={`/user/${comment.user_id}`}
+                        className="font-medium hover:text-accent transition-colors hover:underline"
+                      >
+                        {comment.profiles?.display_name || "Anonymous User"}
+                      </Link>
+                      {comment.profiles?.verified && <VerifiedBadge size="sm" />}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(comment.created_at).toLocaleString()}

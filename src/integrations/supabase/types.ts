@@ -81,6 +81,47 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -129,6 +170,7 @@ export type Database = {
           updated_at: string
           user_id: string
           vehicles_sold: number | null
+          verified: boolean | null
         }
         Insert: {
           address?: string | null
@@ -144,6 +186,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           vehicles_sold?: number | null
+          verified?: boolean | null
         }
         Update: {
           address?: string | null
@@ -159,6 +202,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vehicles_sold?: number | null
+          verified?: boolean | null
         }
         Relationships: []
       }
@@ -335,6 +379,7 @@ export type Database = {
           rating: number | null
           user_id: string | null
           vehicles_sold: number | null
+          verified: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -345,6 +390,7 @@ export type Database = {
           rating?: number | null
           user_id?: string | null
           vehicles_sold?: number | null
+          verified?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -355,6 +401,7 @@ export type Database = {
           rating?: number | null
           user_id?: string | null
           vehicles_sold?: number | null
+          verified?: boolean | null
         }
         Relationships: []
       }

@@ -53,7 +53,7 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      toast.success("Account created successfully!");
+      toast.success("Check your email to verify your account");
       return { error: null };
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");

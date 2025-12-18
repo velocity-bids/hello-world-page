@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { Mail } from "lucide-react";
 
 export const LoginModal = () => {
   const [loginEmail, setLoginEmail] = useState("");
@@ -28,6 +29,7 @@ export const LoginModal = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
   const { isOpen, closeLoginModal } = useAuthModal();
@@ -73,12 +75,7 @@ export const LoginModal = () => {
     setIsLoading(false);
     
     if (!result.error) {
-      closeLoginModal();
-      setSignupEmail("");
-      setSignupPassword("");
-      setDisplayName("");
-      setDateOfBirth("");
-      setAddress("");
+      setShowEmailConfirmation(true);
     }
   };
 
@@ -129,23 +126,62 @@ export const LoginModal = () => {
       if (!open) {
         setShowResetPassword(false);
         setResetEmail("");
+        setShowEmailConfirmation(false);
       }
       closeLoginModal();
     }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
-            {showResetPassword ? "Reset Password" : "Welcome to BidWheels"}
+            {showEmailConfirmation 
+              ? "Check Your Email" 
+              : showResetPassword 
+                ? "Reset Password" 
+                : "Welcome to BidWheels"
+            }
           </DialogTitle>
           <DialogDescription>
-            {showResetPassword 
-              ? "Enter your email to receive a password reset link"
-              : "Sign in to your account or create a new one to continue"
+            {showEmailConfirmation
+              ? "We've sent you a confirmation email"
+              : showResetPassword 
+                ? "Enter your email to receive a password reset link"
+                : "Sign in to your account or create a new one to continue"
             }
           </DialogDescription>
         </DialogHeader>
 
-        {showResetPassword ? (
+        {showEmailConfirmation ? (
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center">
+              <Mail className="h-16 w-16 text-primary" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="font-semibold text-lg">Verify your email</h3>
+              <p className="text-sm text-muted-foreground">
+                We've sent a confirmation link to <strong>{signupEmail}</strong>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Please click the link in the email to verify your account before signing in.
+              </p>
+              <p className="text-xs text-muted-foreground mt-4">
+                Didn't receive the email? Check your spam folder.
+              </p>
+            </div>
+            <Button 
+              onClick={() => {
+                setShowEmailConfirmation(false);
+                setSignupEmail("");
+                setSignupPassword("");
+                setDisplayName("");
+                setDateOfBirth("");
+                setAddress("");
+              }} 
+              className="w-full"
+            >
+              Got it
+            </Button>
+          </div>
+        ) : showResetPassword ? (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reset-email">Email</Label>
