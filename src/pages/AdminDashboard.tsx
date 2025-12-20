@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { getAllVehiclesAdmin, getAllUsers, getReports, type AdminUser, type Report } from '@/db/queries';
-import { updateVehicleApprovalStatus, updateReportStatus, setUserRole } from '@/db/mutations';
+import { updateVehicleApprovalStatus, updateReportStatus, setUserRole, deleteVehicleAdmin } from '@/db/mutations';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle, XCircle, Clock, ArrowLeft, Users, Flag, Car, Shield, Search } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, ArrowLeft, Users, Flag, Car, Shield, Search, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TablePagination } from '@/components/common';
@@ -56,6 +56,8 @@ const AdminDashboard = () => {
   const [adminNotes, setAdminNotes] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogAction, setDialogAction] = useState<'approve' | 'decline' | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; title: string } | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [reportFilter, setReportFilter] = useState<string>('pending');
   
@@ -155,6 +157,35 @@ const AdminDashboard = () => {
       toast.error('Failed to update report');
     },
   });
+
+  const deleteVehicleMutation = useMutation({
+    mutationFn: async (vehicleId: string) => {
+      const { error } = await deleteVehicleAdmin(vehicleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
+      toast.success('Vehicle deleted successfully');
+      setDeleteDialogOpen(false);
+      setVehicleToDelete(null);
+    },
+    onError: (error) => {
+      console.error('Error deleting vehicle:', error);
+      toast.error('Failed to delete vehicle');
+    },
+  });
+
+  const handleDeleteVehicle = (vehicleId: string, vehicleTitle: string) => {
+    setVehicleToDelete({ id: vehicleId, title: vehicleTitle });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (vehicleToDelete) {
+      deleteVehicleMutation.mutate(vehicleToDelete.id);
+    }
+  };
 
   const handleAction = (vehicle: AdminVehicle, action: 'approve' | 'decline') => {
     setSelectedVehicle(vehicle);
@@ -649,34 +680,43 @@ const AdminDashboard = () => {
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                {report.status === 'pending' && (
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="default"
-                                      onClick={() =>
-                                        updateReportMutation.mutate({
-                                          reportId: report.id,
-                                          status: 'resolved',
-                                        })
-                                      }
-                                    >
-                                      Resolve
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() =>
-                                        updateReportMutation.mutate({
-                                          reportId: report.id,
-                                          status: 'dismissed',
-                                        })
-                                      }
-                                    >
-                                      Dismiss
-                                    </Button>
-                                  </div>
-                                )}
+                                <div className="flex gap-2">
+                                  {report.status === 'pending' && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="default"
+                                        onClick={() =>
+                                          updateReportMutation.mutate({
+                                            reportId: report.id,
+                                            status: 'resolved',
+                                          })
+                                        }
+                                      >
+                                        Resolve
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          updateReportMutation.mutate({
+                                            reportId: report.id,
+                                            status: 'dismissed',
+                                          })
+                                        }
+                                      >
+                                        Dismiss
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteVehicle(report.vehicle_id, `Reported Vehicle`)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))
@@ -739,6 +779,37 @@ const AdminDashboard = () => {
             >
               {updateVehicleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirm {dialogAction === 'approve' ? 'Approval' : 'Decline'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Vehicle</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this vehicle? This action cannot be undone and will remove all associated bids and reports.
+            </DialogDescription>
+          </DialogHeader>
+          {vehicleToDelete && (
+            <div className="py-4">
+              <p className="text-sm font-medium">{vehicleToDelete.title}</p>
+              <p className="text-xs text-muted-foreground">ID: {vehicleToDelete.id}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteVehicleMutation.isPending}
+            >
+              {deleteVehicleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete Vehicle
             </Button>
           </DialogFooter>
         </DialogContent>

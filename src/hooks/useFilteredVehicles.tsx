@@ -13,6 +13,7 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -37,7 +38,15 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
     };
 
     fetchVehicles();
-  }, [brand, maxMileage, page, pageSize]);
+  }, [brand, maxMileage, page, pageSize, refreshKey]);
 
-  return { vehicles, loading, hasMore };
+  const refetch = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const removeVehicle = (vehicleId: string) => {
+    setVehicles(prev => prev.filter(v => v.id !== vehicleId));
+  };
+
+  return { vehicles, loading, hasMore, refetch, removeVehicle };
 };
