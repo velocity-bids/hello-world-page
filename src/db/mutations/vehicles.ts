@@ -134,3 +134,19 @@ export async function deleteVehicle(
     return { data: null, error: error as Error };
   }
 }
+
+/**
+ * Delete a vehicle listing (admin action - no seller check)
+ */
+export async function deleteVehicleAdmin(vehicleId: string): Promise<MutationResult> {
+  try {
+    const { error } = await supabase
+      .from("vehicles")
+      .delete()
+      .eq("id", vehicleId);
+    if (error) throw error;
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error as Error };
+  }
+}

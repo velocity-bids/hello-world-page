@@ -12,7 +12,6 @@ export function VehicleGallery({
   images,
   vehicleName,
 }: VehicleGalleryProps) {
-  console.log("🚀 ~ VehicleGallery ~ images:", images)
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 

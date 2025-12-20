@@ -17,7 +17,6 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
 
   const handleChange = async (fileGroup: any) => {
-    console.log("🚀 ~ handleChange ~ fileGroup:", fileGroup);
     
     if (!fileGroup) return;
 
@@ -40,7 +39,6 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           }
         }
         
-        console.log("🚀 ~ handleChange ~ collected urls:", urls);
         
         if (urls.length > 0) {
           setUploadedUrls(urls);

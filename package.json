@@ -3,7 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://velocity-bids.github.io/hello-world-page/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -58,6 +58,7 @@ const VehicleDetail = () => {
       setWatching(false);
       return;
     }
+    console.log("🚀 ~ VehicleDetail ~ user:", user)
 
     const checkWatchStatus = async () => {
       const isWatched = await isWatching(id);
@@ -325,6 +326,8 @@ const VehicleDetail = () => {
                   reservePrice={vehicle.reserve_price}
                   reserveMet={reserveMet}
                   isOwnListing={isOwnListing}
+                  isAdmin={isAdmin}
+                  isApproved={approvalStatus === 'approved'}
                   bidAmount={bidAmount}
                   onBidAmountChange={setBidAmount}
                   onPlaceBid={handlePlaceBid}

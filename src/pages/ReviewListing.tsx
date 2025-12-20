@@ -60,6 +60,7 @@ const ReviewListing = () => {
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const queryClient = useQueryClient();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  console.log("🚀 ~ ReviewListing ~ vehicle:", vehicle)
   const [loading, setLoading] = useState(true);
   const [adminNotes, setAdminNotes] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -76,7 +77,6 @@ const ReviewListing = () => {
         .select("*")
         .eq("id", id)
         .single();
-      console.log("🚀 ~ fetchVehicle ~ data, error :", data, error);
 
       if (error) {
         if (import.meta.env.DEV) {

@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getWatchedVehiclesForUser, isVehicleWatched, type WatchedVehicle } from "@/db/queries";
-import { 
-  addToWatchlist as addToWatchlistMutation, 
+import {
+  getWatchedVehiclesForUser,
+  isVehicleWatched,
+  type WatchedVehicle,
+} from "@/db/queries";
+import {
+  addToWatchlist as addToWatchlistMutation,
   removeFromWatchlist as removeFromWatchlistMutation,
-  updateWatchlistPreferences 
+  updateWatchlistPreferences,
 } from "@/db/mutations";
 import { toast } from "sonner";
 
@@ -16,7 +20,9 @@ export const useWatchedVehicles = () => {
 
   const fetchWatchedVehicles = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setWatchedVehicles([]);
         setLoading(false);
@@ -61,7 +67,9 @@ export const useWatchedVehicles = () => {
 
   const addToWatchlist = async (vehicleId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in to watch auctions");
         return false;
@@ -92,7 +100,9 @@ export const useWatchedVehicles = () => {
 
   const removeFromWatchlist = async (vehicleId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return false;
 
       const { error } = await removeFromWatchlistMutation(user.id, vehicleId);
@@ -114,7 +124,9 @@ export const useWatchedVehicles = () => {
     notifyOnBid: boolean
   ) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return false;
 
       const { error } = await updateWatchlistPreferences(
@@ -135,20 +147,26 @@ export const useWatchedVehicles = () => {
     }
   };
 
-  const isWatching = async (vehicleId: string): Promise<boolean> => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+  const isWatching = useCallback(
+    async (vehicleId: string): Promise<boolean> => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      const { data, error } = await isVehicleWatched(user.id, vehicleId);
+        if (!user) return false;
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error("Error checking watch status:", error);
-      return false;
-    }
-  };
+        const { data, error } = await isVehicleWatched(user.id, vehicleId);
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error("Error checking watch status:", error);
+        return false;
+      }
+    },
+    []
+  );
 
   return {
     watchedVehicles,

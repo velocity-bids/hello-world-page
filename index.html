@@ -21,12 +21,14 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      localStorage.setItem("supabase_oauth", JSON.stringify(
-        Object.fromEntries(params.entries())
-      ));
-      window.location.href = “/home/”;
+      if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        localStorage.setItem("supabase_oauth", JSON.stringify(
+          Object.fromEntries(params.entries())
+        ));
+        window.location.href = '/';
+      }
     </script>
   </body>
 </html>
