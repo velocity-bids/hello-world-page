@@ -173,6 +173,35 @@ const AdminDashboard = () => {
     });
   };
 
+  // Move all derived data and memoization BEFORE early returns
+  const pendingVehicles = vehicles?.filter((v) => v.approval_status === 'pending') || [];
+  const approvedVehicles = vehicles?.filter((v) => v.approval_status === 'approved') || [];
+  const declinedVehicles = vehicles?.filter((v) => v.approval_status === 'declined') || [];
+
+  const filteredUsers = useMemo(() => {
+    const filtered = users?.filter((u) =>
+      u.display_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.user_id.toLowerCase().includes(userSearch.toLowerCase())
+    ) || [];
+    return filtered;
+  }, [users, userSearch]);
+
+  // Paginated data helpers
+  const paginateData = <T,>(data: T[], page: number): T[] => {
+    const start = (page - 1) * PAGE_SIZE;
+    return data.slice(start, start + PAGE_SIZE);
+  };
+
+  const getTotalPages = (totalItems: number): number => Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+
+  // Paginated lists
+  const paginatedPending = paginateData<AdminVehicle>(pendingVehicles, pendingPage);
+  const paginatedApproved = paginateData<AdminVehicle>(approvedVehicles, approvedPage);
+  const paginatedDeclined = paginateData<AdminVehicle>(declinedVehicles, declinedPage);
+  const paginatedUsers = paginateData<AdminUser>(filteredUsers, usersPage);
+  const paginatedReports = paginateData<Report>(reports || [], reportsPage);
+
+  // Early returns AFTER all hooks and memoization
   if (adminLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -200,34 +229,6 @@ const AdminDashboard = () => {
       </div>
     );
   }
-
-  const pendingVehicles = vehicles?.filter((v) => v.approval_status === 'pending') || [];
-  const approvedVehicles = vehicles?.filter((v) => v.approval_status === 'approved') || [];
-  const declinedVehicles = vehicles?.filter((v) => v.approval_status === 'declined') || [];
-
-  const filteredUsers = useMemo(() => {
-    const filtered = users?.filter((u) =>
-      u.display_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.user_id.toLowerCase().includes(userSearch.toLowerCase())
-    ) || [];
-    // Reset to page 1 when search changes
-    return filtered;
-  }, [users, userSearch]);
-
-  // Paginated data helpers
-  const paginateData = <T,>(data: T[], page: number): T[] => {
-    const start = (page - 1) * PAGE_SIZE;
-    return data.slice(start, start + PAGE_SIZE);
-  };
-
-  const getTotalPages = (totalItems: number): number => Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-
-  // Paginated lists
-  const paginatedPending = paginateData<AdminVehicle>(pendingVehicles, pendingPage);
-  const paginatedApproved = paginateData<AdminVehicle>(approvedVehicles, approvedPage);
-  const paginatedDeclined = paginateData<AdminVehicle>(declinedVehicles, declinedPage);
-  const paginatedUsers = paginateData<AdminUser>(filteredUsers, usersPage);
-  const paginatedReports = paginateData<Report>(reports || [], reportsPage);
 
   const renderVehicleTable = (vehicleList: AdminVehicle[], showActions: boolean) => (
     <Table>
