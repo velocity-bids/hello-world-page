@@ -1,18 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getActiveVehicles } from "@/db/queries";
+import type { Vehicle } from "@/types";
 
-export interface Vehicle {
-  id: string;
-  make: string;
-  model: string;
-  year: number;
-  mileage: number;
-  current_bid: number;
-  bid_count: number;
-  image_url: string | null;
-  auction_end_time: string;
-  status: string;
-}
+export type { Vehicle };
 
 export const useVehicles = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -20,19 +11,14 @@ export const useVehicles = () => {
 
   useEffect(() => {
     const fetchVehicles = async () => {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("status", "active")
-        .eq("approval_status", "approved")
-        .order("created_at", { ascending: false });
+      const { data, error } = await getActiveVehicles();
 
       if (error) {
         if (import.meta.env.DEV) {
           console.error("Error fetching vehicles:", error);
         }
       } else {
-        setVehicles(data || []);
+        setVehicles(data);
       }
       setLoading(false);
     };

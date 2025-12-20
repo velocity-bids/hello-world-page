@@ -206,6 +206,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -256,6 +300,7 @@ export type Database = {
           reserve_price: number | null
           seller_id: string
           smoker: boolean | null
+          starting_bid: number | null
           status: string | null
           transmission: string | null
           updated_at: string | null
@@ -290,6 +335,7 @@ export type Database = {
           reserve_price?: number | null
           seller_id: string
           smoker?: boolean | null
+          starting_bid?: number | null
           status?: string | null
           transmission?: string | null
           updated_at?: string | null
@@ -324,6 +370,7 @@ export type Database = {
           reserve_price?: number | null
           seller_id?: string
           smoker?: boolean | null
+          starting_bid?: number | null
           status?: string | null
           transmission?: string | null
           updated_at?: string | null
@@ -369,44 +416,37 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          display_name: string | null
-          id: string | null
-          member_since: string | null
-          rating: number | null
-          user_id: string | null
-          vehicles_sold: number | null
-          verified: boolean | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          id?: string | null
-          member_since?: string | null
-          rating?: number | null
-          user_id?: string | null
-          vehicles_sold?: number | null
-          verified?: boolean | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          id?: string | null
-          member_since?: string | null
-          rating?: number | null
-          user_id?: string | null
-          vehicles_sold?: number | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_public_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          display_name: string
+          id: string
+          member_since: string
+          rating: number
+          user_id: string
+          vehicles_sold: number
+          verified: boolean
+        }[]
+      }
+      get_public_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          display_name: string
+          id: string
+          member_since: string
+          rating: number
+          user_id: string
+          vehicles_sold: number
+          verified: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

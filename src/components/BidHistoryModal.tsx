@@ -9,21 +9,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getAllBidsForVehicle, enrichWithProfiles } from "@/db/queries";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-
-interface Bid {
-  id: string;
-  amount: number;
-  created_at: string;
-  bidder_id: string;
-  profiles?: {
-    display_name: string | null;
-    verified: boolean | null;
-  } | null;
-}
+import type { Bid } from "@/types";
 
 interface BidHistoryModalProps {
   vehicleId: string;
@@ -40,11 +30,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
 
     const fetchAllBids = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("bids")
-        .select("*")
-        .eq("vehicle_id", vehicleId)
-        .order("amount", { ascending: false });
+      const { data, error } = await getAllBidsForVehicle(vehicleId);
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -55,22 +41,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
         return;
       }
 
-      // Fetch public profiles for each bid
-      const bidsWithProfiles = await Promise.all(
-        (data || []).map(async (bid) => {
-          const { data: profileData } = await supabase
-            .from("public_profiles")
-            .select("display_name, verified")
-            .eq("user_id", bid.bidder_id)
-            .maybeSingle();
-
-          return {
-            ...bid,
-            profiles: profileData,
-          };
-        })
-      );
-
+      const bidsWithProfiles = await enrichWithProfiles(data, (bid) => bid.bidder_id);
       setBids(bidsWithProfiles);
       setLoading(false);
     };
@@ -94,9 +65,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           ) : bids.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              No bids yet
-            </div>
+            <div className="py-8 text-center text-muted-foreground">No bids yet</div>
           ) : (
             <div className="space-y-3">
               {bids.map((bid, index) => (
@@ -118,9 +87,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
                         </Link>
                         {bid.profiles?.verified && <VerifiedBadge size="sm" />}
                         {index === 0 && (
-                          <Badge variant="outline" className="bg-accent/10">
-                            Highest
-                          </Badge>
+                          <Badge variant="outline" className="bg-accent/10">Highest</Badge>
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -132,9 +99,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
                     <div className="text-xl font-bold text-bid-active">
                       ${bid.amount.toLocaleString()}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Bid #{bids.length - index}
-                    </div>
+                    <div className="text-xs text-muted-foreground">Bid #{bids.length - index}</div>
                   </div>
                 </div>
               ))}

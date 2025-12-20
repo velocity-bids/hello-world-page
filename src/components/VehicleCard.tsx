@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { VehicleCardBase } from "@/components/common";
 import { Clock, Gauge, Calendar } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface VehicleCardProps {
   id: string;
@@ -25,26 +24,21 @@ const VehicleCard = ({
   image,
   featured = false,
 }: VehicleCardProps) => {
-  const navigate = useNavigate();
+  const displayTitle = `${year} ${title}`;
 
   return (
-    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-elevated">
+    <VehicleCardBase
+      id={id}
+      image={`${image}-/resize/322x/`}
+      title={displayTitle}
+      badge={
+        featured ? (
+          <Badge className="bg-accent text-accent-foreground">Featured</Badge>
+        ) : undefined
+      }
+      ctaText="View Auction"
+    >
       <Link to={`/vehicle/${id}`} className="block">
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          <img
-            // src={`${image}-/resize/322x322/`}
-            src={`${image}-/resize/322x/`}
-            alt={title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {featured && (
-            <Badge className="absolute left-4 top-4 bg-accent text-accent-foreground">
-              Featured
-            </Badge>
-          )}
-        </div>
-
         <div className="mx-4 mt-4 flex items-center justify-between rounded-lg border bg-card px-3 py-2">
           <div className="flex items-center gap-1 text-sm">
             <Clock className="h-4 w-4 text-timer-warning" />
@@ -61,7 +55,7 @@ const VehicleCard = ({
         <div className="space-y-3 p-4 pt-3">
           <div>
             <h3 className="font-semibold transition-colors group-hover:text-accent">
-              {year} {title}
+              {displayTitle}
             </h3>
           </div>
 
@@ -77,20 +71,8 @@ const VehicleCard = ({
           </div>
         </div>
       </Link>
-
-      <div className="px-4 pb-4 pt-2">
-        <Button
-          onClick={(e) => {
-            e.preventDefault();
-            navigate(`/vehicle/${id}`);
-          }}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 shadow-sm"
-          aria-label={`View auction for ${title}`}
-        >
-          View Auction
-        </Button>
-      </div>
-    </Card>
+    </VehicleCardBase>
   );
 };
+
 export default VehicleCard;

@@ -35,6 +35,7 @@ export const useAuth = () => {
     dateOfBirth?: string,
     address?: string
   ) => {
+    console.log("🚀 ~ signUp ~ dateOfBirth:", dateOfBirth)
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -56,6 +57,7 @@ export const useAuth = () => {
       toast.success("Check your email to verify your account");
       return { error: null };
     } catch (error: any) {
+      console.log("🚀 ~ signUp ~ error:", error)
       toast.error(error.message || "Failed to sign up");
       return { error };
     }

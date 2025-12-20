@@ -1,24 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getWatchedVehiclesForUser, isVehicleWatched, type WatchedVehicle } from "@/db/queries";
+import { 
+  addToWatchlist as addToWatchlistMutation, 
+  removeFromWatchlist as removeFromWatchlistMutation,
+  updateWatchlistPreferences 
+} from "@/db/mutations";
 import { toast } from "sonner";
 
-interface WatchedVehicle {
-  id: string;
-  vehicle_id: string;
-  notify_on_sale: boolean;
-  notify_on_bid: boolean;
-  vehicles: {
-    id: string;
-    make: string;
-    model: string;
-    year: number;
-    mileage: number;
-    current_bid: number;
-    image_url: string;
-    auction_end_time: string;
-    status: string;
-  };
-}
+export type { WatchedVehicle };
 
 export const useWatchedVehicles = () => {
   const [watchedVehicles, setWatchedVehicles] = useState<WatchedVehicle[]>([]);
@@ -33,30 +23,10 @@ export const useWatchedVehicles = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("watched_vehicles")
-        .select(`
-          id,
-          vehicle_id,
-          notify_on_sale,
-          notify_on_bid,
-          vehicles (
-            id,
-            make,
-            model,
-            year,
-            mileage,
-            current_bid,
-            image_url,
-            auction_end_time,
-            status
-          )
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+      const { data, error } = await getWatchedVehiclesForUser(user.id);
 
       if (error) throw error;
-      setWatchedVehicles(data || []);
+      setWatchedVehicles(data);
     } catch (error) {
       console.error("Error fetching watched vehicles:", error);
       toast.error("Failed to load watched vehicles");
@@ -97,15 +67,13 @@ export const useWatchedVehicles = () => {
         return false;
       }
 
-      const { error } = await supabase
-        .from("watched_vehicles")
-        .insert({
-          user_id: user.id,
-          vehicle_id: vehicleId,
-        });
+      const { error } = await addToWatchlistMutation({
+        user_id: user.id,
+        vehicle_id: vehicleId,
+      });
 
       if (error) {
-        if (error.code === "23505") {
+        if ((error as Error & { code?: string }).message?.includes("23505")) {
           toast.error("Already watching this auction");
         } else {
           throw error;
@@ -127,11 +95,7 @@ export const useWatchedVehicles = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { error } = await supabase
-        .from("watched_vehicles")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("vehicle_id", vehicleId);
+      const { error } = await removeFromWatchlistMutation(user.id, vehicleId);
 
       if (error) throw error;
 
@@ -153,14 +117,12 @@ export const useWatchedVehicles = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { error } = await supabase
-        .from("watched_vehicles")
-        .update({
-          notify_on_sale: notifyOnSale,
-          notify_on_bid: notifyOnBid,
-        })
-        .eq("user_id", user.id)
-        .eq("vehicle_id", vehicleId);
+      const { error } = await updateWatchlistPreferences(
+        user.id,
+        vehicleId,
+        notifyOnSale,
+        notifyOnBid
+      );
 
       if (error) throw error;
 
@@ -178,15 +140,10 @@ export const useWatchedVehicles = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { data, error } = await supabase
-        .from("watched_vehicles")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("vehicle_id", vehicleId)
-        .single();
+      const { data, error } = await isVehicleWatched(user.id, vehicleId);
 
-      if (error && error.code !== "PGRST116") throw error;
-      return !!data;
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error("Error checking watch status:", error);
       return false;

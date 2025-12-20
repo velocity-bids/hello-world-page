@@ -2,23 +2,14 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getCommentsForVehicle, enrichWithProfiles, fetchUserProfile } from "@/db/queries";
+import { createComment, deleteComment } from "@/db/mutations";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
-import { VerifiedBadge } from "@/components/VerifiedBadge";
-
-interface Comment {
-  id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  profiles?: {
-    display_name: string | null;
-    verified: boolean | null;
-  } | null;
-}
+import { UserAvatar } from "@/components/common";
+import type { Comment } from "@/types";
 
 interface CommentSectionProps {
   vehicleId: string;
@@ -30,88 +21,44 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch comments
   useEffect(() => {
     const fetchComments = async () => {
-      const { data, error } = await supabase
-        .from("comments")
-        .select("*")
-        .eq("vehicle_id", vehicleId)
-        .order("created_at", { ascending: false });
+      const { data, error } = await getCommentsForVehicle(vehicleId);
 
       if (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error fetching comments:", error);
-        }
+        if (import.meta.env.DEV) console.error("Error fetching comments:", error);
         return;
       }
 
-      // Fetch public profiles for each comment
-      const commentsWithProfiles = await Promise.all(
-        (data || []).map(async (comment) => {
-          const { data: profileData } = await supabase
-            .from("public_profiles")
-            .select("display_name, verified")
-            .eq("user_id", comment.user_id)
-            .maybeSingle();
-
-          return {
-            ...comment,
-            profiles: profileData,
-          };
-        })
-      );
-
+      const commentsWithProfiles = await enrichWithProfiles(data, (c) => c.user_id);
       setComments(commentsWithProfiles);
     };
 
     fetchComments();
   }, [vehicleId]);
 
-  // Subscribe to new comments
   useEffect(() => {
     const channel = supabase
       .channel(`comments-${vehicleId}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "comments",
-          filter: `vehicle_id=eq.${vehicleId}`,
-        },
+        { event: "INSERT", schema: "public", table: "comments", filter: `vehicle_id=eq.${vehicleId}` },
         async (payload) => {
-          const { data: profileData } = await supabase
-            .from("public_profiles")
-            .select("display_name, verified")
-            .eq("user_id", (payload.new as any).user_id)
-            .maybeSingle();
-
-          const newComment = {
-            ...payload.new as Comment,
-            profiles: profileData,
-          };
-
+          const profileData = await fetchUserProfile((payload.new as Comment).user_id);
+          const newComment = { ...payload.new as Comment, profiles: profileData };
           setComments((prev) => [newComment, ...prev]);
         }
       )
       .on(
         "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "comments",
-          filter: `vehicle_id=eq.${vehicleId}`,
-        },
+        { event: "DELETE", schema: "public", table: "comments", filter: `vehicle_id=eq.${vehicleId}` },
         (payload) => {
-          setComments((prev) => prev.filter((c) => c.id !== (payload.old as any).id));
+          setComments((prev) => prev.filter((c) => c.id !== (payload.old as Comment).id));
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [vehicleId]);
 
   const handleSubmit = async () => {
@@ -119,43 +66,30 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
       toast.error("Please sign in to comment");
       return;
     }
-
     if (!newComment.trim()) {
       toast.error("Comment cannot be empty");
       return;
     }
 
     setSubmitting(true);
-
-    const { error } = await supabase.from("comments").insert({
+    const { error } = await createComment({
       vehicle_id: vehicleId,
       user_id: user.id,
       content: newComment.trim(),
     });
 
     if (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error posting comment:", error);
-      }
       toast.error("Failed to post comment");
     } else {
       toast.success("Comment posted!");
       setNewComment("");
     }
-
     setSubmitting(false);
   };
 
   const handleDelete = async (commentId: string) => {
-    const { error } = await supabase
-      .from("comments")
-      .delete()
-      .eq("id", commentId);
-
+    const { error } = await deleteComment(commentId);
     if (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error deleting comment:", error);
-      }
       toast.error("Failed to delete comment");
     } else {
       toast.success("Comment deleted");
@@ -166,7 +100,6 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
     <Card className="p-6">
       <h2 className="mb-6 text-2xl font-semibold">Comments</h2>
 
-      {/* Add comment form */}
       {user ? (
         <div className="mb-6 space-y-3">
           <Textarea
@@ -186,7 +119,6 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
         </div>
       )}
 
-      {/* Comments list */}
       {comments.length === 0 ? (
         <p className="text-center text-muted-foreground">
           No comments yet. Be the first to share your thoughts!
@@ -196,25 +128,13 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
           {comments.map((comment) => (
             <div key={comment.id} className="rounded-lg border border-border p-4">
               <div className="mb-3 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Link 
-                        to={`/user/${comment.user_id}`}
-                        className="font-medium hover:text-accent transition-colors hover:underline"
-                      >
-                        {comment.profiles?.display_name || "Anonymous User"}
-                      </Link>
-                      {comment.profiles?.verified && <VerifiedBadge size="sm" />}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(comment.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
+                <UserAvatar
+                  userId={comment.user_id}
+                  displayName={comment.profiles?.display_name}
+                  verified={comment.profiles?.verified}
+                  size="md"
+                  subtitle={new Date(comment.created_at).toLocaleString()}
+                />
                 {user && user.id === comment.user_id && (
                   <Button
                     variant="ghost"
