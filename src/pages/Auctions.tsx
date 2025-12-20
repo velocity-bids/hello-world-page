@@ -2,27 +2,66 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { BasePage } from "@/components/BasePage";
 import { useFilteredVehicles } from "@/hooks/useFilteredVehicles";
 import { useVehicleBrands } from "@/hooks/useVehicleBrands";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { deleteVehicleAdmin } from "@/db/mutations";
 import VehicleCard from "@/components/VehicleCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 const Auctions = () => {
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [sliderValue, setSliderValue] = useState<number>(200000);
   const [maxMileage, setMaxMileage] = useState<number>(200000);
   const [page, setPage] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
+  const { isAdmin } = useIsAdmin();
   const { brands } = useVehicleBrands();
-  const { vehicles, loading, hasMore } = useFilteredVehicles({
+  const { vehicles, loading, hasMore, removeVehicle } = useFilteredVehicles({
     brand: selectedBrand,
     maxMileage,
     page,
     pageSize: 12
   });
+
+  const handleDeleteVehicle = (vehicleId: string, vehicleTitle: string) => {
+    setVehicleToDelete({ id: vehicleId, title: vehicleTitle });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!vehicleToDelete) return;
+    
+    setDeleting(true);
+    const { error } = await deleteVehicleAdmin(vehicleToDelete.id);
+    
+    if (error) {
+      toast.error("Failed to delete vehicle");
+    } else {
+      toast.success("Vehicle deleted successfully");
+      removeVehicle(vehicleToDelete.id);
+    }
+    
+    setDeleting(false);
+    setDeleteDialogOpen(false);
+    setVehicleToDelete(null);
+  };
 
   // Debounce mileage slider
   useEffect(() => {
@@ -133,16 +172,31 @@ const Auctions = () => {
                 </p>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {vehicles.map((vehicle) => (
-                    <VehicleCard
-                      key={vehicle.id}
-                      id={vehicle.id}
-                      title={`${vehicle.make} ${vehicle.model}`}
-                      year={vehicle.year}
-                      mileage={vehicle.mileage}
-                      currentBid={vehicle.current_bid}
-                      timeLeft={calculateTimeLeft(vehicle.auction_end_time)}
-                      image={vehicle.image_url || "/placeholder.svg"}
-                    />
+                    <div key={vehicle.id} className="relative group">
+                      <VehicleCard
+                        id={vehicle.id}
+                        title={`${vehicle.make} ${vehicle.model}`}
+                        year={vehicle.year}
+                        mileage={vehicle.mileage}
+                        currentBid={vehicle.current_bid}
+                        timeLeft={calculateTimeLeft(vehicle.auction_end_time)}
+                        image={vehicle.image_url || "/placeholder.svg"}
+                      />
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteVehicle(vehicle.id, `${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
                 
@@ -164,6 +218,36 @@ const Auctions = () => {
           </div>
         </section>
       </main>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Vehicle</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this vehicle? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {vehicleToDelete && (
+            <div className="py-4">
+              <p className="text-sm font-medium">{vehicleToDelete.title}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete Vehicle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </BasePage>
   );
 };
