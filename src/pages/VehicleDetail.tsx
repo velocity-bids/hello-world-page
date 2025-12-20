@@ -325,6 +325,8 @@ const VehicleDetail = () => {
                   reservePrice={vehicle.reserve_price}
                   reserveMet={reserveMet}
                   isOwnListing={isOwnListing}
+                  isAdmin={isAdmin}
+                  isApproved={approvalStatus === 'approved'}
                   bidAmount={bidAmount}
                   onBidAmountChange={setBidAmount}
                   onPlaceBid={handlePlaceBid}

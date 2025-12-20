@@ -12,6 +12,8 @@ interface BiddingCardProps {
   reservePrice?: number | null;
   reserveMet: boolean;
   isOwnListing: boolean;
+  isAdmin?: boolean;
+  isApproved?: boolean;
   bidAmount: string;
   onBidAmountChange: (value: string) => void;
   onPlaceBid: () => void;
@@ -32,6 +34,8 @@ export const BiddingCard = ({
   reservePrice,
   reserveMet,
   isOwnListing,
+  isAdmin = false,
+  isApproved = true,
   bidAmount,
   onBidAmountChange,
   onPlaceBid,
@@ -43,6 +47,7 @@ export const BiddingCard = ({
   minBid,
   isActive,
 }: BiddingCardProps) => {
+  const canBid = !isOwnListing && !isAdmin && isApproved;
   return (
     <Card className="p-6">
       <div className="mb-6 space-y-4">
@@ -84,9 +89,13 @@ export const BiddingCard = ({
 
       {isActive && !isEnded && (
         <div className="space-y-3">
-          {isOwnListing ? (
+          {!canBid ? (
             <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
-              You cannot bid on your own listing
+              {isOwnListing
+                ? "You cannot bid on your own listing"
+                : isAdmin
+                ? "Administrators cannot place bids"
+                : "This vehicle is pending approval"}
             </div>
           ) : (
             <>
