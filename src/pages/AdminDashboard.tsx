@@ -386,7 +386,14 @@ const AdminDashboard = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
           </Button>
-          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+            {pendingVehicles.length > 0 && (
+              <Badge variant="destructive" className="h-7 px-3 text-sm font-semibold">
+                {pendingVehicles.length} Pending Review{pendingVehicles.length !== 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
           <p className="mt-2 text-muted-foreground">
             Manage listings, users, and reports
           </p>
