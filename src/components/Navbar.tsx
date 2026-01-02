@@ -130,7 +130,11 @@ const Navbar = () => {
                             }`}
                             onClick={() => {
                               markAsRead(notification.id);
-                              navigate(`/vehicle/${notification.vehicle_id}`);
+                              if (notification.type === 'new_listing_submitted') {
+                                navigate(`/review/${notification.vehicle_id}`);
+                              } else {
+                                navigate(`/vehicle/${notification.vehicle_id}`);
+                              }
                             }}
                           >
                             <p className="text-sm">{notification.message}</p>
