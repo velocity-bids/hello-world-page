@@ -56,7 +56,7 @@ interface Vehicle {
 const ReviewListing = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const queryClient = useQueryClient();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -133,7 +133,7 @@ const ReviewListing = () => {
     setDialogOpen(false);
   };
 
-  if (adminLoading || loading) {
+  if (authLoading || adminLoading || loading) {
     return (
       <BasePage>
         <div className="flex min-h-screen items-center justify-center">
