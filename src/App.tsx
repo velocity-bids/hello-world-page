@@ -43,7 +43,6 @@ const App = () => (
                 <Route path="/vehicle/:id" element={<VehicleDetail />} />
                 <Route path="/sell" element={<CreateListing />} />
                 <Route path="/edit-listing/:id" element={<EditListing />} />
-                <Route path="/review-listing" element={<ReviewListing />} />
                 <Route path="/review/:id" element={<ReviewListing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/my-bids" element={<MyBids />} />
