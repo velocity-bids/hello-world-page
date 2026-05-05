@@ -258,6 +258,7 @@ const Auctions = () => {
                         currentBid={vehicle.current_bid}
                         timeLeft={calculateTimeLeft(vehicle.auction_end_time)}
                         image={vehicle.image_url || "/placeholder.svg"}
+                        reserveMet={vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : true}
                       />
                       {isAdmin && (
                         <Button

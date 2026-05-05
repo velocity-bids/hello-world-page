@@ -1,101 +1,148 @@
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { useFormContext, useWatch } from "react-hook-form";
+import { Star, GripVertical, X } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-import { FileUploader } from "@/components/UploadCareWidget";
-import { Button } from "@/components/ui/button";
+import { ImageUploader } from "@/components/ImageUploader";
 import { cn } from "@/lib/utils";
+import { useListingPhotos } from "@/contexts/ListingPhotosContext";
 
-import type { ListingForm } from "./schema";
+interface SortablePhotoProps {
+  id: string;
+  preview: string;
+  index: number;
+  onRemove: (id: string) => void;
+}
 
-export default function PhotosStep() {
-  const form = useFormContext<ListingForm>();
-  const photos = useWatch({ control: form.control, name: "photos" }) ?? [];
+function SortablePhoto({ id, preview, index, onRemove }: SortablePhotoProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
 
-  const updatePhotos = (nextPhotos: string[]) => {
-    form.setValue("photos", nextPhotos, { shouldDirty: true, shouldTouch: true });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
 
-  const movePhoto = (index: number, direction: -1 | 1) => {
-    const nextIndex = index + direction;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "rounded-lg border overflow-hidden bg-background select-none",
+        isDragging && "opacity-50 shadow-2xl ring-2 ring-primary z-50"
+      )}
+    >
+      <div className="relative">
+        <img src={preview} alt={`Vehicle ${index + 1}`} className="w-full h-48 object-cover" />
+        {index === 0 && (
+          <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground px-2 py-1 rounded-full">
+            <Star className="h-3 w-3 fill-current" />
+            Cover
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => onRemove(id)}
+          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+          aria-label="Remove photo"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <div className="px-3 py-2 flex items-center justify-between text-sm text-muted-foreground">
+        <span>Photo {index + 1}</span>
+        <button
+          type="button"
+          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
-    if (nextIndex < 0 || nextIndex >= photos.length) {
-      return;
-    }
+export default function PhotosStep() {
+  const { files, setFiles, previews } = useListingPhotos();
 
-    const nextPhotos = [...photos];
-    [nextPhotos[index], nextPhotos[nextIndex]] = [nextPhotos[nextIndex], nextPhotos[index]];
-    updatePhotos(nextPhotos);
+  // Each file is identified by its index as a string key
+  const ids = files.map((_, i) => String(i));
+
+  const handleFilesSelected = (incoming: File[]) => {
+    setFiles([...files, ...incoming]);
+  };
+
+  const handleRemove = (id: string) => {
+    const idx = parseInt(id);
+    const nextFiles = files.filter((_, i) => i !== idx);
+    setFiles(nextFiles);
+  };
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = ids.indexOf(active.id as string);
+    const newIndex = ids.indexOf(over.id as string);
+    setFiles(arrayMove(files, oldIndex, newIndex));
   };
 
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-500">
-      <div className="bg-card rounded-lg p-6 border">
-        <h2 className="text-xl font-semibold mb-4">Vehicle Images *</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Upload at least 5 images of your vehicle. The first image will be used as the cover photo.
-        </p>
-        <FileUploader onUploadComplete={updatePhotos} />
-        {photos.length > 0 && (
-          <p className={cn("text-sm mt-2", photos.length >= 5 ? "text-green-600" : "text-amber-600")}>
-            {photos.length >= 5 ? "✓" : "⚠"} {photos.length} of 5 minimum images uploaded
+      <div className="bg-card rounded-lg p-6 border space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold mb-1">Vehicle Images *</h2>
+          <p className="text-sm text-muted-foreground">
+            Upload at least 5 images. The first image will be used as the cover photo.
+          </p>
+        </div>
+        <ImageUploader onFilesSelected={handleFilesSelected} />
+        {files.length > 0 && (
+          <p className={cn("text-sm", files.length >= 5 ? "text-green-600" : "text-amber-600")}>
+            {files.length >= 5 ? "✓" : "⚠"} {files.length} of 5 minimum images selected
           </p>
         )}
       </div>
 
-      {photos.length > 0 && (
+      {files.length > 0 && (
         <div className="bg-card rounded-lg p-6 border space-y-4">
           <div>
             <h2 className="text-xl font-semibold mb-1">Preview & Order</h2>
             <p className="text-sm text-muted-foreground">
-              Reorder your images to choose which photo appears first in the listing.
+              Drag to reorder. Click <X className="inline h-3 w-3" /> to remove a photo.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {photos.map((url, index) => (
-              <div key={url} className="rounded-lg border overflow-hidden bg-background">
-                <img
-                  src={url}
-                  alt={`Vehicle ${index + 1}`}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2 text-sm">
-                    <span className="font-medium">Photo {index + 1}</span>
-                    {index === 0 && (
-                      <span className="inline-flex items-center gap-1 text-primary">
-                        <Star className="h-4 w-4 fill-current" />
-                        Cover
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => movePhoto(index, -1)}
-                      disabled={index === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Earlier
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => movePhoto(index, 1)}
-                      disabled={index === photos.length - 1}
-                    >
-                      Later
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={ids} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {files.map((_, index) => (
+                  <SortablePhoto
+                    key={index}
+                    id={String(index)}
+                    preview={previews[index]}
+                    index={index}
+                    onRemove={handleRemove}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
     </div>

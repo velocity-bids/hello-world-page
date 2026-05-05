@@ -41,11 +41,11 @@ const App = () => (
               <LoginModal />
               <Routes>
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/sell" element={<CreateListing />} />
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/auctions" element={<Auctions />} />
                   <Route path="/vehicle/:id" element={<VehicleDetail />} />
-                  <Route path="/sell" element={<CreateListing />} />
                   <Route path="/edit-listing/:id" element={<EditListing />} />
                   <Route path="/review/:id" element={<ReviewListing />} />
                   <Route path="/auth" element={<Auth />} />

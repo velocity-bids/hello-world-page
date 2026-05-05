@@ -63,6 +63,7 @@ const FeaturedAuctions = () => {
               currentBid={vehicle.current_bid}
               timeLeft={calculateTimeLeft(vehicle.auction_end_time)}
               image={vehicle.image_url || ""}
+              reserveMet={vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : true}
             />
           ))}
         </div>

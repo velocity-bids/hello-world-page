@@ -79,7 +79,9 @@ export const BidCard = ({ bid }: BidCardProps) => {
             <p className="text-lg font-bold text-foreground">{formatCurrency(bid.amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Current Bid</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+              {isAuctionEnded ? "Final Price" : "Current Bid"}
+            </p>
             <p className="text-lg font-bold text-foreground">{formatCurrency(bid.vehicle.current_bid)}</p>
           </div>
           <div>

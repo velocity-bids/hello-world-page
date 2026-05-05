@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Clock, Heart } from "lucide-react";
+import { CheckCircle2, Clock, Heart, XCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface BiddingCardProps {
@@ -54,14 +54,43 @@ export const BiddingCard = ({
     <Card className="p-6">
       <div className="mb-6 space-y-4">
         <div>
-          <div className="text-sm text-muted-foreground">Current Bid</div>
-          <div className="text-3xl font-bold text-bid-active">
-            {formatCurrency(currentBid)}
-          </div>
-          {bidCount > 0 && (
-            <div className="text-sm text-muted-foreground">
-              {bidCount} {bidCount === 1 ? "bid" : "bids"}
-            </div>
+          {isEnded ? (
+            <>
+              {bidCount === 0 ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <XCircle className="h-5 w-5" />
+                  <span className="text-lg font-semibold">No Bids</span>
+                </div>
+              ) : reserveMet ? (
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span className="text-lg font-semibold">Sold</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-destructive">
+                  <XCircle className="h-5 w-5" />
+                  <span className="text-lg font-semibold">Reserve Not Met</span>
+                </div>
+              )}
+              <div className="text-3xl font-bold text-foreground mt-1">
+                {formatCurrency(currentBid)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {bidCount} {bidCount === 1 ? "bid" : "bids"} • Final price
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-sm text-muted-foreground">Current Bid</div>
+              <div className="text-3xl font-bold text-bid-active">
+                {formatCurrency(currentBid)}
+              </div>
+              {bidCount > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {bidCount} {bidCount === 1 ? "bid" : "bids"}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -75,7 +104,7 @@ export const BiddingCard = ({
           <div className="text-2xl font-bold">{timeLeft}</div>
         </div>
 
-        {reservePrice && (
+        {!isEnded && reservePrice && (
           <div>
             <div className="text-sm text-muted-foreground">Reserve Status</div>
             <div

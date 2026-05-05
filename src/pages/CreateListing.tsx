@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useIdVerification } from "@/contexts/IdVerificationContext";
+import { ListingPhotosProvider, useListingPhotos } from "@/contexts/ListingPhotosContext";
 import { createVehicle } from "@/db/mutations";
 import { useAuth } from "@/hooks/useAuth";
+import { uploadFilesToUploadCare } from "@/lib/uploadcare";
 import { cn } from "@/lib/utils";
 
 import BasicInfoStep from "./create-listing/BasicInfoStep";
@@ -31,10 +33,19 @@ const steps = [
 ];
 
 export default function CreateListing() {
+  return (
+    <ListingPhotosProvider>
+      <CreateListingInner />
+    </ListingPhotosProvider>
+  );
+}
+
+function CreateListingInner() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { openLoginModal } = useAuthModal();
   const { isVerified, timeRemaining } = useIdVerification();
+  const { files } = useListingPhotos();
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,7 +97,7 @@ export default function CreateListing() {
       return;
     }
 
-    if (data.photos.length < 5) {
+    if (files.length < 5) {
       toast.error("Please upload at least 5 images");
       return;
     }
@@ -94,6 +105,10 @@ export default function CreateListing() {
     setIsSubmitting(true);
 
     try {
+      // Upload all local files to UploadCare and get CDN URLs
+      toast.loading("Uploading images...", { id: "uploading" });
+      const photoUrls = await uploadFilesToUploadCare(files);
+      toast.dismiss("uploading");
       const [hours, minutes] = data.auctionEndTime.split(":");
       const auctionDateTime = new Date(data.auctionEndDate);
       auctionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -109,8 +124,8 @@ export default function CreateListing() {
         reserve_price: data.reservePrice,
         starting_bid: data.startingBid || 0,
         auction_end_time: auctionDateTime.toISOString(),
-        images: data.photos,
-        image_url: data.photos[0],
+        images: photoUrls,
+        image_url: photoUrls[0],
         status: "active",
         horsepower: data.horsepower || null,
         engine_type: data.engineType || null,
@@ -155,7 +170,7 @@ export default function CreateListing() {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      if ((form.getValues("photos") ?? []).length < 5) {
+      if (files.length < 5) {
         toast.error("Please upload at least 5 images");
         return;
       }
