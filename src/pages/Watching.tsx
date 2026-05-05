@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { formatTimeRemaining } from "@/hooks/useCountdown";
 import { Eye, Mail, Bell, Trash2 } from "lucide-react";
+import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 const Watching = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const Watching = () => {
                     <div className="relative">
                       <img
                         src={vehicle.image_url || "/placeholder.svg"}
-                        alt={`${vehicle.make} ${vehicle.model}`}
+                        alt={getVehicleTitle(vehicle)}
                         className="h-48 w-full object-cover transition-transform group-hover:scale-105"
                       />
                       <Badge variant={isEnded ? "secondary" : "default"} className="absolute top-2 right-2">
@@ -86,7 +87,7 @@ const Watching = () => {
                     </div>
                     <CardContent className="p-4">
                       <h3 className="text-lg font-semibold mb-1">
-                        {vehicle.year} {vehicle.make} {vehicle.model}
+                        {getVehicleTitle(vehicle)}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-3">
                         {vehicle.mileage.toLocaleString()} km
@@ -94,7 +95,7 @@ const Watching = () => {
                       <div className="mb-4">
                         <p className="text-sm text-muted-foreground">Current Bid</p>
                         <p className="text-2xl font-bold text-primary">
-                          {vehicle.current_bid.toLocaleString()} €
+                          {formatCurrency(vehicle.current_bid)}
                         </p>
                       </div>
 

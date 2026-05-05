@@ -25,6 +25,7 @@ import { Clock, Euro, Gavel, Eye, AlertCircle, Pencil, Trash2, Loader2 } from "l
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import type { Vehicle } from "@/types";
+import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 interface VehicleWithApproval extends Vehicle {
   approval_status: string;
@@ -159,7 +160,7 @@ const MyListings = () => {
             { label: "Active Auctions", value: stats.active, icon: Gavel },
             { label: "Pending Approval", value: stats.pending, icon: AlertCircle },
             { label: "Total Bids", value: stats.totalBids, icon: Euro },
-            { label: "Current Value", value: `${stats.totalValue.toLocaleString()} €`, icon: Euro },
+            { label: "Current Value", value: formatCurrency(stats.totalValue), icon: Euro },
           ].map(({ label, value, icon: Icon }) => (
             <Card key={label} className="p-6">
               <div className="flex items-center justify-between">
@@ -183,7 +184,7 @@ const MyListings = () => {
         ) : (
           <div className="space-y-4">
             {vehicles.map((vehicle) => {
-              const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+              const vehicleTitle = getVehicleTitle(vehicle);
               const canDelete = canDeleteListing(vehicle);
               const isDeleting = deletingId === vehicle.id;
 
@@ -211,7 +212,7 @@ const MyListings = () => {
                       <div className="mb-4 grid gap-4 md:grid-cols-3">
                         <div>
                           <p className="text-sm text-muted-foreground">Current Bid</p>
-                          <p className="text-lg font-bold">{vehicle.current_bid?.toLocaleString() || 0} €</p>
+                          <p className="text-lg font-bold">{formatCurrency(vehicle.current_bid || 0)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground">Number of Bids</p>
@@ -226,7 +227,7 @@ const MyListings = () => {
                         <div className="mb-4">
                           <p className="text-sm text-muted-foreground">Reserve Price</p>
                           <p className="font-semibold">
-                            {vehicle.reserve_price.toLocaleString()} €
+                            {formatCurrency(vehicle.reserve_price)}
                             {vehicle.current_bid >= vehicle.reserve_price && (
                               <Badge variant="default" className="ml-2">Reserve Met</Badge>
                             )}

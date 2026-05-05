@@ -45,30 +45,31 @@ export const useNotifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // Scope subscription to current user's notifications only
-    let userId: string | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    // Await user before subscribing so the filter has the correct userId
     supabase.auth.getUser().then(({ data: { user } }) => {
-      userId = user?.id ?? null;
+      if (!user) return;
+
+      channel = supabase
+        .channel("notifications-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchNotifications();
+          }
+        )
+        .subscribe();
     });
 
-    const channel = supabase
-      .channel("notifications-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: userId ? `user_id=eq.${userId}` : undefined,
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 

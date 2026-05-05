@@ -1,27 +1,22 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { BasePage } from "@/components/BasePage";
 import { useFilteredVehicles } from "@/hooks/useFilteredVehicles";
 import { useVehicleBrands } from "@/hooks/useVehicleBrands";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { deleteVehicleAdmin } from "@/db/mutations";
 import VehicleCard from "@/components/VehicleCard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Loader2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { getVehicleModels } from "@/db/queries";
+import { getVehicleTitle } from "@/lib/utils";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1989 }, (_, i) => CURRENT_YEAR - i);
@@ -55,8 +50,6 @@ const Auctions = () => {
   const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [models, setModels] = useState<string[]>([]);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const { isAdmin } = useIsAdmin();
   const { brands } = useVehicleBrands();
@@ -107,30 +100,9 @@ const Auctions = () => {
     setPage(0);
   }, [selectedBrands, selectedModel, yearFrom, yearTo, selectedMileage]);
 
-  // Infinite scroll observer
-  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
-    const [target] = entries;
-    if (target.isIntersecting && hasMore && !loading) {
-      setPage(prev => prev + 1);
-    }
-  }, [hasMore, loading]);
-
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element) return;
-
-    observerRef.current = new IntersectionObserver(handleObserver, {
-      threshold: 0.1
-    });
-
-    observerRef.current.observe(element);
-
-    return () => {
-      if (observerRef.current && element) {
-        observerRef.current.unobserve(element);
-      }
-    };
-  }, [handleObserver]);
+  // Infinite scroll
+  const onLoadMore = useCallback(() => setPage(prev => prev + 1), []);
+  const { loadMoreRef } = useInfiniteScroll({ hasMore, loading, onLoadMore });
 
   const calculateTimeLeft = (endTime: string) => {
     const end = new Date(endTime).getTime();
@@ -281,7 +253,7 @@ const Auctions = () => {
                     <div key={vehicle.id} className="relative group">
                       <VehicleCard
                         id={vehicle.id}
-                        title={`${vehicle.make} ${vehicle.model}`}
+                        title={getVehicleTitle(vehicle)}
                         year={vehicle.year}
                         mileage={vehicle.mileage}
                         currentBid={vehicle.current_bid}
@@ -296,7 +268,7 @@ const Auctions = () => {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleDeleteVehicle(vehicle.id, `${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+                            handleDeleteVehicle(vehicle.id, getVehicleTitle(vehicle));
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -325,35 +297,22 @@ const Auctions = () => {
         </section>
       </main>
 
-      {/* Delete confirmation dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Vehicle</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this vehicle? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {vehicleToDelete && (
-            <div className="py-4">
-              <p className="text-sm font-medium">{vehicleToDelete.title}</p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleting}
-            >
-              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete Vehicle
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Vehicle"
+        description="Are you sure you want to delete this vehicle? This action cannot be undone."
+        confirmLabel="Delete Vehicle"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={confirmDelete}
+      >
+        {vehicleToDelete && (
+          <div className="py-4">
+            <p className="text-sm font-medium">{vehicleToDelete.title}</p>
+          </div>
+        )}
+      </ConfirmDialog>
     </BasePage>
   );
 };

@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { User } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { Bid } from "@/types";
+import { formatCurrency } from "@/lib/utils";
 
 interface RecentBidsCardProps {
   bids: Bid[];
@@ -56,7 +57,7 @@ export const RecentBidsCard = ({ bids, onViewAll }: RecentBidsCardProps) => {
                     </Badge>
                   )}
                   <span className="text-sm font-bold text-bid-active whitespace-nowrap">
-                    {bid.amount.toLocaleString()} €
+                    {formatCurrency(bid.amount)}
                   </span>
                 </div>
               </div>

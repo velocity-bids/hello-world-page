@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Clock, Gavel, Package } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 interface Listing {
   id: string;
@@ -90,7 +91,7 @@ export const ListingGrid = ({
                     {listing.image_url ? (
                       <img
                         src={listing.image_url}
-                        alt={`${listing.year} ${listing.make} ${listing.model}`}
+                        alt={getVehicleTitle(listing)}
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
@@ -110,7 +111,7 @@ export const ListingGrid = ({
                   <CardContent className="p-4 space-y-3">
                     <div>
                       <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
-                        {listing.year} {listing.make} {listing.model}
+                        {getVehicleTitle(listing)}
                       </h3>
                     </div>
                     
@@ -121,7 +122,7 @@ export const ListingGrid = ({
                           Current Bid
                         </span>
                         <span className="font-bold">
-                          {listing.current_bid.toLocaleString()} €
+                          {formatCurrency(listing.current_bid)}
                         </span>
                       </div>
                       

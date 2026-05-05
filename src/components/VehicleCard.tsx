@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { VehicleCardBase } from "@/components/common";
 import { Clock, Gauge, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatCurrency } from "@/lib/utils";
 
 interface VehicleCardProps {
   id: string;
@@ -24,7 +25,7 @@ const VehicleCard = ({
   image,
   featured = false,
 }: VehicleCardProps) => {
-  const displayTitle = `${year} ${title}`;
+  const displayTitle = title.startsWith(`${year} `) ? title : `${year} ${title}`;
 
   return (
     <VehicleCardBase
@@ -47,7 +48,7 @@ const VehicleCard = ({
           <div className="text-sm font-medium">
             <span className="text-muted-foreground">Current Bid:</span>{" "}
             <span className="text-bid-active">
-              {currentBid.toLocaleString()} €
+              {formatCurrency(currentBid)}
             </span>
           </div>
         </div>

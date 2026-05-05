@@ -44,30 +44,31 @@ export const useWatchedVehicles = () => {
   useEffect(() => {
     fetchWatchedVehicles();
 
-    // Scope subscription to the current user to avoid triggering on other users' changes
-    let userId: string | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    // Await user before subscribing so the filter has the correct userId
     supabase.auth.getUser().then(({ data: { user } }) => {
-      userId = user?.id ?? null;
+      if (!user) return;
+
+      channel = supabase
+        .channel("watched-vehicles-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "watched_vehicles",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchWatchedVehicles();
+          }
+        )
+        .subscribe();
     });
 
-    const channel = supabase
-      .channel("watched-vehicles-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "watched_vehicles",
-          filter: userId ? `user_id=eq.${userId}` : undefined,
-        },
-        () => {
-          fetchWatchedVehicles();
-        }
-      )
-      .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 

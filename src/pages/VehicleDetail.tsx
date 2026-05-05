@@ -15,16 +15,18 @@ import { ReportModal } from "@/components/ReportModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehicleById, getRecentBidsForVehicle, fetchUserProfile, enrichWithProfiles } from "@/db/queries";
-import { updateVehicleApprovalStatus } from "@/db/mutations";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useWatchedVehicles } from "@/hooks/useWatchedVehicles";
+import { useBidSubmission } from "@/hooks/useBidSubmission";
+import { useAdminApproval } from "@/hooks/useAdminApproval";
 import { toast } from "sonner";
 import { BidHistoryModal } from "@/components/BidHistoryModal";
 import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
 import type { Vehicle as VehicleType, Bid, UserProfile } from "@/types";
+import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 interface VehicleWithProfile extends VehicleType {
   profiles?: UserProfile | null;
@@ -41,16 +43,30 @@ const VehicleDetail = () => {
   const [vehicle, setVehicle] = useState<VehicleWithProfile | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [winningBidderId, setWinningBidderId] = useState<string | null>(null);
-  const [bidAmount, setBidAmount] = useState("");
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [watching, setWatching] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const [showBidHistory, setShowBidHistory] = useState(false);
-  const [adminNotes, setAdminNotes] = useState("");
-  const [adminSubmitting, setAdminSubmitting] = useState(false);
 
   const { timeLeft, isEnded } = useCountdown(vehicle?.auction_end_time || null);
+
+  const { bidAmount, setBidAmount, submitting, minBid, handlePlaceBid, handleQuickBid } =
+    useBidSubmission({
+      vehicle,
+      userId: user?.id,
+      onSuccess: (amount) => {
+        setVehicle((prev) =>
+          prev ? { ...prev, current_bid: amount, bid_count: (prev.bid_count || 0) + 1 } : null
+        );
+      },
+    });
+
+  const { adminNotes, setAdminNotes, adminSubmitting, handleAdminAction } = useAdminApproval({
+    vehicleId: vehicle?.id,
+    onStatusChange: (status, notes) => {
+      setVehicle((prev) => (prev ? { ...prev, approval_status: status, admin_notes: notes } : null));
+    },
+  });
 
   // Check if user is watching this vehicle
   useEffect(() => {
@@ -58,7 +74,6 @@ const VehicleDetail = () => {
       setWatching(false);
       return;
     }
-    console.log("🚀 ~ VehicleDetail ~ user:", user)
 
     const checkWatchStatus = async () => {
       const isWatched = await isWatching(id);
@@ -155,7 +170,7 @@ const VehicleDetail = () => {
           setBids((prev) => [newBid, ...prev].slice(0, 3));
           setWinningBidderId((payload.new as Bid).bidder_id);
           toast.success("New bid placed!", {
-            description: `${(payload.new as Bid).amount.toLocaleString()} €`,
+            description: `${formatCurrency((payload.new as Bid).amount)}`,
           });
         }
       )
@@ -167,50 +182,13 @@ const VehicleDetail = () => {
     };
   }, [id]);
 
-  const handlePlaceBid = async () => {
+  const handlePlaceBidWithAuth = async () => {
     if (!user) {
       toast.error("Please sign in to place a bid");
       openLoginModal();
       return;
     }
-
-    if (!bidAmount || !vehicle) return;
-
-    const amount = parseFloat(bidAmount);
-    const startingBid = (vehicle as any).starting_bid || 0;
-    const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : Math.max(startingBid, 100);
-    
-    if (amount < minBid) {
-      toast.error(`Minimum bid is $${minBid.toLocaleString()}`);
-      return;
-    }
-
-    setSubmitting(true);
-
-    const { data, error } = await supabase.rpc("place_bid", {
-      p_vehicle_id: vehicle.id,
-      p_amount: amount,
-    });
-
-    if (error) {
-      toast.error("Failed to place bid. Please try again.");
-    } else if (data && typeof data === "object" && "error" in data && data.error) {
-      toast.error(String(data.error));
-    } else {
-      toast.success("Bid placed successfully!");
-      setBidAmount("");
-      setVehicle((prev) =>
-        prev
-          ? { ...prev, current_bid: amount, bid_count: (prev.bid_count || 0) + 1 }
-          : null
-      );
-    }
-
-    setSubmitting(false);
-  };
-
-  const handleQuickBid = (increment: number) => {
-    setBidAmount(String((vehicle?.current_bid || 0) + increment));
+    await handlePlaceBid();
   };
 
   const handleWatchToggle = async () => {
@@ -233,22 +211,6 @@ const VehicleDetail = () => {
     }
     
     setWatchLoading(false);
-  };
-
-  const handleAdminAction = async (action: 'approved' | 'declined') => {
-    if (!vehicle) return;
-    
-    setAdminSubmitting(true);
-    const { error } = await updateVehicleApprovalStatus(vehicle.id, action, adminNotes || null);
-    
-    if (error) {
-      toast.error(`Failed to ${action === 'approved' ? 'approve' : 'decline'} listing`);
-    } else {
-      toast.success(`Listing ${action === 'approved' ? 'approved' : 'declined'} successfully`);
-      setVehicle(prev => prev ? { ...prev, approval_status: action, admin_notes: adminNotes } : null);
-      setAdminNotes("");
-    }
-    setAdminSubmitting(false);
   };
 
   if (loading) {
@@ -282,10 +244,8 @@ const VehicleDetail = () => {
   }
 
   const reserveMet = vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : false;
-  const startingBid = (vehicle as any).starting_bid || 0;
-  const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : Math.max(startingBid, 100);
   const canShowFeedback = isEnded && winningBidderId && (user?.id === vehicle.seller_id || user?.id === winningBidderId);
-  const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  const vehicleTitle = getVehicleTitle(vehicle);
   const vehicleUrl = typeof window !== "undefined" ? window.location.href : "";
   const showAdminPanel = isAdmin && !isOwnListing;
 
@@ -352,7 +312,7 @@ const VehicleDetail = () => {
                   isApproved={approvalStatus === 'approved'}
                   bidAmount={bidAmount}
                   onBidAmountChange={setBidAmount}
-                  onPlaceBid={handlePlaceBid}
+                  onPlaceBid={handlePlaceBidWithAuth}
                   onQuickBid={handleQuickBid}
                   onWatchToggle={handleWatchToggle}
                   submitting={submitting}

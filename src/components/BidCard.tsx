@@ -5,6 +5,7 @@ import { VehicleCardBase } from "@/components/common";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowUpRight, Eye } from "lucide-react";
 import type { BidWithVehicle } from "@/types";
+import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 interface BidCardProps {
   bid: BidWithVehicle;
@@ -19,7 +20,7 @@ export const BidCard = ({ bid }: BidCardProps) => {
     addSuffix: true,
   });
 
-  const displayTitle = `${bid.vehicle.year} ${bid.vehicle.make} ${bid.vehicle.model}`;
+  const displayTitle = getVehicleTitle(bid.vehicle);
   
   const getStatusBadge = () => {
     if (isAuctionEnded) {
@@ -75,11 +76,11 @@ export const BidCard = ({ bid }: BidCardProps) => {
         <div className="grid grid-cols-3 gap-4 py-4 border-y border-border">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Your Bid</p>
-            <p className="text-lg font-bold text-foreground">{bid.amount.toLocaleString()} €</p>
+            <p className="text-lg font-bold text-foreground">{formatCurrency(bid.amount)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Current Bid</p>
-            <p className="text-lg font-bold text-foreground">{bid.vehicle.current_bid.toLocaleString()} €</p>
+            <p className="text-lg font-bold text-foreground">{formatCurrency(bid.vehicle.current_bid)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">

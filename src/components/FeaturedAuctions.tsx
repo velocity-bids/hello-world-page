@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import VehicleCard from "./VehicleCard";
 import { useVehicles } from "@/hooks/useVehicles";
 import { Skeleton } from "./ui/skeleton";
+import { getVehicleTitle } from "@/lib/utils";
 
 const FeaturedAuctions = () => {
   const { vehicles, loading } = useVehicles();
@@ -56,7 +57,7 @@ const FeaturedAuctions = () => {
             <VehicleCard
               key={vehicle.id}
               id={vehicle.id}
-              title={`${vehicle.make} ${vehicle.model}`}
+              title={getVehicleTitle(vehicle)}
               year={vehicle.year}
               mileage={vehicle.mileage}
               currentBid={vehicle.current_bid}

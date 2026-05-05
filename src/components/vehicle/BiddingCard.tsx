@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Clock, Heart } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface BiddingCardProps {
   currentBid: number;
@@ -55,7 +56,7 @@ export const BiddingCard = ({
         <div>
           <div className="text-sm text-muted-foreground">Current Bid</div>
           <div className="text-3xl font-bold text-bid-active">
-            {currentBid.toLocaleString()} €
+            {formatCurrency(currentBid)}
           </div>
           {bidCount > 0 && (
             <div className="text-sm text-muted-foreground">

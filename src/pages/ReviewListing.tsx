@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 interface Vehicle {
   id: string;
@@ -201,7 +202,7 @@ const ReviewListing = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-3xl">
-                    {vehicle.year} {vehicle.make} {vehicle.model}
+                    {getVehicleTitle(vehicle)}
                   </CardTitle>
                   {getStatusBadge(vehicle.approval_status)}
                 </div>
@@ -209,7 +210,7 @@ const ReviewListing = () => {
               <CardContent>
                 <VehicleGallery
                   images={vehicle.images || []}
-                  vehicleName={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                  vehicleName={getVehicleTitle(vehicle)}
                 />
               </CardContent>
             </Card>
@@ -267,7 +268,7 @@ const ReviewListing = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Current Bid</p>
                   <p className="text-2xl font-bold">
-                    {vehicle.current_bid.toLocaleString()} €
+                    {formatCurrency(vehicle.current_bid)}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {vehicle.bid_count} bids
@@ -280,7 +281,7 @@ const ReviewListing = () => {
                       Reserve Price
                     </p>
                     <p className="text-lg font-semibold">
-                      {vehicle.reserve_price.toLocaleString()} €
+                      {formatCurrency(vehicle.reserve_price)}
                     </p>
                   </div>
                 )}
