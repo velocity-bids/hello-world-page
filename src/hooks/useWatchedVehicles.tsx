@@ -44,7 +44,12 @@ export const useWatchedVehicles = () => {
   useEffect(() => {
     fetchWatchedVehicles();
 
-    // Set up real-time subscription
+    // Scope subscription to the current user to avoid triggering on other users' changes
+    let userId: string | null = null;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      userId = user?.id ?? null;
+    });
+
     const channel = supabase
       .channel("watched-vehicles-changes")
       .on(
@@ -53,6 +58,7 @@ export const useWatchedVehicles = () => {
           event: "*",
           schema: "public",
           table: "watched_vehicles",
+          filter: userId ? `user_id=eq.${userId}` : undefined,
         },
         () => {
           fetchWatchedVehicles();
@@ -81,7 +87,7 @@ export const useWatchedVehicles = () => {
       });
 
       if (error) {
-        if ((error as Error & { code?: string }).message?.includes("23505")) {
+        if ((error as Error & { code?: string }).code === "23505") {
           toast.error("Already watching this auction");
         } else {
           throw error;

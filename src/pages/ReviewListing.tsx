@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,8 +144,7 @@ const ReviewListing = () => {
   }
 
   if (!user || !isAdmin) {
-    navigate("/");
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   if (!vehicle) {

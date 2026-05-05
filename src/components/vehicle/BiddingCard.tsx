@@ -143,17 +143,21 @@ export const BiddingCard = ({
               </p>
             </>
           )}
-          <Button
-            variant={watching ? "default" : "outline"}
-            className="w-full"
-            onClick={onWatchToggle}
-            disabled={watchLoading}
-          >
-            <Heart className={`h-4 w-4 mr-2 ${watching ? "fill-current" : ""}`} />
-            {watchLoading ? "Loading..." : watching ? "Watching" : "Watch Auction"}
-          </Button>
         </div>
       )}
+
+      {/* Watch button is always available regardless of auction status */}
+      <div className="mt-3">
+        <Button
+          variant={watching ? "default" : "outline"}
+          className="w-full"
+          onClick={onWatchToggle}
+          disabled={watchLoading}
+        >
+          <Heart className={`h-4 w-4 mr-2 ${watching ? "fill-current" : ""}`} />
+          {watchLoading ? "Loading..." : watching ? "Watching" : "Watch Auction"}
+        </Button>
+      </div>
     </Card>
   );
 };

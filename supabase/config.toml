@@ -1,4 +1,4 @@
-project_id = "qvctkrnfkxblwffyefty"
+project_id = "roqdreilzdxvrpofdzwa"
 
 [functions.check-auction-endings]
 verify_jwt = false

@@ -74,17 +74,19 @@ export async function createVehicle(data: CreateVehicleData): Promise<MutationRe
 }
 
 /**
- * Update a vehicle listing by ID
+ * Update a vehicle listing by ID, restricted to the owner
  */
 export async function updateVehicle(
   vehicleId: string,
+  sellerId: string,
   data: UpdateVehicleData
 ): Promise<MutationResult> {
   try {
     const { error } = await supabase
       .from("vehicles")
       .update(data)
-      .eq("id", vehicleId);
+      .eq("id", vehicleId)
+      .eq("seller_id", sellerId);
     if (error) throw error;
     return { data: null, error: null };
   } catch (error) {
@@ -123,6 +125,17 @@ export async function deleteVehicle(
   sellerId: string
 ): Promise<MutationResult> {
   try {
+    // Guard: reject deletion if any bids have been placed
+    const { count, error: countError } = await supabase
+      .from("bids")
+      .select("id", { count: "exact", head: true })
+      .eq("vehicle_id", vehicleId);
+
+    if (countError) throw countError;
+    if (count && count > 0) {
+      return { data: null, error: new Error("Cannot delete a listing that has bids") };
+    }
+
     const { error } = await supabase
       .from("vehicles")
       .delete()

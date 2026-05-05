@@ -1,8 +1,8 @@
 -- Add new fields to profiles table
 ALTER TABLE public.profiles
-ADD COLUMN date_of_birth date,
-ADD COLUMN id_document_url text,
-ADD COLUMN address text;
+ADD COLUMN IF NOT EXISTS date_of_birth date,
+ADD COLUMN IF NOT EXISTS id_document_url text,
+ADD COLUMN IF NOT EXISTS address text;
 
 -- Create storage bucket for ID documents
 INSERT INTO storage.buckets (id, name, public)

@@ -22,8 +22,12 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchComments = async () => {
       const { data, error } = await getCommentsForVehicle(vehicleId);
+
+      if (cancelled) return;
 
       if (error) {
         if (import.meta.env.DEV) console.error("Error fetching comments:", error);
@@ -31,10 +35,11 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
       }
 
       const commentsWithProfiles = await enrichWithProfiles(data, (c) => c.user_id);
-      setComments(commentsWithProfiles);
+      if (!cancelled) setComments(commentsWithProfiles);
     };
 
     fetchComments();
+    return () => { cancelled = true; };
   }, [vehicleId]);
 
   useEffect(() => {
@@ -88,7 +93,8 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
   };
 
   const handleDelete = async (commentId: string) => {
-    const { error } = await deleteComment(commentId);
+    if (!user) return;
+    const { error } = await deleteComment(commentId, user.id);
     if (error) {
       toast.error("Failed to delete comment");
     } else {

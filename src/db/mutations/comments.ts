@@ -21,14 +21,15 @@ export async function createComment(data: CreateCommentData): Promise<MutationRe
 }
 
 /**
- * Delete a comment by ID
+ * Delete a comment by ID, scoped to the owning user
  */
-export async function deleteComment(commentId: string): Promise<MutationResult> {
+export async function deleteComment(commentId: string, userId: string): Promise<MutationResult> {
   try {
     const { error } = await supabase
       .from("comments")
       .delete()
-      .eq("id", commentId);
+      .eq("id", commentId)
+      .eq("user_id", userId);
     if (error) throw error;
     return { data: null, error: null };
   } catch (error) {

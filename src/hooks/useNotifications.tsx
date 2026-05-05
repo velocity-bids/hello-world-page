@@ -45,7 +45,12 @@ export const useNotifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // Set up real-time subscription
+    // Scope subscription to current user's notifications only
+    let userId: string | null = null;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      userId = user?.id ?? null;
+    });
+
     const channel = supabase
       .channel("notifications-changes")
       .on(
@@ -54,6 +59,7 @@ export const useNotifications = () => {
           event: "*",
           schema: "public",
           table: "notifications",
+          filter: userId ? `user_id=eq.${userId}` : undefined,
         },
         () => {
           fetchNotifications();
@@ -68,7 +74,10 @@ export const useNotifications = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await markNotificationAsRead(notificationId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await markNotificationAsRead(notificationId, user.id);
 
       if (error) throw error;
 

@@ -2,16 +2,18 @@ import { supabase } from "@/integrations/supabase/client";
 import type { MutationResult } from "./types";
 
 /**
- * Mark a single notification as read
+ * Mark a single notification as read (scoped to the owning user)
  */
 export async function markNotificationAsRead(
-  notificationId: string
+  notificationId: string,
+  userId: string
 ): Promise<MutationResult> {
   try {
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
-      .eq("id", notificationId);
+      .eq("id", notificationId)
+      .eq("user_id", userId);
     if (error) throw error;
     return { data: null, error: null };
   } catch (error) {

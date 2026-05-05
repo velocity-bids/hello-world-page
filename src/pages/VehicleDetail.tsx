@@ -84,6 +84,8 @@ const VehicleDetail = () => {
         return;
       }
 
+      // Non-approved listings are only visible to their seller or admins.
+      // isAdmin is checked separately; defer access check to render where isAdmin is resolved.
       const sellerProfile = await fetchUserProfile(data.seller_id);
       setVehicle({ ...data, profiles: sellerProfile });
       setLoading(false);
@@ -151,6 +153,7 @@ const VehicleDetail = () => {
           const profileData = await fetchUserProfile((payload.new as Bid).bidder_id);
           const newBid = { ...payload.new as Bid, profiles: profileData };
           setBids((prev) => [newBid, ...prev].slice(0, 3));
+          setWinningBidderId((payload.new as Bid).bidder_id);
           toast.success("New bid placed!", {
             description: `$${(payload.new as Bid).amount.toLocaleString()}`,
           });
@@ -196,6 +199,11 @@ const VehicleDetail = () => {
     } else {
       toast.success("Bid placed successfully!");
       setBidAmount("");
+      setVehicle((prev) =>
+        prev
+          ? { ...prev, current_bid: amount, bid_count: (prev.bid_count || 0) + 1 }
+          : null
+      );
     }
 
     setSubmitting(false);
@@ -257,7 +265,22 @@ const VehicleDetail = () => {
 
   if (!vehicle) return null;
 
+  const approvalStatus = (vehicle as any).approval_status || 'pending';
   const isOwnListing = user?.id === vehicle.seller_id;
+
+  // Block public access to non-approved listings
+  if (!isAdmin && !isOwnListing && approvalStatus !== 'approved') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        <main className="flex flex-1 items-center justify-center">
+          <p className="text-muted-foreground">This listing is not available.</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const reserveMet = vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : false;
   const startingBid = (vehicle as any).starting_bid || 0;
   const minBid = vehicle.current_bid > 0 ? vehicle.current_bid + 100 : Math.max(startingBid, 100);
@@ -265,7 +288,6 @@ const VehicleDetail = () => {
   const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
   const vehicleUrl = typeof window !== "undefined" ? window.location.href : "";
   const showAdminPanel = isAdmin && !isOwnListing;
-  const approvalStatus = (vehicle as any).approval_status || 'pending';
 
   return (
     <div className="flex min-h-screen flex-col">

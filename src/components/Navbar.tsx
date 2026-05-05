@@ -34,6 +34,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  console.log("🚀 ~ Navbar ~ user:", user)
   const { isAdmin } = useIsAdmin();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { openLoginModal } = useAuthModal();

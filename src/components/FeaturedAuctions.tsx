@@ -1,9 +1,17 @@
+import { useState, useEffect } from "react";
 import VehicleCard from "./VehicleCard";
 import { useVehicles } from "@/hooks/useVehicles";
 import { Skeleton } from "./ui/skeleton";
 
 const FeaturedAuctions = () => {
   const { vehicles, loading } = useVehicles();
+  const [, setTick] = useState(0);
+
+  // Re-render every minute so countdown strings stay fresh
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const calculateTimeLeft = (auctionEndTime: string) => {
     const end = new Date(auctionEndTime);

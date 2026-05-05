@@ -78,7 +78,13 @@ export function ReportModal({ vehicleId, vehicleTitle }: ReportModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        setReason("");
+        setDescription("");
+      }
+      setOpen(isOpen);
+    }}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Flag className="h-4 w-4" />

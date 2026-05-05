@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface ProfileHeaderProps {
@@ -40,7 +40,9 @@ export const ProfileHeader = ({ avatarUrl, displayName, memberSince, bio, verifi
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span className="text-sm">
-                Member since {format(new Date(memberSince), "MMMM yyyy")}
+                {memberSince && isValid(new Date(memberSince))
+                  ? `Member since ${format(new Date(memberSince), "MMMM yyyy")}`
+                  : "Member"}
               </span>
             </div>
             

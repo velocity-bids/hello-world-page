@@ -28,9 +28,13 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
   useEffect(() => {
     if (!isOpen || !vehicleId) return;
 
+    let cancelled = false;
+
     const fetchAllBids = async () => {
       setLoading(true);
       const { data, error } = await getAllBidsForVehicle(vehicleId);
+
+      if (cancelled) return;
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -42,11 +46,14 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
       }
 
       const bidsWithProfiles = await enrichWithProfiles(data, (bid) => bid.bidder_id);
-      setBids(bidsWithProfiles);
-      setLoading(false);
+      if (!cancelled) {
+        setBids(bidsWithProfiles);
+        setLoading(false);
+      }
     };
 
     fetchAllBids();
+    return () => { cancelled = true; };
   }, [isOpen, vehicleId]);
 
   return (

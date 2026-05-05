@@ -9,17 +9,17 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    // getSession() catches the session if detectSessionInUrl (async PKCE exchange)
+    // completes before onAuthStateChange fires INITIAL_SESSION.
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -93,16 +93,14 @@ export const useAuth = () => {
 
   const signInWithGoogle = async () => {
     try {
-      const callbackUrl = import.meta.env.DEV
-        ? "http://localhost:8080/auth/callback"
-        : "https://velocity-bids.github.io/auth/callback";
-
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error,...rest } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: callbackUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
+      console.log("🚀 ~ signInWithGoogle ~ rest:", rest)
+      console.log("🚀 ~ signInWithGoogle ~ error:", error)
 
       if (error) throw error;
       return { error: null };
@@ -117,7 +115,7 @@ export const useAuth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

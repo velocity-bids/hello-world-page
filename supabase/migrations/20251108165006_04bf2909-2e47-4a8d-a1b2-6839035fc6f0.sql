@@ -25,7 +25,7 @@ USING (bucket_id = 'vehicle-images' AND auth.uid()::text = (storage.foldername(n
 
 -- Add images column to vehicles table to support multiple images
 ALTER TABLE public.vehicles
-ADD COLUMN images text[] DEFAULT '{}';
+ADD COLUMN IF NOT EXISTS images text[] DEFAULT '{}';
 
 -- Update image_url to be optional since we'll use images array
 ALTER TABLE public.vehicles

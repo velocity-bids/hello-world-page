@@ -77,15 +77,17 @@ export const LoginModal = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     const result = await signInWithGoogle();
-    setIsLoading(false);
-    if (!result.error) closeLoginModal();
+    // Only clear loading on error — on success the browser navigates away
+    if (result.error) setIsLoading(false);
   };
 
   const handleAppleSignIn = async () => {
     setIsLoading(true);
     const result = await signInWithApple();
-    setIsLoading(false);
-    if (!result.error) closeLoginModal();
+    if (result.error) {
+      setIsLoading(false);
+      closeLoginModal();
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {

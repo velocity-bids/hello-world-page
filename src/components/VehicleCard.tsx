@@ -29,7 +29,7 @@ const VehicleCard = ({
   return (
     <VehicleCardBase
       id={id}
-      image={`${image}-/resize/322x/`}
+      image={image ? `${image}-/resize/322x/` : "/placeholder.svg"}
       title={displayTitle}
       badge={
         featured ? (
@@ -66,7 +66,7 @@ const VehicleCard = ({
             </div>
             <div className="flex items-center gap-1">
               <Gauge className="h-4 w-4" />
-              <span>{mileage.toLocaleString()} mi</span>
+              <span>{mileage.toLocaleString()} km</span>
             </div>
           </div>
         </div>

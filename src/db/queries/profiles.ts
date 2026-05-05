@@ -117,7 +117,7 @@ export const getOwnProfile = async (userId: string): Promise<QueryResult<FullPro
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
     return { data, error: null };

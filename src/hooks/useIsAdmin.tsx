@@ -19,6 +19,10 @@ export const useIsAdmin = () => {
         return;
       }
 
+      // Reset eagerly so previous user's admin status never leaks into the next session
+      setIsAdmin(false);
+      setLoading(true);
+
       const { data, error } = await checkUserIsAdmin(user.id);
 
       if (error) {

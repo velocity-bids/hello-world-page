@@ -82,11 +82,9 @@ const ProfileSettings = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from("id-documents")
-        .getPublicUrl(fileName);
-
-      setIdDocumentUrl(data.publicUrl);
+      // Store only the file path (not a public URL) so the document stays private.
+      // Access requires a signed URL generated server-side.
+      setIdDocumentUrl(fileName);
       toast.success("ID document uploaded successfully");
     } catch (error: unknown) {
       toast.error("Failed to upload ID document");

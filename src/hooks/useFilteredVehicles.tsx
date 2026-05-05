@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getFilteredVehicles } from "@/db/queries";
 import type { Vehicle } from "@/types";
 
@@ -14,12 +14,17 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
+    const currentRequestId = ++requestIdRef.current;
+    setLoading(true);
+
     const fetchVehicles = async () => {
-      setLoading(true);
-      
       const { data, error } = await getFilteredVehicles({ brand, maxMileage, page, pageSize });
+
+      // Discard stale responses from superseded requests
+      if (currentRequestId !== requestIdRef.current) return;
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -28,6 +33,7 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
         setHasMore(false);
       } else {
         if (page === 0) {
+          // First page (or filter changed) — always replace the list
           setVehicles(data);
         } else {
           setVehicles(prev => [...prev, ...data]);

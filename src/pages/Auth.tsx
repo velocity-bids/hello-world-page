@@ -26,6 +26,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("🚀 ~ Auth ~ user:", user)
     if (user) navigate("/");
   }, [user, navigate]);
 
@@ -53,14 +54,16 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    await signInWithGoogle();
-    setIsLoading(false);
+    const result = await signInWithGoogle();
+    console.log("🚀 ~ handleGoogleSignIn ~ result:", result)
+    // Only clear loading on error — on success the browser navigates away
+    if (result.error) setIsLoading(false);
   };
 
   const handleAppleSignIn = async () => {
     setIsLoading(true);
-    await signInWithApple();
-    setIsLoading(false);
+    const result = await signInWithApple();
+    if (result.error) setIsLoading(false);
   };
 
   return (

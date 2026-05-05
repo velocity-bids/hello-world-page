@@ -40,8 +40,9 @@ export function IdVerificationProvider({ children }: { children: React.ReactNode
   
   const expirationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const processingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup timers on unmount
+  // Cleanup all timers on unmount
   useEffect(() => {
     return () => {
       if (expirationTimerRef.current) {
@@ -49,6 +50,9 @@ export function IdVerificationProvider({ children }: { children: React.ReactNode
       }
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
+      }
+      if (processingTimerRef.current) {
+        clearTimeout(processingTimerRef.current);
       }
     };
   }, []);
@@ -61,11 +65,14 @@ export function IdVerificationProvider({ children }: { children: React.ReactNode
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
     }
+    if (processingTimerRef.current) {
+      clearTimeout(processingTimerRef.current);
+    }
 
     setIsVerifying(true);
 
-    // Simulate processing time
-    setTimeout(() => {
+    // Simulate processing time — store ref so it can be cleared on unmount
+    processingTimerRef.current = setTimeout(() => {
       setIsVerifying(false);
       setIsVerified(true);
       setTimeRemaining(VERIFICATION_DURATION_SECONDS);
@@ -97,6 +104,9 @@ export function IdVerificationProvider({ children }: { children: React.ReactNode
     }
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
+    }
+    if (processingTimerRef.current) {
+      clearTimeout(processingTimerRef.current);
     }
     setIsVerified(false);
     setIsVerifying(false);

@@ -9,7 +9,7 @@ export const getRecentBidsForVehicle = async (vehicleId: string, limit = 3): Pro
       .from("bids")
       .select("*")
       .eq("vehicle_id", vehicleId)
-      .order("amount", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) throw error;
@@ -26,7 +26,7 @@ export const getAllBidsForVehicle = async (vehicleId: string): Promise<QueryList
       .from("bids")
       .select("*")
       .eq("vehicle_id", vehicleId)
-      .order("amount", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return { data: data || [], error: null };

@@ -245,7 +245,7 @@ export default function EditListing() {
         };
       }
 
-      const { error } = await updateVehicle(vehicle.id, updateData);
+      const { error } = await updateVehicle(vehicle.id, user.id, updateData);
 
       if (error) throw error;
 

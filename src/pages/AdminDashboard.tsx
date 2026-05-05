@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -238,6 +238,11 @@ const AdminDashboard = () => {
     ) || [];
     return filtered;
   }, [users, userSearch]);
+
+  // Reset users page when search changes
+  useEffect(() => { setUsersPage(1); }, [userSearch]);
+  // Reset reports page when filter changes
+  useEffect(() => { setReportsPage(1); }, [reportFilter]);
 
   // Paginated data helpers
   const paginateData = <T,>(data: T[], page: number): T[] => {
