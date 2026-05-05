@@ -56,7 +56,7 @@ export const RecentBidsCard = ({ bids, onViewAll }: RecentBidsCardProps) => {
                     </Badge>
                   )}
                   <span className="text-sm font-bold text-bid-active whitespace-nowrap">
-                    ${bid.amount.toLocaleString()}
+                    {bid.amount.toLocaleString()} €
                   </span>
                 </div>
               </div>

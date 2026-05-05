@@ -55,7 +55,7 @@ export const BiddingCard = ({
         <div>
           <div className="text-sm text-muted-foreground">Current Bid</div>
           <div className="text-3xl font-bold text-bid-active">
-            ${currentBid.toLocaleString()}
+            {currentBid.toLocaleString()} €
           </div>
           {bidCount > 0 && (
             <div className="text-sm text-muted-foreground">

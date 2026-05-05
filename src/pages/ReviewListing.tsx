@@ -243,7 +243,7 @@ const ReviewListing = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Mileage</p>
                       <p className="font-semibold">
-                        {vehicle.mileage?.toLocaleString()} miles
+                        {vehicle.mileage?.toLocaleString()} km
                       </p>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ const ReviewListing = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Current Bid</p>
                   <p className="text-2xl font-bold">
-                    ${vehicle.current_bid.toLocaleString()}
+                    {vehicle.current_bid.toLocaleString()} €
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {vehicle.bid_count} bids
@@ -280,7 +280,7 @@ const ReviewListing = () => {
                       Reserve Price
                     </p>
                     <p className="text-lg font-semibold">
-                      ${vehicle.reserve_price.toLocaleString()}
+                      {vehicle.reserve_price.toLocaleString()} €
                     </p>
                   </div>
                 )}

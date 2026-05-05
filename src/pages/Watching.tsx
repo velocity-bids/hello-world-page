@@ -89,12 +89,12 @@ const Watching = () => {
                         {vehicle.year} {vehicle.make} {vehicle.model}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-3">
-                        {vehicle.mileage.toLocaleString()} miles
+                        {vehicle.mileage.toLocaleString()} km
                       </p>
                       <div className="mb-4">
                         <p className="text-sm text-muted-foreground">Current Bid</p>
                         <p className="text-2xl font-bold text-primary">
-                          ${vehicle.current_bid.toLocaleString()}
+                          {vehicle.current_bid.toLocaleString()} €
                         </p>
                       </div>
 

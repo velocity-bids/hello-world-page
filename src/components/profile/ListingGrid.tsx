@@ -121,7 +121,7 @@ export const ListingGrid = ({
                           Current Bid
                         </span>
                         <span className="font-bold">
-                          ${listing.current_bid.toLocaleString()}
+                          {listing.current_bid.toLocaleString()} €
                         </span>
                       </div>
                       

@@ -75,11 +75,11 @@ export const BidCard = ({ bid }: BidCardProps) => {
         <div className="grid grid-cols-3 gap-4 py-4 border-y border-border">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Your Bid</p>
-            <p className="text-lg font-bold text-foreground">${bid.amount.toLocaleString()}</p>
+            <p className="text-lg font-bold text-foreground">{bid.amount.toLocaleString()} €</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Current Bid</p>
-            <p className="text-lg font-bold text-foreground">${bid.vehicle.current_bid.toLocaleString()}</p>
+            <p className="text-lg font-bold text-foreground">{bid.vehicle.current_bid.toLocaleString()} €</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">

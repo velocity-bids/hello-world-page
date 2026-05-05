@@ -104,7 +104,7 @@ export const BidHistoryModal = ({ vehicleId, isOpen, onClose }: BidHistoryModalP
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="text-xl font-bold text-bid-active">
-                      ${bid.amount.toLocaleString()}
+                      {bid.amount.toLocaleString()} €
                     </div>
                     <div className="text-xs text-muted-foreground">Bid #{bids.length - index}</div>
                   </div>

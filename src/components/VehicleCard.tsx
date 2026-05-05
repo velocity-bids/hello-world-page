@@ -47,7 +47,7 @@ const VehicleCard = ({
           <div className="text-sm font-medium">
             <span className="text-muted-foreground">Current Bid:</span>{" "}
             <span className="text-bid-active">
-              ${currentBid.toLocaleString()}
+              {currentBid.toLocaleString()} €
             </span>
           </div>
         </div>

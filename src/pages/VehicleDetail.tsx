@@ -155,7 +155,7 @@ const VehicleDetail = () => {
           setBids((prev) => [newBid, ...prev].slice(0, 3));
           setWinningBidderId((payload.new as Bid).bidder_id);
           toast.success("New bid placed!", {
-            description: `$${(payload.new as Bid).amount.toLocaleString()}`,
+            description: `${(payload.new as Bid).amount.toLocaleString()} €`,
           });
         }
       )

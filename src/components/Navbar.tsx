@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Menu, Search, User, LogOut, Shield, Bell, X, Gavel, Eye, Settings } from "lucide-react";
+import { Car, Menu, User, LogOut, Shield, Bell, X, Gavel, Eye, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -81,9 +81,6 @@ const Navbar = () => {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
-            <Search className="h-5 w-5" />
-          </Button>
 
           {user ? (
             <>

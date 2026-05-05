@@ -54,7 +54,7 @@ const HeroCard = ({
         <div className="flex items-center gap-6 text-sm text-muted-foreground border-t border-border pt-4">
           <div className="flex items-center gap-2">
             <Gauge className="h-4 w-4 text-primary" />
-            <span className="font-medium">{mileage.toLocaleString()} mi</span>
+            <span className="font-medium">{mileage.toLocaleString()} km</span>
           </div>
           <div className="flex items-center gap-2">
             <Cog className="h-4 w-4 text-primary" />

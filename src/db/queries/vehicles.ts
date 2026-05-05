@@ -37,14 +37,20 @@ export const getActiveVehicles = async (): Promise<QueryListResult<Vehicle>> => 
 
 // Fetch filtered vehicles with pagination
 interface FilteredVehiclesParams {
-  brand?: string;
+  brands?: string[];
+  model?: string;
+  yearFrom?: number;
+  yearTo?: number;
   maxMileage: number;
   page: number;
   pageSize: number;
 }
 
 export const getFilteredVehicles = async ({
-  brand,
+  brands,
+  model,
+  yearFrom,
+  yearTo,
   maxMileage,
   page,
   pageSize,
@@ -59,8 +65,20 @@ export const getFilteredVehicles = async ({
       .order("created_at", { ascending: false })
       .range(page * pageSize, (page + 1) * pageSize - 1);
 
-    if (brand && brand !== "all") {
-      query = query.eq("make", brand);
+    if (brands && brands.length > 0) {
+      query = query.in("make", brands);
+    }
+
+    if (model && model !== "all") {
+      query = query.eq("model", model);
+    }
+
+    if (yearFrom) {
+      query = query.gte("year", yearFrom);
+    }
+
+    if (yearTo) {
+      query = query.lte("year", yearTo);
     }
 
     const { data, error } = await query;
@@ -163,6 +181,25 @@ export const getVehicleBrands = async (): Promise<QueryListResult<string>> => {
 
     const uniqueBrands = Array.from(new Set(data.map((v) => v.make))).sort();
     return { data: uniqueBrands, error: null };
+  } catch (error) {
+    return { data: [], error: error as Error };
+  }
+};
+
+// Fetch unique vehicle models for a given make
+export const getVehicleModels = async (make: string): Promise<QueryListResult<string>> => {
+  try {
+    const { data, error } = await supabase
+      .from("vehicles")
+      .select("model")
+      .eq("status", "active")
+      .eq("approval_status", "approved")
+      .eq("make", make);
+
+    if (error) throw error;
+
+    const uniqueModels = Array.from(new Set(data.map((v) => v.model))).sort();
+    return { data: uniqueModels, error: null };
   } catch (error) {
     return { data: [], error: error as Error };
   }

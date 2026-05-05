@@ -3,13 +3,16 @@ import { getFilteredVehicles } from "@/db/queries";
 import type { Vehicle } from "@/types";
 
 interface FilterParams {
-  brand?: string;
+  brands?: string[];
+  model?: string;
+  yearFrom?: number;
+  yearTo?: number;
   maxMileage: number;
   page: number;
   pageSize: number;
 }
 
-export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: FilterParams) => {
+export const useFilteredVehicles = ({ brands, model, yearFrom, yearTo, maxMileage, page, pageSize }: FilterParams) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -21,7 +24,7 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
     setLoading(true);
 
     const fetchVehicles = async () => {
-      const { data, error } = await getFilteredVehicles({ brand, maxMileage, page, pageSize });
+      const { data, error } = await getFilteredVehicles({ brands, model, yearFrom, yearTo, maxMileage, page, pageSize });
 
       // Discard stale responses from superseded requests
       if (currentRequestId !== requestIdRef.current) return;
@@ -44,7 +47,7 @@ export const useFilteredVehicles = ({ brand, maxMileage, page, pageSize }: Filte
     };
 
     fetchVehicles();
-  }, [brand, maxMileage, page, pageSize, refreshKey]);
+  }, [brands, model, yearFrom, yearTo, maxMileage, page, pageSize, refreshKey]);
 
   const refetch = () => {
     setRefreshKey(prev => prev + 1);

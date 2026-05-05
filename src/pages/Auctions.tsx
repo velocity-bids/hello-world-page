@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BasePage } from "@/components/BasePage";
 import { useFilteredVehicles } from "@/hooks/useFilteredVehicles";
 import { useVehicleBrands } from "@/hooks/useVehicleBrands";
@@ -6,7 +7,8 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { deleteVehicleAdmin } from "@/db/mutations";
 import VehicleCard from "@/components/VehicleCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,28 +19,65 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { getVehicleModels } from "@/db/queries";
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: CURRENT_YEAR - 1989 }, (_, i) => CURRENT_YEAR - i);
+
+const MILEAGE_OPTIONS = [
+  { label: "Any mileage", value: "any" },
+  { label: "Até 10.000 km", value: "10000" },
+  { label: "Até 25.000 km", value: "25000" },
+  { label: "Até 50.000 km", value: "50000" },
+  { label: "Até 75.000 km", value: "75000" },
+  { label: "Até 100.000 km", value: "100000" },
+  { label: "Até 150.000 km", value: "150000" },
+  { label: "Até 200.000 km", value: "200000" },
+];
 
 const Auctions = () => {
-  const [selectedBrand, setSelectedBrand] = useState<string>("all");
-  const [sliderValue, setSliderValue] = useState<number>(200000);
-  const [maxMileage, setMaxMileage] = useState<number>(200000);
+  const [searchParams] = useSearchParams();
+
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
+    const b = searchParams.get("brand");
+    return b ? [b] : [];
+  });
+  const [selectedModel, setSelectedModel] = useState<string>(searchParams.get("model") ?? "all");
+  const [yearFrom, setYearFrom] = useState<string>(searchParams.get("yearFrom") ?? "any");
+  const [yearTo, setYearTo] = useState<string>(searchParams.get("yearTo") ?? "any");
+  const [selectedMileage, setSelectedMileage] = useState<string>(
+    searchParams.get("maxMileage") ?? "any"
+  );
   const [page, setPage] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [models, setModels] = useState<string[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const { isAdmin } = useIsAdmin();
   const { brands } = useVehicleBrands();
   const { vehicles, loading, hasMore, removeVehicle } = useFilteredVehicles({
-    brand: selectedBrand,
-    maxMileage,
+    brands: selectedBrands.length > 0 ? selectedBrands : undefined,
+    model: selectedModel === "all" ? undefined : selectedModel,
+    yearFrom: yearFrom !== "any" ? parseInt(yearFrom) : undefined,
+    yearTo: yearTo !== "any" ? parseInt(yearTo) : undefined,
+    maxMileage: selectedMileage !== "any" ? parseInt(selectedMileage) : 200000,
     page,
-    pageSize: 12
+    pageSize: 12,
   });
+
+  useEffect(() => {
+    if (selectedBrands.length === 1) {
+      getVehicleModels(selectedBrands[0]).then(({ data }) => setModels(data));
+    } else {
+      setModels([]);
+      setSelectedModel("all");
+    }
+  }, [selectedBrands]);
 
   const handleDeleteVehicle = (vehicleId: string, vehicleTitle: string) => {
     setVehicleToDelete({ id: vehicleId, title: vehicleTitle });
@@ -63,19 +102,10 @@ const Auctions = () => {
     setVehicleToDelete(null);
   };
 
-  // Debounce mileage slider
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMaxMileage(sliderValue);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [sliderValue]);
-
   // Reset page when filters change
   useEffect(() => {
     setPage(0);
-  }, [selectedBrand, maxMileage]);
+  }, [selectedBrands, selectedModel, yearFrom, yearTo, selectedMileage]);
 
   // Infinite scroll observer
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -127,35 +157,111 @@ const Auctions = () => {
             </div>
 
             {/* Filters */}
-            <div className="mb-8 space-y-6 max-w-md">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Brand</label>
-                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Brands" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Brands</SelectItem>
-                    {brands.map(brand => (
-                      <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="mb-6 bg-background rounded-2xl border border-border shadow-sm p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Make</label>
+                  <MultiSelect
+                    options={brands}
+                    selected={selectedBrands}
+                    onChange={setSelectedBrands}
+                    placeholder="Any make"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Model</label>
+                  <Select
+                    value={selectedModel}
+                    onValueChange={setSelectedModel}
+                    disabled={selectedBrands.length !== 1 || models.length === 0}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Any model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any model</SelectItem>
+                      {models.map(m => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Year from</label>
+                  <Select value={yearFrom} onValueChange={setYearFrom}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Any year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Any year</SelectItem>
+                      {YEARS.map(y => (
+                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Year to</label>
+                  <Select value={yearTo} onValueChange={setYearTo}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Any year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Any year</SelectItem>
+                      {YEARS.filter(y => yearFrom === "any" || y >= parseInt(yearFrom)).map(y => (
+                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Max mileage</label>
+                  <Select value={selectedMileage} onValueChange={setSelectedMileage}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Any mileage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MILEAGE_OPTIONS.map(o => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Max Mileage: {sliderValue.toLocaleString()} mi
-                </label>
-                <Slider
-                  value={[sliderValue]}
-                  onValueChange={(value) => setSliderValue(value[0])}
-                  min={0}
-                  max={200000}
-                  step={5000}
-                  className="w-full"
-                />
-              </div>
+              {/* Active filter badges */}
+              {(selectedBrands.length > 0 || selectedModel !== "all" || yearFrom !== "any" || yearTo !== "any" || selectedMileage !== "any") && (
+                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+                  {selectedBrands.map(b => (
+                    <Badge key={b} variant="secondary" className="flex items-center gap-1">
+                      {b}
+                      <button onClick={() => setSelectedBrands(selectedBrands.filter(v => v !== b))}><X className="h-3 w-3" /></button>
+                    </Badge>
+                  ))}
+                  {selectedModel !== "all" && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Model: {selectedModel}
+                      <button onClick={() => setSelectedModel("all")}><X className="h-3 w-3" /></button>
+                    </Badge>
+                  )}
+                  {(yearFrom !== "any" || yearTo !== "any") && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Year: {yearFrom !== "any" ? yearFrom : "…"} – {yearTo !== "any" ? yearTo : "…"}
+                      <button onClick={() => { setYearFrom("any"); setYearTo("any"); }}><X className="h-3 w-3" /></button>
+                    </Badge>
+                  )}
+                  {selectedMileage !== "any" && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      {MILEAGE_OPTIONS.find(o => o.value === selectedMileage)?.label}
+                      <button onClick={() => setSelectedMileage("any")}><X className="h-3 w-3" /></button>
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Results */}
