@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { IdVerificationModal } from "@/components/IdVerificationModal";
 import CreateListingNavbar from "@/components/CreateListingNavbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -197,9 +196,9 @@ export default function CreateListing() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <main className="flex flex-1 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      </main>
     );
   }
 
@@ -219,7 +218,7 @@ export default function CreateListing() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <>
       <CreateListingNavbar currentStep={currentStep} totalSteps={totalSteps} />
 
       <IdVerificationModal
@@ -371,7 +370,6 @@ export default function CreateListing() {
           </Form>
         </div>
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }

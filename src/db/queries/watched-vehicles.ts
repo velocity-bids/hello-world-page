@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withQuery, withQueryList } from "../helpers";
 import type { QueryResult, QueryListResult } from "./types";
 
 export interface WatchedVehicle {
@@ -21,7 +22,7 @@ export interface WatchedVehicle {
 
 // Fetch watched vehicles for a user
 export const getWatchedVehiclesForUser = async (userId: string): Promise<QueryListResult<WatchedVehicle>> => {
-  try {
+  return withQueryList(async () => {
     const { data, error } = await supabase
       .from("watched_vehicles")
       .select(`
@@ -44,16 +45,13 @@ export const getWatchedVehiclesForUser = async (userId: string): Promise<QueryLi
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
-    return { data: (data as unknown as WatchedVehicle[]) || [], error: null };
-  } catch (error) {
-    return { data: [], error: error as Error };
-  }
+    return { data: data as unknown as WatchedVehicle[] | null, error };
+  });
 };
 
 // Check if user is watching a vehicle
 export const isVehicleWatched = async (userId: string, vehicleId: string): Promise<QueryResult<boolean>> => {
-  try {
+  const result = await withQuery(async () => {
     const { data, error } = await supabase
       .from("watched_vehicles")
       .select("id")
@@ -61,9 +59,8 @@ export const isVehicleWatched = async (userId: string, vehicleId: string): Promi
       .eq("vehicle_id", vehicleId)
       .maybeSingle();
 
-    if (error) throw error;
-    return { data: !!data, error: null };
-  } catch (error) {
-    return { data: false, error: error as Error };
-  }
+    return { data: !!data, error };
+  });
+
+  return result.error ? { data: false, error: result.error } : result;
 };

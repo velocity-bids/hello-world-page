@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { UserProfile } from "@/types";
+import { withQuery, withQueryList } from "../helpers";
 import type { QueryResult, QueryListResult } from "./types";
 
 // Extended profile with additional fields
@@ -25,16 +26,19 @@ interface PublicProfileRow {
 
 // Fetch public profile by user ID using secure RPC function
 export const getPublicProfile = async (userId: string): Promise<QueryResult<UserProfile>> => {
-  try {
-    const { data, error } = await supabase
-      .rpc("get_public_profile", { p_user_id: userId });
+  return withQuery(async () => {
+    const { data, error } = await supabase.rpc("get_public_profile", { p_user_id: userId });
 
-    if (error) throw error;
-    
+    if (error) {
+      return { data: null, error };
+    }
+
     const row = (data as PublicProfileRow[] | null)?.[0];
-    if (!row) return { data: null, error: null };
-    
-    return { 
+    if (!row) {
+      return { data: null, error: null };
+    }
+
+    return {
       data: {
         display_name: row.display_name,
         verified: row.verified,
@@ -42,30 +46,29 @@ export const getPublicProfile = async (userId: string): Promise<QueryResult<User
         rating: row.rating,
         vehicles_sold: row.vehicles_sold,
         member_since: row.member_since,
-      }, 
-      error: null 
+      },
+      error: null,
     };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  });
 };
 
 // Fetch multiple public profiles by user IDs using secure RPC function
 export const getPublicProfiles = async (userIds: string[]): Promise<QueryListResult<UserProfile & { user_id: string }>> => {
-  try {
+  return withQueryList(async () => {
     if (userIds.length === 0) {
       return { data: [], error: null };
     }
 
     const uniqueIds = [...new Set(userIds)];
-    const { data, error } = await supabase
-      .rpc("get_public_profiles", { p_user_ids: uniqueIds });
+    const { data, error } = await supabase.rpc("get_public_profiles", { p_user_ids: uniqueIds });
 
-    if (error) throw error;
-    
+    if (error) {
+      return { data: null, error };
+    }
+
     const rows = (data as PublicProfileRow[] | null) || [];
-    return { 
-      data: rows.map(row => ({
+    return {
+      data: rows.map((row) => ({
         user_id: row.user_id,
         display_name: row.display_name,
         verified: row.verified,
@@ -73,27 +76,28 @@ export const getPublicProfiles = async (userIds: string[]): Promise<QueryListRes
         rating: row.rating,
         vehicles_sold: row.vehicles_sold,
         member_since: row.member_since,
-      })), 
-      error: null 
+      })),
+      error: null,
     };
-  } catch (error) {
-    return { data: [], error: error as Error };
-  }
+  });
 };
 
 // Fetch full profile (for profile page display) - uses secure RPC for public data
 export const getFullProfile = async (userId: string): Promise<QueryResult<FullProfile>> => {
-  try {
-    const { data, error } = await supabase
-      .rpc("get_public_profile", { p_user_id: userId });
+  return withQuery(async () => {
+    const { data, error } = await supabase.rpc("get_public_profile", { p_user_id: userId });
 
-    if (error) throw error;
-    
+    if (error) {
+      return { data: null, error };
+    }
+
     const row = (data as PublicProfileRow[] | null)?.[0];
-    if (!row) return { data: null, error: null };
-    
+    if (!row) {
+      return { data: null, error: null };
+    }
+
     // Bio is not exposed in public profile, return null for it
-    return { 
+    return {
       data: {
         display_name: row.display_name,
         avatar_url: row.avatar_url,
@@ -102,28 +106,21 @@ export const getFullProfile = async (userId: string): Promise<QueryResult<FullPr
         rating: row.rating,
         vehicles_sold: row.vehicles_sold,
         verified: row.verified,
-      }, 
-      error: null 
+      },
+      error: null,
     };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  });
 };
 
 // Fetch user's own profile (for settings) - uses direct table access (RLS restricts to own profile)
 export const getOwnProfile = async (userId: string): Promise<QueryResult<FullProfile & { address: string | null; date_of_birth: string | null; id_document_url: string | null }>> => {
-  try {
-    const { data, error } = await supabase
+  return withQuery(() =>
+    supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return { data, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .maybeSingle()
+  );
 };
 
 // Helper: Fetch single user profile and attach to an object
@@ -152,23 +149,24 @@ export const enrichWithProfiles = async <T>(
 
 // Fetch profile display info for comments/bids using secure RPC function
 export const getProfileDisplayInfo = async (userId: string): Promise<QueryResult<{ display_name: string | null; avatar_url: string | null }>> => {
-  try {
-    const { data, error } = await supabase
-      .rpc("get_public_profile", { p_user_id: userId });
+  return withQuery(async () => {
+    const { data, error } = await supabase.rpc("get_public_profile", { p_user_id: userId });
 
-    if (error) throw error;
-    
+    if (error) {
+      return { data: null, error };
+    }
+
     const row = (data as PublicProfileRow[] | null)?.[0];
-    if (!row) return { data: null, error: null };
-    
-    return { 
+    if (!row) {
+      return { data: null, error: null };
+    }
+
+    return {
       data: {
         display_name: row.display_name,
         avatar_url: row.avatar_url,
-      }, 
-      error: null 
+      },
+      error: null,
     };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  });
 };

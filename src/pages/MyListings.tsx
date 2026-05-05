@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehiclesBySeller } from "@/db/queries";
 import { deleteVehicle } from "@/db/mutations";
+import { vehicleKeys } from "@/lib/queryKeys";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,9 +21,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import Navbar from "@/components/Navbar";
 import { PageLoader, EmptyState } from "@/components/common";
-import { Clock, Euro, Gavel, Eye, AlertCircle, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Euro, Gavel, Eye, AlertCircle, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import type { Vehicle } from "@/types";
@@ -34,9 +35,26 @@ interface VehicleWithApproval extends Vehicle {
 const MyListings = () => {
   const { user, loading: authLoading } = useAuth();
   const { openLoginModal } = useAuthModal();
-  const [vehicles, setVehicles] = useState<VehicleWithApproval[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const sellerListingsQueryKey = user
+    ? vehicleKeys.list({ sellerId: user.id })
+    : vehicleKeys.lists();
+
+  const { data: vehicles = [], isLoading, error } = useQuery<VehicleWithApproval[]>({
+    queryKey: sellerListingsQueryKey,
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await getVehiclesBySeller(user.id);
+      if (error) throw error;
+
+      return ((data ?? []) as VehicleWithApproval[]);
+    },
+    enabled: !!user,
+    retry: false,
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -45,38 +63,29 @@ const MyListings = () => {
   }, [user, authLoading, openLoginModal]);
 
   useEffect(() => {
-    if (user) {
-      fetchVehicles();
-      const unsubscribe = subscribeToVehicleUpdates();
-      return unsubscribe;
-    }
-  }, [user]);
+    if (!error) return;
 
-  const fetchVehicles = async () => {
-    try {
-      const { data, error } = await getVehiclesBySeller(user?.id || "");
+    toast.error("Failed to load your listings");
+  }, [error]);
 
-      if (error) throw error;
-      setVehicles((data as VehicleWithApproval[]) || []);
-    } catch {
-      toast.error("Failed to load your listings");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!user?.id) return;
 
-  const subscribeToVehicleUpdates = () => {
     const channel = supabase
       .channel("vehicle-updates")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "vehicles", filter: `seller_id=eq.${user?.id}` },
-        () => fetchVehicles()
+        { event: "*", schema: "public", table: "vehicles", filter: `seller_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: vehicleKeys.list({ sellerId: user.id }) });
+        }
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   const handleDeleteListing = async (vehicleId: string, vehicleTitle: string) => {
     if (!user?.id) return;
@@ -88,8 +97,9 @@ const MyListings = () => {
       if (error) throw error;
 
       toast.success(`"${vehicleTitle}" has been deleted`);
-      // Remove from local state immediately
-      setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+      queryClient.setQueryData<VehicleWithApproval[]>(sellerListingsQueryKey, (currentVehicles) =>
+        currentVehicles?.filter((vehicle) => vehicle.id !== vehicleId) ?? []
+      );
     } catch (error) {
       console.error("Error deleting listing:", error);
       toast.error("Failed to delete listing. Please try again.");
@@ -99,7 +109,6 @@ const MyListings = () => {
   };
 
   const canDeleteListing = (vehicle: VehicleWithApproval) => {
-    // Can only delete if no bids have been placed
     return (vehicle.bid_count || 0) === 0;
   };
 
@@ -135,21 +144,18 @@ const MyListings = () => {
     totalValue: vehicles.filter((v) => v.status === "active").reduce((sum, v) => sum + (v.current_bid || 0), 0),
   };
 
-  if (authLoading || loading) {
+  if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-12">
           <PageLoader message="Loading your listings..." />
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 py-12">
+    <main className="container mx-auto flex-1 px-4 py-12">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">My Listings</h1>
           <p className="text-muted-foreground">Manage your vehicle auctions</p>
@@ -241,7 +247,6 @@ const MyListings = () => {
                           </Button>
                         </Link>
                         
-                        {/* Edit button */}
                         <Link to={`/edit-listing/${vehicle.id}`}>
                           <Button variant="outline">
                             <Pencil className="mr-2 h-4 w-4" />
@@ -249,7 +254,6 @@ const MyListings = () => {
                           </Button>
                         </Link>
 
-                        {/* Delete button with confirmation */}
                         {canDelete ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -299,8 +303,7 @@ const MyListings = () => {
             })}
           </div>
         )}
-      </main>
-    </div>
+    </main>
   );
 };
 

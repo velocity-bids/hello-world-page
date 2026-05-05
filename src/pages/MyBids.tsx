@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
-import { BasePage } from "@/components/BasePage";
 import { BidCard } from "@/components/BidCard";
 import { BidFilters } from "@/components/BidFilters";
 import { Button } from "@/components/ui/button";
 import { PageLoader, EmptyState } from "@/components/common";
 import { getBidsByUser } from "@/db/queries";
+import { bidKeys } from "@/lib/queryKeys";
 import { Gavel } from "lucide-react";
 import type { BidWithVehicle } from "@/types";
 
@@ -15,32 +16,34 @@ const MyBids = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { openLoginModal } = useAuthModal();
-  const [bids, setBids] = useState<BidWithVehicle[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+
+  const { data: bids = [], isLoading, error } = useQuery<BidWithVehicle[]>({
+    queryKey: user ? bidKeys.forUser(user.id) : bidKeys.all,
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await getBidsByUser(user.id);
+      if (error) throw error;
+
+      return data ?? [];
+    },
+    enabled: !!user,
+    retry: false,
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
       openLoginModal();
-      return;
     }
+  }, [user, authLoading, openLoginModal]);
 
-    if (!user) return;
+  useEffect(() => {
+    if (!error || !import.meta.env.DEV) return;
 
-    const fetchMyBids = async () => {
-      const { data, error } = await getBidsByUser(user.id);
-
-      if (error) {
-        console.error("Error fetching bids:", error);
-      } else {
-        setBids(data);
-      }
-      setLoading(false);
-    };
-
-    fetchMyBids();
-  }, [user, authLoading, openLoginModal, navigate]);
+    console.error("Error fetching bids:", error);
+  }, [error]);
 
   const getFilteredAndSortedBids = () => {
     let filtered = [...bids];
@@ -77,21 +80,18 @@ const MyBids = () => {
     return filtered;
   };
 
-  if (authLoading || loading) {
+  if (authLoading || isLoading) {
     return (
-      <BasePage>
-        <div className="container mx-auto px-4 py-8">
-          <PageLoader message="Loading your bids..." />
-        </div>
-      </BasePage>
+      <main className="container mx-auto flex-1 px-4 py-8">
+        <PageLoader message="Loading your bids..." />
+      </main>
     );
   }
 
   const filteredBids = getFilteredAndSortedBids();
 
   return (
-    <BasePage>
-      <div className="min-h-screen bg-background">
+    <main className="flex-1 bg-background">
         <div className="bg-gradient-hero border-b border-border">
           <div className="container mx-auto px-4 py-12">
             <div className="flex items-center gap-3 mb-2">
@@ -140,8 +140,7 @@ const MyBids = () => {
             </div>
           )}
         </div>
-      </div>
-    </BasePage>
+    </main>
   );
 };
 

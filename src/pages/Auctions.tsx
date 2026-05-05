@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BasePage } from "@/components/BasePage";
 import { useFilteredVehicles } from "@/hooks/useFilteredVehicles";
 import { useVehicleBrands } from "@/hooks/useVehicleBrands";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -119,7 +118,7 @@ const Auctions = () => {
   };
 
   return (
-    <BasePage>
+    <>
       <main className="flex-1">
         <section className="py-12 md:py-16">
           <div className="container">
@@ -313,7 +312,7 @@ const Auctions = () => {
           </div>
         )}
       </ConfirmDialog>
-    </BasePage>
+    </>
   );
 };
 

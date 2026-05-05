@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withMutation } from "../helpers";
 import type { MutationResult } from "./types";
 
 export interface CreateCommentData {
@@ -11,28 +12,18 @@ export interface CreateCommentData {
  * Create a new comment on a vehicle
  */
 export async function createComment(data: CreateCommentData): Promise<MutationResult> {
-  try {
-    const { error } = await supabase.from("comments").insert(data);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  return withMutation(() => supabase.from("comments").insert(data));
 }
 
 /**
  * Delete a comment by ID, scoped to the owning user
  */
 export async function deleteComment(commentId: string, userId: string): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("comments")
       .delete()
       .eq("id", commentId)
-      .eq("user_id", userId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("user_id", userId)
+  );
 }

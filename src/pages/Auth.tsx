@@ -26,7 +26,6 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("🚀 ~ Auth ~ user:", user)
     if (user) navigate("/");
   }, [user, navigate]);
 

@@ -5,7 +5,6 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { updateVehicleApprovalStatus } from "@/db/mutations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BasePage } from "@/components/BasePage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +21,6 @@ import {
   Clock,
   Gauge,
   Calendar,
-  MapPin,
 } from "lucide-react";
 import {
   Dialog,
@@ -61,7 +59,6 @@ const ReviewListing = () => {
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const queryClient = useQueryClient();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-  console.log("🚀 ~ ReviewListing ~ vehicle:", vehicle)
   const [loading, setLoading] = useState(true);
   const [adminNotes, setAdminNotes] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -136,11 +133,9 @@ const ReviewListing = () => {
 
   if (authLoading || adminLoading || loading) {
     return (
-      <BasePage>
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </BasePage>
+      <main className="flex flex-1 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </main>
     );
   }
 
@@ -150,11 +145,9 @@ const ReviewListing = () => {
 
   if (!vehicle) {
     return (
-      <BasePage>
-        <div className="container mx-auto py-8">
-          <p className="text-center text-muted-foreground">Listing not found</p>
-        </div>
-      </BasePage>
+      <main className="container mx-auto flex-1 py-8">
+        <p className="text-center text-muted-foreground">Listing not found</p>
+      </main>
     );
   }
 
@@ -185,9 +178,10 @@ const ReviewListing = () => {
   };
 
   return (
-    <BasePage>
-      <div className="container mx-auto px-4 py-8">
-        <Button
+    <>
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-8">
+          <Button
           variant="ghost"
           onClick={() => navigate("/admin")}
           className="mb-6"
@@ -196,8 +190,8 @@ const ReviewListing = () => {
           Back to Dashboard
         </Button>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -339,7 +333,8 @@ const ReviewListing = () => {
             </Card>
           </div>
         </div>
-      </div>
+        </div>
+      </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
@@ -371,7 +366,7 @@ const ReviewListing = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </BasePage>
+    </>
   );
 };
 

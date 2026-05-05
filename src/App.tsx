@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { IdVerificationProvider } from "@/contexts/IdVerificationContext";
 import { LoginModal } from "@/components/LoginModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import VehicleDetail from "./pages/VehicleDetail";
 import Auth from "./pages/Auth";
@@ -40,21 +41,23 @@ const App = () => (
               <LoginModal />
               <Routes>
                 <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/" element={<Index />} />
-                <Route path="/auctions" element={<Auctions />} />
-                <Route path="/vehicle/:id" element={<VehicleDetail />} />
-                <Route path="/sell" element={<CreateListing />} />
-                <Route path="/edit-listing/:id" element={<EditListing />} />
-                <Route path="/review/:id" element={<ReviewListing />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/my-bids" element={<MyBids />} />
-                <Route path="/profile" element={<ProfileSettings />} />
-                <Route path="/my-listings" element={<MyListings />} />
-                <Route path="/watching" element={<Watching />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/user/:userId" element={<UserProfilePage />} />
-                <Route path="*" element={<NotFound />} />
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auctions" element={<Auctions />} />
+                  <Route path="/vehicle/:id" element={<VehicleDetail />} />
+                  <Route path="/sell" element={<CreateListing />} />
+                  <Route path="/edit-listing/:id" element={<EditListing />} />
+                  <Route path="/review/:id" element={<ReviewListing />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/my-bids" element={<MyBids />} />
+                  <Route path="/profile" element={<ProfileSettings />} />
+                  <Route path="/my-listings" element={<MyListings />} />
+                  <Route path="/watching" element={<Watching />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/user/:userId" element={<UserProfilePage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
               </Routes>
             </BrowserRouter>
           </TooltipProvider>

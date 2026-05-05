@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withQueryList } from "../helpers";
 
 /**
  * User type for admin dashboard queries
@@ -21,30 +22,30 @@ export interface AdminUser {
  * Fetch all users with their roles (admin only)
  */
 export async function getAllUsers() {
-  const { data: profiles, error: profilesError } = await supabase
-    .from("profiles")
-    .select("id, user_id, display_name, avatar_url, verified, rating, vehicles_sold, member_since, created_at")
-    .order("created_at", { ascending: false });
+  return withQueryList(async () => {
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, user_id, display_name, avatar_url, verified, rating, vehicles_sold, member_since, created_at")
+      .order("created_at", { ascending: false });
 
-  if (profilesError) {
-    return { data: null, error: profilesError };
-  }
+    if (profilesError) {
+      return { data: null, error: profilesError };
+    }
 
-  // Get all user roles
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("user_id, role");
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
 
-  if (rolesError) {
-    return { data: null, error: rolesError };
-  }
+    if (rolesError) {
+      return { data: null, error: rolesError };
+    }
 
-  // Map roles to users
-  const rolesMap = new Map(roles?.map((r) => [r.user_id, r.role]) || []);
-  const usersWithRoles = profiles?.map((profile) => ({
-    ...profile,
-    role: rolesMap.get(profile.user_id) || "user",
-  }));
+    const rolesMap = new Map(roles?.map((r) => [r.user_id, r.role]) || []);
+    const usersWithRoles = profiles?.map((profile) => ({
+      ...profile,
+      role: rolesMap.get(profile.user_id) || "user",
+    }));
 
-  return { data: usersWithRoles as AdminUser[] | null, error: null };
+    return { data: usersWithRoles as AdminUser[] | null, error: null };
+  });
 }

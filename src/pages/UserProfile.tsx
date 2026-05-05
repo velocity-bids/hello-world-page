@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFullProfile, getFeedbackForUser, getActiveVehiclesBySeller, getPastVehiclesBySeller, getProfileDisplayInfo, type FullProfile } from "@/db/queries";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { ProfileHeader, ReputationCard, FeedbackList, StatsCard, ListingGrid } from "@/components/profile";
 import { PageLoader } from "@/components/common";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,37 +63,27 @@ const UserProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1 container py-8">
-          <PageLoader message="Loading profile..." />
-        </main>
-        <Footer />
-      </div>
+      <main className="container flex-1 py-8">
+        <PageLoader message="Loading profile..." />
+      </main>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1 container py-8">
-          <div className="text-center py-12">
-            <h1 className="text-3xl font-bold mb-4">User Not Found</h1>
-            <p className="text-muted-foreground">The user profile you're looking for doesn't exist.</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
+      <main className="container flex-1 py-8">
+        <div className="py-12 text-center">
+          <h1 className="mb-4 text-3xl font-bold">User Not Found</h1>
+          <p className="text-muted-foreground">The user profile you're looking for doesn't exist.</p>
+        </div>
+      </main>
     );
   }
 
   const totalListings = activeListings.length + pastListings.length;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 container py-8">
+    <main className="container flex-1 py-8">
         <div className="space-y-8">
           <ProfileHeader
             avatarUrl={profile.avatar_url}
@@ -149,9 +137,7 @@ const UserProfilePage = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
-      <Footer />
-    </div>
+    </main>
   );
 };
 

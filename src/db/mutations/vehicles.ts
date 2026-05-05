@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withMutation } from "../helpers";
 import type { MutationResult } from "./types";
 
 export interface CreateVehicleData {
@@ -64,13 +65,7 @@ export interface UpdateVehicleData {
  * Create a new vehicle listing
  */
 export async function createVehicle(data: CreateVehicleData): Promise<MutationResult> {
-  try {
-    const { error } = await supabase.from("vehicles").insert(data);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  return withMutation(() => supabase.from("vehicles").insert(data));
 }
 
 /**
@@ -81,17 +76,13 @@ export async function updateVehicle(
   sellerId: string,
   data: UpdateVehicleData
 ): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("vehicles")
       .update(data)
       .eq("id", vehicleId)
-      .eq("seller_id", sellerId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("seller_id", sellerId)
+  );
 }
 
 /**
@@ -102,19 +93,15 @@ export async function updateVehicleApprovalStatus(
   status: string,
   adminNotes?: string | null
 ): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("vehicles")
       .update({
         approval_status: status,
         admin_notes: adminNotes || null,
       })
-      .eq("id", vehicleId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("id", vehicleId)
+  );
 }
 
 /**
@@ -124,8 +111,7 @@ export async function deleteVehicle(
   vehicleId: string,
   sellerId: string
 ): Promise<MutationResult> {
-  try {
-    // Guard: reject deletion if any bids have been placed
+  return withMutation(async () => {
     const { count, error: countError } = await supabase
       .from("bids")
       .select("id", { count: "exact", head: true })
@@ -133,33 +119,25 @@ export async function deleteVehicle(
 
     if (countError) throw countError;
     if (count && count > 0) {
-      return { data: null, error: new Error("Cannot delete a listing that has bids") };
+      throw new Error("Cannot delete a listing that has bids");
     }
 
-    const { error } = await supabase
+    return supabase
       .from("vehicles")
       .delete()
       .eq("id", vehicleId)
       .eq("seller_id", sellerId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  });
 }
 
 /**
  * Delete a vehicle listing (admin action - no seller check)
  */
 export async function deleteVehicleAdmin(vehicleId: string): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("vehicles")
       .delete()
-      .eq("id", vehicleId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("id", vehicleId)
+  );
 }

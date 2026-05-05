@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
 import { Loader2, Upload } from "lucide-react";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { isAtLeastAge } from "@/lib/age-utils";
@@ -126,19 +125,14 @@ const ProfileSettings = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </div>
+      <main className="flex flex-1 items-center justify-center bg-background py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 py-12">
+    <main className="container mx-auto flex-1 px-4 py-12">
         <div className="mx-auto max-w-2xl">
           <h1 className="mb-8 text-3xl font-bold">Profile Settings</h1>
 
@@ -255,8 +249,7 @@ const ProfileSettings = () => {
             </form>
           </Card>
         </div>
-      </main>
-    </div>
+    </main>
   );
 };
 

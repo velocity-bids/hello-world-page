@@ -8,8 +8,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { getVehicleById } from "@/db/queries";
 import { updateVehicle } from "@/db/mutations";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -261,9 +259,9 @@ export default function EditListing() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <main className="flex flex-1 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      </main>
     );
   }
 
@@ -272,9 +270,7 @@ export default function EditListing() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <div className="flex-1 bg-background py-12 px-4">
+    <main className="flex-1 bg-background px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <Button
             variant="ghost"
@@ -669,8 +665,6 @@ export default function EditListing() {
             </form>
           </Form>
         </div>
-      </div>
-      <Footer />
-    </div>
+    </main>
   );
 }

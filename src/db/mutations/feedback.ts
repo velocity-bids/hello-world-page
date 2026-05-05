@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withMutation } from "../helpers";
 import type { MutationResult } from "./types";
 
 export interface CreateFeedbackData {
@@ -13,11 +14,5 @@ export interface CreateFeedbackData {
  * Create feedback for a transaction
  */
 export async function createFeedback(data: CreateFeedbackData): Promise<MutationResult> {
-  try {
-    const { error } = await supabase.from("feedback").insert(data);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  return withMutation(() => supabase.from("feedback").insert(data));
 }

@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { VehicleGallery } from "@/components/VehicleGallery";
 import { CommentSection } from "@/components/CommentSection";
 import { FeedbackForm } from "@/components/FeedbackForm";
@@ -12,9 +12,9 @@ import { BiddingCard, RecentBidsCard, SellerCard, VehicleInfo } from "@/componen
 import { PageLoader } from "@/components/common";
 import { ShareButtons } from "@/components/ShareButtons";
 import { ReportModal } from "@/components/ReportModal";
-import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehicleById, getRecentBidsForVehicle, fetchUserProfile, enrichWithProfiles } from "@/db/queries";
+import { bidKeys, vehicleKeys } from "@/lib/queryKeys";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -25,7 +25,7 @@ import { useAdminApproval } from "@/hooks/useAdminApproval";
 import { toast } from "sonner";
 import { BidHistoryModal } from "@/components/BidHistoryModal";
 import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
-import type { Vehicle as VehicleType, Bid, UserProfile } from "@/types";
+import type { Bid, Vehicle as VehicleType, UserProfile } from "@/types";
 import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 interface VehicleWithProfile extends VehicleType {
@@ -35,28 +35,71 @@ interface VehicleWithProfile extends VehicleType {
 const VehicleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { openLoginModal } = useAuthModal();
   const { addToWatchlist, removeFromWatchlist, isWatching } = useWatchedVehicles();
-  
-  const [vehicle, setVehicle] = useState<VehicleWithProfile | null>(null);
-  const [bids, setBids] = useState<Bid[]>([]);
-  const [winningBidderId, setWinningBidderId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+
   const [watching, setWatching] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const [showBidHistory, setShowBidHistory] = useState(false);
 
+  const {
+    data: vehicle,
+    isLoading: vehicleLoading,
+    error: vehicleError,
+  } = useQuery<VehicleWithProfile>({
+    queryKey: id ? vehicleKeys.detail(id) : vehicleKeys.details(),
+    queryFn: async () => {
+      if (!id) {
+        throw new Error("Missing vehicle id");
+      }
+
+      const { data, error } = await getVehicleById(id);
+      if (error || !data) {
+        throw error ?? new Error("Vehicle not found");
+      }
+
+      const sellerProfile = await fetchUserProfile(data.seller_id);
+      return { ...data, profiles: sellerProfile };
+    },
+    enabled: !!id,
+    retry: false,
+  });
+
+  const { data: bids = [], error: bidsError } = useQuery<Bid[]>({
+    queryKey: id ? bidKeys.forVehicle(id) : bidKeys.all,
+    queryFn: async () => {
+      if (!id) {
+        throw new Error("Missing vehicle id");
+      }
+
+      const { data, error } = await getRecentBidsForVehicle(id, 3);
+      if (error) {
+        throw error;
+      }
+
+      return enrichWithProfiles(data ?? [], (bid) => bid.bidder_id);
+    },
+    enabled: !!id,
+    retry: false,
+  });
+
+  const winningBidderId = bids[0]?.bidder_id ?? null;
   const { timeLeft, isEnded } = useCountdown(vehicle?.auction_end_time || null);
 
   const { bidAmount, setBidAmount, submitting, minBid, handlePlaceBid, handleQuickBid } =
     useBidSubmission({
-      vehicle,
+      vehicle: vehicle ?? null,
       userId: user?.id,
       onSuccess: (amount) => {
-        setVehicle((prev) =>
-          prev ? { ...prev, current_bid: amount, bid_count: (prev.bid_count || 0) + 1 } : null
+        if (!id) return;
+
+        queryClient.setQueryData<VehicleWithProfile>(vehicleKeys.detail(id), (currentVehicle) =>
+          currentVehicle
+            ? { ...currentVehicle, current_bid: amount, bid_count: (currentVehicle.bid_count || 0) + 1 }
+            : currentVehicle
         );
       },
     });
@@ -64,11 +107,30 @@ const VehicleDetail = () => {
   const { adminNotes, setAdminNotes, adminSubmitting, handleAdminAction } = useAdminApproval({
     vehicleId: vehicle?.id,
     onStatusChange: (status, notes) => {
-      setVehicle((prev) => (prev ? { ...prev, approval_status: status, admin_notes: notes } : null));
+      if (!id) return;
+
+      queryClient.setQueryData<VehicleWithProfile>(vehicleKeys.detail(id), (currentVehicle) =>
+        currentVehicle ? { ...currentVehicle, approval_status: status, admin_notes: notes } : currentVehicle
+      );
     },
   });
 
-  // Check if user is watching this vehicle
+  useEffect(() => {
+    if (!vehicleError) return;
+
+    if (import.meta.env.DEV) {
+      console.error("Error fetching vehicle:", vehicleError);
+    }
+    toast.error("Failed to load auction");
+    navigate("/");
+  }, [vehicleError, navigate]);
+
+  useEffect(() => {
+    if (!bidsError || !import.meta.env.DEV) return;
+
+    console.error("Error fetching bids:", bidsError);
+  }, [bidsError]);
+
   useEffect(() => {
     if (!id || !user) {
       setWatching(false);
@@ -83,58 +145,6 @@ const VehicleDetail = () => {
     checkWatchStatus();
   }, [id, user, isWatching]);
 
-  // Fetch vehicle data
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchVehicle = async () => {
-      const { data, error } = await getVehicleById(id);
-
-      if (error || !data) {
-        if (import.meta.env.DEV) {
-          console.error("Error fetching vehicle:", error);
-        }
-        toast.error("Failed to load auction");
-        navigate("/");
-        return;
-      }
-
-      // Non-approved listings are only visible to their seller or admins.
-      // isAdmin is checked separately; defer access check to render where isAdmin is resolved.
-      const sellerProfile = await fetchUserProfile(data.seller_id);
-      setVehicle({ ...data, profiles: sellerProfile });
-      setLoading(false);
-    };
-
-    fetchVehicle();
-  }, [id, navigate]);
-
-  // Fetch bids (latest 3 only) and winning bidder
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchBids = async () => {
-      const { data, error } = await getRecentBidsForVehicle(id, 3);
-
-      if (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error fetching bids:", error);
-        }
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setWinningBidderId(data[0].bidder_id);
-      }
-
-      const bidsWithProfiles = await enrichWithProfiles(data, (bid) => bid.bidder_id);
-      setBids(bidsWithProfiles);
-    };
-
-    fetchBids();
-  }, [id]);
-
-  // Set up real-time subscriptions
   useEffect(() => {
     if (!id) return;
 
@@ -148,8 +158,8 @@ const VehicleDetail = () => {
           table: "vehicles",
           filter: `id=eq.${id}`,
         },
-        (payload) => {
-          setVehicle((prev) => prev ? { ...prev, ...payload.new } : null);
+        () => {
+          queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(id) });
         }
       )
       .subscribe();
@@ -164,11 +174,9 @@ const VehicleDetail = () => {
           table: "bids",
           filter: `vehicle_id=eq.${id}`,
         },
-        async (payload) => {
-          const profileData = await fetchUserProfile((payload.new as Bid).bidder_id);
-          const newBid = { ...payload.new as Bid, profiles: profileData };
-          setBids((prev) => [newBid, ...prev].slice(0, 3));
-          setWinningBidderId((payload.new as Bid).bidder_id);
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(id) });
+          queryClient.invalidateQueries({ queryKey: bidKeys.forVehicle(id) });
           toast.success("New bid placed!", {
             description: `${formatCurrency((payload.new as Bid).amount)}`,
           });
@@ -180,7 +188,7 @@ const VehicleDetail = () => {
       supabase.removeChannel(vehicleChannel);
       supabase.removeChannel(bidsChannel);
     };
-  }, [id]);
+  }, [id, queryClient]);
 
   const handlePlaceBidWithAuth = async () => {
     if (!user) {
@@ -201,7 +209,7 @@ const VehicleDetail = () => {
     if (!id) return;
 
     setWatchLoading(true);
-    
+
     if (watching) {
       const success = await removeFromWatchlist(id);
       if (success) setWatching(false);
@@ -209,37 +217,28 @@ const VehicleDetail = () => {
       const success = await addToWatchlist(id);
       if (success) setWatching(true);
     }
-    
+
     setWatchLoading(false);
   };
 
-  if (loading) {
+  if (vehicleLoading) {
     return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex flex-1 items-center justify-center">
-          <PageLoader message="Loading auction..." />
-        </main>
-        <Footer />
-      </div>
+      <main className="flex flex-1 items-center justify-center">
+        <PageLoader message="Loading auction..." />
+      </main>
     );
   }
 
   if (!vehicle) return null;
 
-  const approvalStatus = (vehicle as any).approval_status || 'pending';
+  const approvalStatus = vehicle.approval_status || "pending";
   const isOwnListing = user?.id === vehicle.seller_id;
 
-  // Block public access to non-approved listings
-  if (!isAdmin && !isOwnListing && approvalStatus !== 'approved') {
+  if (!isAdmin && !isOwnListing && approvalStatus !== "approved") {
     return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">This listing is not available.</p>
-        </main>
-        <Footer />
-      </div>
+      <main className="flex flex-1 items-center justify-center">
+        <p className="text-muted-foreground">This listing is not available.</p>
+      </main>
     );
   }
 
@@ -250,25 +249,21 @@ const VehicleDetail = () => {
   const showAdminPanel = isAdmin && !isOwnListing;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-
+    <>
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
           <div className="grid gap-8 lg:grid-cols-3">
-            {/* Main Content */}
             <div className="lg:col-span-2">
               <div className="mb-6">
                 <VehicleGallery
-                  images={vehicle.images && vehicle.images.length > 0 
-                    ? vehicle.images 
+                  images={vehicle.images && vehicle.images.length > 0
+                    ? vehicle.images
                     : [vehicle.image_url || "/placeholder.svg"]
                   }
                   vehicleName={vehicleTitle}
                 />
               </div>
 
-              {/* Share and Report buttons */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <ShareButtons
                   url={vehicleUrl}
@@ -297,7 +292,6 @@ const VehicleDetail = () => {
               <CommentSection vehicleId={vehicle.id} />
             </div>
 
-            {/* Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-20 space-y-6">
                 <BiddingCard
@@ -309,7 +303,7 @@ const VehicleDetail = () => {
                   reserveMet={reserveMet}
                   isOwnListing={isOwnListing}
                   isAdmin={isAdmin}
-                  isApproved={approvalStatus === 'approved'}
+                  isApproved={approvalStatus === "approved"}
                   bidAmount={bidAmount}
                   onBidAmountChange={setBidAmount}
                   onPlaceBid={handlePlaceBidWithAuth}
@@ -324,31 +318,30 @@ const VehicleDetail = () => {
 
                 <SellerCard sellerId={vehicle.seller_id} profile={vehicle.profiles} />
 
-                {/* Admin Actions Panel */}
                 {showAdminPanel && (
                   <Card className="border-primary/20 bg-primary/5 p-6">
                     <div className="mb-4 flex items-center gap-2">
                       <Shield className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold">Admin Actions</h3>
                     </div>
-                    
+
                     <div className="mb-4 flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">Status:</span>
-                      <Badge 
+                      <Badge
                         variant={
-                          approvalStatus === 'approved' ? 'default' : 
-                          approvalStatus === 'declined' ? 'destructive' : 
-                          'secondary'
+                          approvalStatus === "approved" ? "default" :
+                          approvalStatus === "declined" ? "destructive" :
+                          "secondary"
                         }
                       >
                         {approvalStatus.charAt(0).toUpperCase() + approvalStatus.slice(1)}
                       </Badge>
                     </div>
 
-                    {(vehicle as any).admin_notes && (
+                    {vehicle.admin_notes && (
                       <div className="mb-4 rounded-md bg-muted p-3">
                         <p className="text-xs font-medium text-muted-foreground mb-1">Admin Notes:</p>
-                        <p className="text-sm">{(vehicle as any).admin_notes}</p>
+                        <p className="text-sm">{vehicle.admin_notes}</p>
                       </div>
                     )}
 
@@ -360,11 +353,11 @@ const VehicleDetail = () => {
                         rows={3}
                         className="bg-background"
                       />
-                      
+
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => handleAdminAction('approved')}
-                          disabled={adminSubmitting || approvalStatus === 'approved'}
+                          onClick={() => handleAdminAction("approved")}
+                          disabled={adminSubmitting || approvalStatus === "approved"}
                           className="flex-1"
                           size="sm"
                         >
@@ -376,8 +369,8 @@ const VehicleDetail = () => {
                           Approve
                         </Button>
                         <Button
-                          onClick={() => handleAdminAction('declined')}
-                          disabled={adminSubmitting || approvalStatus === 'declined'}
+                          onClick={() => handleAdminAction("declined")}
+                          disabled={adminSubmitting || approvalStatus === "declined"}
                           variant="destructive"
                           className="flex-1"
                           size="sm"
@@ -390,12 +383,12 @@ const VehicleDetail = () => {
                           Decline
                         </Button>
                       </div>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
                         className="w-full"
-                        onClick={() => navigate('/admin')}
+                        onClick={() => navigate("/admin")}
                       >
                         Back to Dashboard
                       </Button>
@@ -418,13 +411,12 @@ const VehicleDetail = () => {
         </div>
       </main>
 
-      <Footer />
       <BidHistoryModal
         vehicleId={vehicle.id}
         isOpen={showBidHistory}
         onClose={() => setShowBidHistory(false)}
       />
-    </div>
+    </>
   );
 };
 

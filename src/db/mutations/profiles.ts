@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withMutation } from "../helpers";
 import type { MutationResult } from "./types";
 
 export interface UpdateProfileData {
@@ -17,14 +18,10 @@ export async function updateProfile(
   userId: string,
   data: UpdateProfileData
 ): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("profiles")
       .update(data)
-      .eq("user_id", userId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("user_id", userId)
+  );
 }

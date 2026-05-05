@@ -1,9 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withQuery } from "../helpers";
 import type { QueryResult } from "./types";
 
 // Check if user has admin role
 export const checkUserIsAdmin = async (userId: string): Promise<QueryResult<boolean>> => {
-  try {
+  const result = await withQuery(async () => {
     const { data, error } = await supabase
       .from("user_roles")
       .select("role")
@@ -11,9 +12,8 @@ export const checkUserIsAdmin = async (userId: string): Promise<QueryResult<bool
       .eq("role", "admin")
       .maybeSingle();
 
-    if (error) throw error;
-    return { data: !!data, error: null };
-  } catch (error) {
-    return { data: false, error: error as Error };
-  }
+    return { data: !!data, error };
+  });
+
+  return result.error ? { data: false, error: result.error } : result;
 };

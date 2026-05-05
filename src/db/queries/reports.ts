@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withQueryList } from "../helpers";
 
 /**
  * Report type for query results
@@ -20,15 +21,17 @@ export interface Report {
  * Fetch reports with optional status filter
  */
 export async function getReports(status?: string) {
-  let query = supabase
-    .from("reports")
-    .select("*")
-    .order("created_at", { ascending: false });
+  return withQueryList(async () => {
+    let query = supabase
+      .from("reports")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (status) {
-    query = query.eq("status", status);
-  }
+    if (status) {
+      query = query.eq("status", status);
+    }
 
-  const { data, error } = await query;
-  return { data: data as Report[] | null, error };
+    const { data, error } = await query;
+    return { data: data as Report[] | null, error };
+  });
 }

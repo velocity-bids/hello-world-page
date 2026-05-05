@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withMutation } from "../helpers";
 import type { MutationResult } from "./types";
 
 /**
@@ -8,17 +9,13 @@ export async function markNotificationAsRead(
   notificationId: string,
   userId: string
 ): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("id", notificationId)
-      .eq("user_id", userId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("user_id", userId)
+  );
 }
 
 /**
@@ -27,15 +24,11 @@ export async function markNotificationAsRead(
 export async function markAllNotificationsAsRead(
   userId: string
 ): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", userId)
-      .eq("is_read", false);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("is_read", false)
+  );
 }

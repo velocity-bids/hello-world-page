@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withMutation } from "../helpers";
 import type { MutationResult } from "./types";
 
 export interface CreateReportData {
@@ -12,13 +13,7 @@ export interface CreateReportData {
  * Create a new report for a vehicle listing
  */
 export async function createReport(data: CreateReportData): Promise<MutationResult> {
-  try {
-    const { error } = await supabase.from("reports").insert(data);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+  return withMutation(() => supabase.from("reports").insert(data));
 }
 
 /**
@@ -29,17 +24,13 @@ export async function updateReportStatus(
   status: string,
   adminNotes?: string | null
 ): Promise<MutationResult> {
-  try {
-    const { error } = await supabase
+  return withMutation(() =>
+    supabase
       .from("reports")
       .update({
         status,
         admin_notes: adminNotes || null,
       })
-      .eq("id", reportId);
-    if (error) throw error;
-    return { data: null, error: null };
-  } catch (error) {
-    return { data: null, error: error as Error };
-  }
+      .eq("id", reportId)
+  );
 }
