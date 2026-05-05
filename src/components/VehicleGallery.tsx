@@ -145,12 +145,12 @@ export function VehicleGallery({
 
       {/* Lightbox Dialog */}
       <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-7xl p-0 bg-background/95 backdrop-blur-xl border-border/50 overflow-hidden">
-          <div className="relative bg-black/5 dark:bg-white/5">
+        <DialogContent className="w-auto max-w-[95vw] p-0 bg-transparent border-0 shadow-none gap-0 overflow-visible [&>button]:hidden">
+          <div className="relative">
             <img
               src={images[selectedIndex]}
               alt={`${vehicleName} - Full size`}
-              className="h-[90vh] w-full object-contain transition-opacity duration-300"
+              className="max-h-[90vh] max-w-[95vw] block transition-opacity duration-300"
             />
 
             {/* Close Button */}
