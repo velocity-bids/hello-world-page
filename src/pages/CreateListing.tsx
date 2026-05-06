@@ -116,7 +116,7 @@ function CreateListingInner() {
       toast.loading(t("translation:createListing.uploadingImages"), { id: "uploading" });
       const photoUrls = await uploadFilesToUploadCare(files);
       toast.dismiss("uploading");
-      const [hours, minutes] = data.auctionEndTime.split("translation::");
+      const [hours, minutes] = data.auctionEndTime.split(":");
       const auctionDateTime = new Date(data.auctionEndDate);
       auctionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 

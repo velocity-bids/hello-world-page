@@ -194,7 +194,7 @@ export const LoginModal = () => {
                   {isLoading ? t("translation:auth.signingIn") : t("translation:nav.signIn")}
                 </Button>
                 <button type="button" onClick={() => setShowResetPassword(true)} className="mt-2 w-full text-center text-sm text-primary hover:underline">
-                  {t("translation:translation:auth.forgotPassword")}
+                  {t("translation:auth.forgotPassword")}
                 </button>
               </form>
             </TabsContent>

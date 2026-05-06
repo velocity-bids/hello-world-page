@@ -24,7 +24,7 @@ export async function getReports(status?: string) {
   return withQueryList(async () => {
     let query = supabase
       .from("reports")
-      .select("translation:*")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (status) {

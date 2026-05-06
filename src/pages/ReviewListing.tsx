@@ -55,7 +55,7 @@ const ReviewListing = () => {
     if (!id) return;
 
     const fetchVehicle = async () => {
-      const { data, error } = await supabase.from("vehicles").select("translation:*").eq("id", id).single();
+      const { data, error } = await supabase.from("vehicles").select("*").eq("id", id).single();
 
       if (error) {
         if (import.meta.env.DEV) console.error("Error fetching vehicle:", error);

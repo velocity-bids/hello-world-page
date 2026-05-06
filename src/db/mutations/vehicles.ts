@@ -114,7 +114,7 @@ export async function deleteVehicle(
   return withMutation(async () => {
     const { count, error: countError } = await supabase
       .from("bids")
-      .select("translation:id", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("vehicle_id", vehicleId);
 
     if (countError) throw countError;

@@ -21,6 +21,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -176,9 +183,20 @@ export default function DetailsStep() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("translation:vehicle.fuelType")}</FormLabel>
-                <FormControl>
-                  <Input placeholder={t("translation:createListing.fuelTypePlaceholder")} {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("translation:createListing.fuelTypePlaceholder")} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {(["gasoline", "diesel", "hybrid", "electric", "other"] as const).map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {t(`translation:vehicle.fuelTypes.${key}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -189,9 +207,20 @@ export default function DetailsStep() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("translation:vehicle.transmission")}</FormLabel>
-                <FormControl>
-                  <Input placeholder={t("translation:createListing.transmissionPlaceholder")} {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("translation:createListing.transmissionPlaceholder")} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {(["manual", "automatic", "semiAutomatic"] as const).map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {t(`translation:vehicle.transmissions.${key}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -329,7 +358,7 @@ export default function DetailsStep() {
             control={form.control}
             name="auctionEndTime"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>{t("translation:createListing.auctionEndTime")}</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />

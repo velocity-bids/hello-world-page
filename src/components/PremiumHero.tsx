@@ -50,11 +50,11 @@ const PremiumHero = () => {
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (brand !== "any") params.set("translation:brand", brand);
-    if (model !== "any") params.set("translation:model", model);
-    if (yearFrom !== "any") params.set("translation:yearFrom", yearFrom);
-    if (yearTo !== "any") params.set("translation:yearTo", yearTo);
-    if (maxMileage !== "any") params.set("translation:maxMileage", maxMileage);
+    if (brand !== "any") params.set("brand", brand);
+    if (model !== "any") params.set("model", model);
+    if (yearFrom !== "any") params.set("yearFrom", yearFrom);
+    if (yearTo !== "any") params.set("yearTo", yearTo);
+    if (maxMileage !== "any") params.set("maxMileage", maxMileage);
     navigate(`/auctions?${params.toString()}`);
   };
 
@@ -111,6 +111,20 @@ const PremiumHero = () => {
                 </div>
 
                 <div className="space-y-1">
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("translation:vehicle.maxMileage")}</label>
+                  <Select value={maxMileage} onValueChange={setMaxMileage}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder={t("translation:vehicle.anyMileage")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mileageOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
                   <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("translation:vehicle.yearFrom")}</label>
                   <Select value={yearFrom} onValueChange={(v) => { setYearFrom(v); if (yearToNum && parseInt(v) > yearToNum) setYearTo(v); }}>
                     <SelectTrigger className="h-11">
@@ -135,20 +149,6 @@ const PremiumHero = () => {
                       <SelectItem value="any">{t("translation:vehicle.anyYear")}</SelectItem>
                       {YEARS.filter((y) => !yearFromNum || y >= yearFromNum).map((y) => (
                         <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("translation:vehicle.maxMileage")}</label>
-                  <Select value={maxMileage} onValueChange={setMaxMileage}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder={t("translation:vehicle.anyMileage")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mileageOptions.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

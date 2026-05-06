@@ -8,7 +8,7 @@ export const getCommentsForVehicle = async (vehicleId: string): Promise<QueryLis
   return withQueryList(() =>
     supabase
       .from("comments")
-      .select("translation:*")
+      .select("*")
       .eq("vehicle_id", vehicleId)
       .order("created_at", { ascending: false })
   );

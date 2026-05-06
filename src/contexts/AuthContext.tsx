@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       toast.success("Signed out successfully");
-      window.location.href = "/";
+      window.location.href = import.meta.env.BASE_URL;
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
     }

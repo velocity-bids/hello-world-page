@@ -119,7 +119,7 @@ const Auctions = () => {
     <>
       <main className="flex-1">
         <section className="py-12 md:py-16">
-          <div className="container">
+          <div className="container px-4">
             <div className="mb-8">
               <h1 className="mb-2 text-3xl font-bold">{t("translation:auctions.allTitle")}</h1>
               <p className="text-muted-foreground">{t("translation:auctions.allDescription")}</p>

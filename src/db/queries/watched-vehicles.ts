@@ -54,7 +54,7 @@ export const isVehicleWatched = async (userId: string, vehicleId: string): Promi
   const result = await withQuery(async () => {
     const { data, error } = await supabase
       .from("watched_vehicles")
-      .select("translation:id")
+      .select("id")
       .eq("user_id", userId)
       .eq("vehicle_id", vehicleId)
       .maybeSingle();

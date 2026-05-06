@@ -122,7 +122,19 @@
     "exteriorColor": "Cor exterior",
     "interiorColor": "Cor interior",
     "fuelType": "Tipo de combustível",
+    "fuelTypes": {
+      "gasoline": "Gasolina",
+      "diesel": "Diesel",
+      "hybrid": "Híbrido",
+      "electric": "Elétrico",
+      "other": "Outro"
+    },
     "transmission": "Caixa de velocidades",
+    "transmissions": {
+      "manual": "Manual",
+      "automatic": "Automática",
+      "semiAutomatic": "Semi-Automática"
+    },
     "doors": "Portas",
     "horsepower": "Cavalos",
     "engine": "Motor",

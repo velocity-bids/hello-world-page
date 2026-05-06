@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { formatCurrency } from "@/lib/utils";
+import { useListingPhotos } from "@/contexts/ListingPhotosContext";
 
 import type { ListingForm } from "./schema";
 
@@ -10,7 +11,7 @@ export default function ReviewStep() {
   const { t } = useTranslation();
   const { control } = useFormContext<ListingForm>();
   const values = useWatch({ control });
-  const photos = values.photos ?? [];
+  const { previews } = useListingPhotos();
 
   return (
     <div className="animate-in space-y-8 fade-in-50 duration-500">
@@ -20,8 +21,8 @@ export default function ReviewStep() {
         <div>
           <h3 className="mb-3 text-lg font-semibold text-primary">{t("translation:vehicle.images")}</h3>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {photos.map((url, index) => (
-              <img key={url} src={url} alt={t("translation:createListing.photo", { count: index + 1 })} className="h-32 w-full rounded-lg border object-cover" />
+            {previews.map((url, index) => (
+              <img key={url} src={url} alt={t("translation:createListing.photo", { count: (index + 1).toString() })} className="h-32 w-full rounded-lg border object-cover" />
             ))}
           </div>
         </div>

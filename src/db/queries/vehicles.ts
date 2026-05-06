@@ -6,7 +6,7 @@ import type { QueryResult, QueryListResult } from "./types";
 // Fetch a single vehicle by ID
 export const getVehicleById = async (id: string): Promise<QueryResult<Vehicle>> => {
   return withQuery(() =>
-    supabase.from("vehicles").select("translation:*").eq("id", id).single()
+    supabase.from("vehicles").select("*").eq("id", id).single()
   );
 };
 
@@ -15,9 +15,10 @@ export const getActiveVehicles = async (): Promise<QueryListResult<Vehicle>> => 
   return withQueryList(() =>
     supabase
       .from("vehicles")
-      .select("translation:*")
+      .select("*")
       .eq("status", "active")
       .eq("approval_status", "approved")
+      .gt("auction_end_time", new Date().toISOString())
       .order("created_at", { ascending: false })
   );
 };
@@ -45,9 +46,10 @@ export const getFilteredVehicles = async ({
   return withQueryList(async () => {
     let query = supabase
       .from("vehicles")
-      .select("translation:*")
+      .select("*")
       .eq("status", "active")
       .eq("approval_status", "approved")
+      .gt("auction_end_time", new Date().toISOString())
       .lte("mileage", maxMileage)
       .order("created_at", { ascending: false })
       .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -77,7 +79,7 @@ export const getVehiclesBySeller = async (sellerId: string): Promise<QueryListRe
   return withQueryList(() =>
     supabase
       .from("vehicles")
-      .select("translation:*")
+      .select("*")
       .eq("seller_id", sellerId)
       .order("created_at", { ascending: false })
   );
@@ -88,7 +90,7 @@ export const getActiveVehiclesBySeller = async (sellerId: string): Promise<Query
   return withQueryList(() =>
     supabase
       .from("vehicles")
-      .select("translation:*")
+      .select("*")
       .eq("seller_id", sellerId)
       .eq("status", "active")
       .eq("approval_status", "approved")
@@ -101,7 +103,7 @@ export const getPastVehiclesBySeller = async (sellerId: string): Promise<QueryLi
   return withQueryList(() =>
     supabase
       .from("vehicles")
-      .select("translation:*")
+      .select("*")
       .eq("seller_id", sellerId)
       .neq("status", "active")
       .order("auction_end_time", { ascending: false })
@@ -123,9 +125,10 @@ export const getFeaturedVehicles = async (limit = 8): Promise<QueryListResult<Fe
   return withQueryList(() =>
     supabase
       .from("vehicles")
-      .select("translation:id, make, model, year, image_url, current_bid, auction_end_time")
+      .select("id, make, model, year, image_url, current_bid, auction_end_time")
       .eq("status", "active")
       .eq("approval_status", "approved")
+      .gt("auction_end_time", new Date().toISOString())
       .order("current_bid", { ascending: false })
       .limit(limit)
   );
@@ -136,7 +139,7 @@ export const getVehicleBrands = async (): Promise<QueryListResult<string>> => {
   return withQueryList(async () => {
     const { data, error } = await supabase
       .from("vehicles")
-      .select("translation:make")
+      .select("make")
       .eq("status", "active")
       .eq("approval_status", "approved");
 
@@ -154,7 +157,7 @@ export const getVehicleModels = async (make: string): Promise<QueryListResult<st
   return withQueryList(async () => {
     const { data, error } = await supabase
       .from("vehicles")
-      .select("translation:model")
+      .select("model")
       .eq("status", "active")
       .eq("approval_status", "approved")
       .eq("make", make);
@@ -173,7 +176,7 @@ export const getAllVehiclesAdmin = async (): Promise<QueryListResult<Vehicle>> =
   return withQueryList(() =>
     supabase
       .from("vehicles")
-      .select("translation:*")
+      .select("*")
       .order("created_at", { ascending: false })
   );
 };

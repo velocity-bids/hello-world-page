@@ -47,13 +47,13 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 relative">
         <Link to="/" className="flex items-center gap-2">
           <Car className="h-6 w-6" />
           <span className="text-xl font-bold">BidWheels</span>
         </Link>
 
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-6 md:flex absolute left-1/2 -translate-x-1/2">
           <Link to="/auctions" className="text-sm font-medium transition-colors hover:text-primary">
             {t("translation:nav.auctions")}
           </Link>
@@ -148,7 +148,7 @@ const Navbar = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings">
+                    <Link to="/profile">
                       <Settings className="mr-2 h-4 w-4" />
                       {t("translation:nav.settings")}
                     </Link>
@@ -241,7 +241,7 @@ const Navbar = () => {
                       <User className="mr-2 h-4 w-4" />
                       {t("translation:nav.myProfile")}
                     </Button>
-                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/settings")}>
+                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/profile")}>
                       <Settings className="mr-2 h-4 w-4" />
                       {t("translation:nav.settings")}
                     </Button>

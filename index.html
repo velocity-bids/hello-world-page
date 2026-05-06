@@ -21,14 +21,19 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if (window.location.hash) {
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        localStorage.setItem("supabase_oauth", JSON.stringify(
-          Object.fromEntries(params.entries())
-        ));
-        window.location.href = '/';
-      }
+      // Restore path encoded by 404.html for GitHub Pages SPA routing.
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function (s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(
+            null, null,
+            l.pathname.slice(0, l.pathname.indexOf('/hello-world-page/') + '/hello-world-page/'.length) +
+            decoded + l.hash
+          );
+        }
+      }(window.location));
     </script>
   </body>
 </html>

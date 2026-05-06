@@ -15,7 +15,7 @@ export const getFeedbackForUser = async (userId: string): Promise<QueryListResul
   return withQueryList(() =>
     supabase
       .from("feedback")
-      .select("translation:id, rating, comment, created_at, reviewer_id")
+      .select("id, rating, comment, created_at, reviewer_id")
       .eq("reviewee_id", userId)
       .order("created_at", { ascending: false })
   );
@@ -30,7 +30,7 @@ export const checkExistingFeedback = async (
   return withQuery(() =>
     supabase
       .from("feedback")
-      .select("translation:id")
+      .select("id")
       .eq("reviewer_id", reviewerId)
       .eq("reviewee_id", revieweeId)
       .eq("vehicle_id", vehicleId)

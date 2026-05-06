@@ -122,7 +122,19 @@
     "exteriorColor": "Exterior Color",
     "interiorColor": "Interior Color",
     "fuelType": "Fuel Type",
+    "fuelTypes": {
+      "gasoline": "Gasoline",
+      "diesel": "Diesel",
+      "hybrid": "Hybrid",
+      "electric": "Electric",
+      "other": "Other"
+    },
     "transmission": "Transmission",
+    "transmissions": {
+      "manual": "Manual",
+      "automatic": "Automatic",
+      "semiAutomatic": "Semi-Automatic"
+    },
     "doors": "Doors",
     "horsepower": "Horsepower",
     "engine": "Engine",

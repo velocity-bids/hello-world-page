@@ -7,7 +7,7 @@ export const checkUserIsAdmin = async (userId: string): Promise<QueryResult<bool
   const result = await withQuery(async () => {
     const { data, error } = await supabase
       .from("user_roles")
-      .select("translation:role")
+      .select("role")
       .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
