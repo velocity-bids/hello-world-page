@@ -37,7 +37,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter basename="/">
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <LoginModal />
               <Routes>
                 <Route path="/auth/callback" element={<AuthCallback />} />

@@ -92,7 +92,7 @@ export const LoginModal = () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
       });
       if (error) throw error;
       toast.success(t("translation:auth.passwordResetSent"));
