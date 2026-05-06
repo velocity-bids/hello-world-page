@@ -1,3 +1,4 @@
+import { ucareTransforms } from "@/lib/uploadcare";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
@@ -31,8 +32,8 @@ export function VehicleGallery({ images, vehicleName }: VehicleGalleryProps) {
     <>
       <div className="space-y-4">
         <div className="group relative cursor-pointer overflow-hidden rounded-lg bg-muted" onClick={() => setIsLightboxOpen(true)}>
-          <div className="relative aspect-[4/3]">
-            <img src={`${images[selectedIndex]}/-/resize/911x/`} alt={`${vehicleName} - ${t("translation:createListing.photo", { count: selectedIndex + 1 })}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          <div className="relative h-[500px] overflow-hidden bg-muted">
+            <img src={ucareTransforms.galleryMain(images[selectedIndex])} alt={`${vehicleName} - ${t("translation:createListing.photo", { count: selectedIndex + 1 })}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
 
             <Button
               variant="secondary"
@@ -68,7 +69,7 @@ export function VehicleGallery({ images, vehicleName }: VehicleGalleryProps) {
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-6">
             {displayThumbnails.map((image, index) => (
               <button key={index} onClick={() => setSelectedIndex(index)} className={`group relative aspect-[4/3] overflow-hidden rounded-md transition-all ${index === selectedIndex ? "ring-2 ring-primary ring-offset-2" : "opacity-60 hover:opacity-100"}`} aria-label={t("translation:vehicle.thumbnail", { count: index + 1 })}>
-                <img src={image} alt={`${vehicleName} ${t("translation:vehicle.thumbnail", { count: index + 1 })}`} loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                <img src={ucareTransforms.galleryThumb(image)} alt={`${vehicleName} ${t("translation:vehicle.thumbnail", { count: index + 1 })}`} loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-110" />
               </button>
             ))}
 

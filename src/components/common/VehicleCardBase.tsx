@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { ucareTransforms } from "@/lib/uploadcare";
 
 export interface VehicleCardBaseProps {
   id: string;
@@ -60,7 +61,7 @@ export const VehicleCardBase = ({
 
   const imageSection = (
     <div className={cn("relative overflow-hidden bg-muted", !horizontal && aspectRatioClass, horizontal && "aspect-[4/3] md:aspect-square", imageClassName)}>
-      <img src={image} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <img src={ucareTransforms.cardThumb(image)} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
       {badge && <div className="absolute left-4 top-4">{badge}</div>}
       {overlay && <div className="absolute right-3 top-3">{overlay}</div>}
     </div>

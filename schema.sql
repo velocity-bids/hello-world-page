@@ -602,6 +602,9 @@ EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Enable realtime for comments
 ALTER PUBLICATION supabase_realtime ADD TABLE public.comments;
+-- Enable realtime for bids and vehicles (required for live auction updates)
+ALTER PUBLICATION supabase_realtime ADD TABLE public.bids;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.vehicles;
 -- ============================================
 -- 20251114165334_405a6327-fa66-4189-ad16-6a8eeb27d9a5.sql
 -- ============================================

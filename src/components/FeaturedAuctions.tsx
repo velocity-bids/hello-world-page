@@ -36,8 +36,12 @@ const FeaturedAuctions = () => {
     <section className="container mx-auto px-4 py-16">
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <h2 className="text-3xl font-bold sm:text-4xl">{t("translation:auctions.featuredTitle")}</h2>
-          <p className="mt-2 text-muted-foreground">{t("translation:auctions.featuredDescription")}</p>
+          <h2 className="text-3xl font-bold sm:text-4xl">
+            {t("translation:auctions.featuredTitle")}
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            {t("translation:auctions.featuredDescription")}
+          </p>
         </div>
       </div>
 
@@ -53,23 +57,36 @@ const FeaturedAuctions = () => {
         </div>
       ) : featuredVehicles.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredVehicles.map((vehicle) => (
-            <VehicleCard
-              key={vehicle.id}
-              id={vehicle.id}
-              title={getVehicleTitle(vehicle)}
-              year={vehicle.year}
-              mileage={vehicle.mileage}
-              currentBid={vehicle.current_bid}
-              timeLeft={calculateTimeLeft(vehicle.auction_end_time)}
-              image={vehicle.image_url || ""}
-              reserveMet={vehicle.reserve_price ? vehicle.current_bid >= vehicle.reserve_price : true}
-            />
-          ))}
+          {featuredVehicles.map((vehicle) => {
+            console.log(
+              "🚀 ~ FeaturedAuctions ~ vehicle.image_url:",
+              vehicle.image_url,
+            );
+
+            return (
+              <VehicleCard
+                key={vehicle.id}
+                id={vehicle.id}
+                title={getVehicleTitle(vehicle)}
+                year={vehicle.year}
+                mileage={vehicle.mileage}
+                currentBid={vehicle.current_bid}
+                timeLeft={calculateTimeLeft(vehicle.auction_end_time)}
+                image={vehicle.image_url || ""}
+                reserveMet={
+                  vehicle.reserve_price
+                    ? vehicle.current_bid >= vehicle.reserve_price
+                    : true
+                }
+              />
+            );
+          })}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">{t("translation:auctions.noneAvailable")}</p>
+          <p className="text-muted-foreground">
+            {t("translation:auctions.noneAvailable")}
+          </p>
         </div>
       )}
     </section>

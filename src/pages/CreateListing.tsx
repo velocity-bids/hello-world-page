@@ -343,9 +343,6 @@ function CreateListingInner() {
                   </Button>
                 )}
 
-                <Button type="button" variant="ghost" size="lg" onClick={() => navigate("/")} disabled={isSubmitting}>
-                  {t("translation:common.cancel")}
-                </Button>
               </div>
             </form>
           </Form>
