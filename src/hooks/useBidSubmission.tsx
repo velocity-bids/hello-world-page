@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
@@ -11,6 +12,7 @@ interface UseBidSubmissionOptions {
 }
 
 export const useBidSubmission = ({ vehicle, userId, onSuccess }: UseBidSubmissionOptions) => {
+  const { t } = useTranslation();
   const [bidAmount, setBidAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,7 +25,7 @@ export const useBidSubmission = ({ vehicle, userId, onSuccess }: UseBidSubmissio
 
   const handlePlaceBid = async () => {
     if (!userId) {
-      toast.error("Please sign in to place a bid");
+      toast.error(t("translation:bidding.pleaseSignInToBid"));
       return false;
     }
 
@@ -32,7 +34,7 @@ export const useBidSubmission = ({ vehicle, userId, onSuccess }: UseBidSubmissio
     const amount = parseFloat(bidAmount);
 
     if (amount < minBid) {
-      toast.error(`Minimum bid is ${formatCurrency(minBid)}`);
+      toast.error(t("translation:bidding.minimumBidIs", { amount: formatCurrency(minBid) }));
       return false;
     }
 
@@ -44,7 +46,7 @@ export const useBidSubmission = ({ vehicle, userId, onSuccess }: UseBidSubmissio
     });
 
     if (error) {
-      toast.error("Failed to place bid. Please try again.");
+      toast.error(t("translation:bidding.bidPlacedFailed"));
       setSubmitting(false);
       return false;
     } else if (data && typeof data === "object" && "error" in data && data.error) {
@@ -53,8 +55,8 @@ export const useBidSubmission = ({ vehicle, userId, onSuccess }: UseBidSubmissio
       return false;
     }
 
-    toast.success("Bid placed successfully!");
-    setBidAmount("");
+    toast.success(t("translation:bidding.bidPlacedSuccess"));
+    setBidAmount("translation:");
     onSuccess?.(amount);
     setSubmitting(false);
     return true;

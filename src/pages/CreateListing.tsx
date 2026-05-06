@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, Clock, Loader2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -25,13 +26,6 @@ import { listingSchema, type ListingForm } from "./create-listing/schema";
 
 const totalSteps = 4;
 
-const steps = [
-  { num: 1, label: "Photos" },
-  { num: 2, label: "Basic Info" },
-  { num: 3, label: "Details" },
-  { num: 4, label: "Review" },
-];
-
 export default function CreateListing() {
   return (
     <ListingPhotosProvider>
@@ -41,20 +35,34 @@ export default function CreateListing() {
 }
 
 function CreateListingInner() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { openLoginModal } = useAuthModal();
+  const { openLoginModal, isOpen: isModalOpen } = useAuthModal();
   const { isVerified, timeRemaining } = useIdVerification();
   const { files } = useListingPhotos();
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const steps = [
+    { num: 1, label: t("translation:createListing.photos") },
+    { num: 2, label: t("translation:createListing.basicInfo") },
+    { num: 3, label: t("translation:createListing.details") },
+    { num: 4, label: t("translation:createListing.review") },
+  ];
+
   useEffect(() => {
     if (!authLoading && !user) {
       openLoginModal();
     }
   }, [user, authLoading, openLoginModal]);
+
+  useEffect(() => {
+    if (!authLoading && !user && !isModalOpen) {
+      navigate("/");
+    }
+  }, [user, authLoading, isModalOpen, navigate]);
 
   const form = useForm<ListingForm>({
     resolver: zodResolver(listingSchema),
@@ -86,30 +94,29 @@ function CreateListingInner() {
 
   const onSubmit = async (data: ListingForm) => {
     if (!user) {
-      toast.error("You must be logged in to create a listing");
+      toast.error(t("translation:createListing.mustBeLoggedIn"));
       openLoginModal();
       return;
     }
 
     if (!isVerified) {
-      toast.error("Please verify your ID before creating an auction");
+      toast.error(t("translation:createListing.verifyIdFirst"));
       setVerificationModalOpen(true);
       return;
     }
 
     if (files.length < 5) {
-      toast.error("Please upload at least 5 images");
+      toast.error(t("translation:createListing.uploadFiveImages"));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Upload all local files to UploadCare and get CDN URLs
-      toast.loading("Uploading images...", { id: "uploading" });
+      toast.loading(t("translation:createListing.uploadingImages"), { id: "uploading" });
       const photoUrls = await uploadFilesToUploadCare(files);
       toast.dismiss("uploading");
-      const [hours, minutes] = data.auctionEndTime.split(":");
+      const [hours, minutes] = data.auctionEndTime.split("translation::");
       const auctionDateTime = new Date(data.auctionEndDate);
       auctionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
@@ -144,13 +151,11 @@ function CreateListingInner() {
 
       if (insertError) throw insertError;
 
-      toast.success(
-        "Listing submitted! It will be reviewed by our admin team before going live."
-      );
+      toast.success(t("translation:createListing.submittedForReview"));
       navigate("/");
     } catch (error) {
       console.error("Error creating listing:", error);
-      toast.error("Failed to create listing. Please try again.");
+      toast.error(t("translation:createListing.createFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -171,7 +176,7 @@ function CreateListingInner() {
   const handleNext = async () => {
     if (currentStep === 1) {
       if (files.length < 5) {
-        toast.error("Please upload at least 5 images");
+        toast.error(t("translation:createListing.uploadFiveImages"));
         return;
       }
 
@@ -196,7 +201,7 @@ function CreateListingInner() {
           ];
 
     if (currentStep === 3 && form.getValues("imported") && !form.getValues("importCountry")) {
-      toast.error("Please specify the import country");
+      toast.error(t("translation:createListing.specifyImportCountry"));
       return;
     }
 
@@ -205,7 +210,7 @@ function CreateListingInner() {
     if (isValid) {
       nextStep();
     } else {
-      toast.error("Please complete all required fields correctly");
+      toast.error(t("translation:createListing.completeRequiredFields"));
     }
   };
 
@@ -236,35 +241,30 @@ function CreateListingInner() {
     <>
       <CreateListingNavbar currentStep={currentStep} totalSteps={totalSteps} />
 
-      <IdVerificationModal
-        open={verificationModalOpen}
-        onOpenChange={setVerificationModalOpen}
-      />
+      <IdVerificationModal open={verificationModalOpen} onOpenChange={setVerificationModalOpen} />
 
-      <div className="flex-1 bg-background py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">Create Vehicle Listing</h1>
+      <div className="flex-1 bg-background px-4 py-12">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="mb-4 text-4xl font-bold">{t("translation:createListing.title")}</h1>
 
           <div
             className={cn(
-              "mb-6 p-4 rounded-lg border flex items-center gap-3",
+              "mb-6 flex items-center gap-3 rounded-lg border p-4",
               isVerified
-                ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
-                : "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800"
+                ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30"
+                : "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
             )}
           >
             {isVerified ? (
               <>
-                <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0" />
+                <ShieldCheck className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                    ID Verified
-                  </p>
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">{t("translation:createListing.idVerified")}</p>
                   <p className="text-xs text-green-600 dark:text-green-500">
-                    You can create auctions. {timeRemaining > 0 && (
+                    {t("translation:createListing.canCreateAuctions")} {timeRemaining > 0 && (
                       <span className="inline-flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        Expires in {timeRemaining}s (demo)
+                        {t("translation:createListing.expiresInDemo", { count: timeRemaining })}
                       </span>
                     )}
                   </p>
@@ -272,22 +272,13 @@ function CreateListingInner() {
               </>
             ) : (
               <>
-                <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <ShieldAlert className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                    ID Verification Required
-                  </p>
-                  <p className="text-xs text-amber-600 dark:text-amber-500">
-                    You must verify your identity before creating an auction.
-                  </p>
+                  <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{t("translation:createListing.idVerificationRequired")}</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">{t("translation:createListing.verifyIdentityBeforeAuction")}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVerificationModalOpen(true)}
-                  className="shrink-0"
-                >
-                  Upload ID
+                <Button variant="outline" size="sm" onClick={() => setVerificationModalOpen(true)} className="shrink-0">
+                  {t("translation:createListing.uploadId")}
                 </Button>
               </>
             )}
@@ -296,34 +287,26 @@ function CreateListingInner() {
           <div className="mb-8">
             <div className="flex items-start justify-between gap-2">
               {steps.map((step) => (
-                <div key={step.num} className="flex flex-col items-center flex-1">
-                  <div className="flex items-center w-full">
+                <div key={step.num} className="flex flex-1 flex-col items-center">
+                  <div className="flex w-full items-center">
                     <div
                       className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors mx-auto",
+                        "mx-auto flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors",
                         currentStep >= step.num
-                          ? "bg-primary border-primary text-primary-foreground"
+                          ? "border-primary bg-primary text-primary-foreground"
                           : "border-muted-foreground text-muted-foreground"
                       )}
                     >
                       {step.num}
                     </div>
                   </div>
-                  <span className="mt-2 text-xs text-muted-foreground text-center">
-                    {step.label}
-                  </span>
+                  <span className="mt-2 text-center text-xs text-muted-foreground">{step.label}</span>
                 </div>
               ))}
             </div>
-            <div className="flex items-center mt-6 -mx-4">
+            <div className="-mx-4 mt-6 flex items-center">
               {steps.map((step) => (
-                <div
-                  key={step.num}
-                  className={cn(
-                    "flex-1 h-1 mx-2 transition-colors",
-                    currentStep > step.num ? "bg-primary" : "bg-muted"
-                  )}
-                />
+                <div key={step.num} className={cn("mx-2 h-1 flex-1 transition-colors", currentStep > step.num ? "bg-primary" : "bg-muted")} />
               ))}
             </div>
           </div>
@@ -334,28 +317,17 @@ function CreateListingInner() {
 
               <div className="flex justify-between gap-4">
                 {currentStep > 1 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    onClick={prevStep}
-                    disabled={isSubmitting}
-                  >
+                  <Button type="button" variant="outline" size="lg" onClick={prevStep} disabled={isSubmitting}>
                     <ChevronLeft className="mr-2 h-4 w-4" />
-                    Previous
+                    {t("translation:common.previous")}
                   </Button>
                 ) : (
                   <div />
                 )}
 
                 {currentStep < totalSteps ? (
-                  <Button
-                    type="button"
-                    size="lg"
-                    onClick={handleNext}
-                    className={cn(currentStep === 1 && "ml-auto")}
-                  >
-                    Next
+                  <Button type="button" size="lg" onClick={handleNext} className={cn(currentStep === 1 && "ml-auto")}>
+                    {t("translation:common.next")}
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
@@ -363,22 +335,16 @@ function CreateListingInner() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating Listing...
+                        {t("translation:createListing.creatingListingButton")}
                       </>
                     ) : (
-                      "Create Listing"
+                      t("translation:createListing.createListing")
                     )}
                   </Button>
                 )}
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  disabled={isSubmitting}
-                >
-                  Cancel
+                <Button type="button" variant="ghost" size="lg" onClick={() => navigate("/")} disabled={isSubmitting}>
+                  {t("translation:common.cancel")}
                 </Button>
               </div>
             </form>

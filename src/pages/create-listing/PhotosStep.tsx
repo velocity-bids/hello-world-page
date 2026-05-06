@@ -1,4 +1,5 @@
 import { Star, GripVertical, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -27,8 +28,8 @@ interface SortablePhotoProps {
 }
 
 function SortablePhoto({ id, preview, index, onRemove }: SortablePhotoProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -40,35 +41,30 @@ function SortablePhoto({ id, preview, index, onRemove }: SortablePhotoProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-lg border overflow-hidden bg-background select-none",
-        isDragging && "opacity-50 shadow-2xl ring-2 ring-primary z-50"
+        "select-none overflow-hidden rounded-lg border bg-background",
+        isDragging && "z-50 opacity-50 shadow-2xl ring-2 ring-primary"
       )}
     >
       <div className="relative">
-        <img src={preview} alt={`Vehicle ${index + 1}`} className="w-full h-48 object-cover" />
+        <img src={preview} alt={t("translation:createListing.photo", { count: index + 1 })} className="h-48 w-full object-cover" />
         {index === 0 && (
-          <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground px-2 py-1 rounded-full">
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
             <Star className="h-3 w-3 fill-current" />
-            Cover
+            {t("translation:createListing.cover")}
           </span>
         )}
         <button
           type="button"
           onClick={() => onRemove(id)}
-          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-          aria-label="Remove photo"
+          className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
+          aria-label={t("translation:common.removePhoto")}
         >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="px-3 py-2 flex items-center justify-between text-sm text-muted-foreground">
-        <span>Photo {index + 1}</span>
-        <button
-          type="button"
-          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted touch-none"
-          {...attributes}
-          {...listeners}
-        >
+      <div className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground">
+        <span>{t("translation:createListing.photo", { count: index + 1 })}</span>
+        <button type="button" className="touch-none rounded p-1 hover:bg-muted cursor-grab active:cursor-grabbing" {...attributes} {...listeners} aria-label={t("translation:common.sort")}>
           <GripVertical className="h-4 w-4" />
         </button>
       </div>
@@ -77,9 +73,9 @@ function SortablePhoto({ id, preview, index, onRemove }: SortablePhotoProps) {
 }
 
 export default function PhotosStep() {
+  const { t } = useTranslation();
   const { files, setFiles, previews } = useListingPhotos();
 
-  // Each file is identified by its index as a string key
   const ids = files.map((_, i) => String(i));
 
   const handleFilesSelected = (incoming: File[]) => {
@@ -104,41 +100,33 @@ export default function PhotosStep() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in-50 duration-500">
-      <div className="bg-card rounded-lg p-6 border space-y-4">
+    <div className="animate-in space-y-8 fade-in-50 duration-500">
+      <div className="space-y-4 rounded-lg border bg-card p-6">
         <div>
-          <h2 className="text-xl font-semibold mb-1">Vehicle Images *</h2>
-          <p className="text-sm text-muted-foreground">
-            Upload at least 5 images. The first image will be used as the cover photo.
-          </p>
+          <h2 className="mb-1 text-xl font-semibold">{t("translation:createListing.vehicleImages")}</h2>
+          <p className="text-sm text-muted-foreground">{t("translation:createListing.uploadImagesMin")}</p>
         </div>
         <ImageUploader onFilesSelected={handleFilesSelected} />
         {files.length > 0 && (
           <p className={cn("text-sm", files.length >= 5 ? "text-green-600" : "text-amber-600")}>
-            {files.length >= 5 ? "✓" : "⚠"} {files.length} of 5 minimum images selected
+            {files.length >= 5 ? "✓" : "⚠"} {t("translation:createListing.minimumImagesSelected", { count: files.length })}
           </p>
         )}
       </div>
 
       {files.length > 0 && (
-        <div className="bg-card rounded-lg p-6 border space-y-4">
+        <div className="space-y-4 rounded-lg border bg-card p-6">
           <div>
-            <h2 className="text-xl font-semibold mb-1">Preview & Order</h2>
+            <h2 className="mb-1 text-xl font-semibold">{t("translation:createListing.previewOrder")}</h2>
             <p className="text-sm text-muted-foreground">
-              Drag to reorder. Click <X className="inline h-3 w-3" /> to remove a photo.
+              {t("translation:createListing.dragToReorder")} <X className="inline h-3 w-3" />
             </p>
           </div>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={ids} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {files.map((_, index) => (
-                  <SortablePhoto
-                    key={index}
-                    id={String(index)}
-                    preview={previews[index]}
-                    index={index}
-                    onRemove={handleRemove}
-                  />
+                  <SortablePhoto key={index} id={String(index)} preview={previews[index]} index={index} onRemove={handleRemove} />
                 ))}
               </div>
             </SortableContext>

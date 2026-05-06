@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import { ImagePlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface ImageUploaderProps {
@@ -9,6 +10,7 @@ interface ImageUploaderProps {
 
 export const ImageUploader = ({ onFilesSelected, className }: ImageUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const handleFiles = useCallback(
     (incoming: FileList | null) => {
@@ -35,24 +37,16 @@ export const ImageUploader = ({ onFilesSelected, className }: ImageUploaderProps
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border",
-        "bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors p-10 text-center",
+        "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 p-10 text-center transition-colors hover:bg-muted/50",
         className
       )}
     >
       <ImagePlus className="h-10 w-10 text-muted-foreground" />
       <div>
-        <p className="font-medium">Click to select or drag &amp; drop images</p>
-        <p className="text-sm text-muted-foreground mt-1">JPG, PNG, WEBP — multiple files allowed</p>
+        <p className="font-medium">{t("translation:createListing.imageUploadPrompt", { defaultValue: "Click to select or drag & drop images" })}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("translation:createListing.imageFormats", { defaultValue: "JPG, PNG, WEBP — multiple files allowed" })}</p>
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => handleFiles(e.target.files)}
-      />
+      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
     </div>
   );
 };

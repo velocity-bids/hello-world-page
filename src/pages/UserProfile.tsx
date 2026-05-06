@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { getFullProfile, getFeedbackForUser, getActiveVehiclesBySeller, getPastVehiclesBySeller, getProfileDisplayInfo, type FullProfile } from "@/db/queries";
 import { ProfileHeader, ReputationCard, FeedbackList, StatsCard, ListingGrid } from "@/components/profile";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import type { Vehicle, FeedbackWithReviewer } from "@/types";
 
 const UserProfilePage = () => {
+  const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [feedback, setFeedback] = useState<FeedbackWithReviewer[]>([]);
@@ -21,12 +23,10 @@ const UserProfilePage = () => {
 
       try {
         const { data: profileData, error: profileError } = await getFullProfile(userId);
-
         if (profileError) throw profileError;
         setProfile(profileData);
 
         const { data: feedbackData, error: feedbackError } = await getFeedbackForUser(userId);
-
         if (feedbackError) throw feedbackError;
 
         const feedbackWithReviewers = await Promise.all(
@@ -36,7 +36,7 @@ const UserProfilePage = () => {
             return {
               ...fb,
               reviewer: {
-                display_name: reviewerProfile?.display_name || "Anonymous",
+                display_name: reviewerProfile?.display_name || t("translation:common.anonymous"),
                 avatar_url: reviewerProfile?.avatar_url || null,
               },
             } as FeedbackWithReviewer;
@@ -51,7 +51,7 @@ const UserProfilePage = () => {
         const { data: pastData } = await getPastVehiclesBySeller(userId);
         setPastListings(pastData || []);
       } catch (error) {
-        toast.error("Failed to load user profile");
+        toast.error(t("translation:errors.failedLoadUserProfile"));
         console.error("Error fetching user data:", error);
       } finally {
         setLoading(false);
@@ -59,12 +59,12 @@ const UserProfilePage = () => {
     };
 
     fetchUserData();
-  }, [userId]);
+  }, [userId, t]);
 
   if (loading) {
     return (
       <main className="container flex-1 py-8">
-        <PageLoader message="Loading profile..." />
+        <PageLoader message={t("translation:profile.loadingProfile")} />
       </main>
     );
   }
@@ -73,8 +73,8 @@ const UserProfilePage = () => {
     return (
       <main className="container flex-1 py-8">
         <div className="py-12 text-center">
-          <h1 className="mb-4 text-3xl font-bold">User Not Found</h1>
-          <p className="text-muted-foreground">The user profile you're looking for doesn't exist.</p>
+          <h1 className="mb-4 text-3xl font-bold">{t("translation:profile.userNotFound")}</h1>
+          <p className="text-muted-foreground">{t("translation:profile.userNotFoundDescription")}</p>
         </div>
       </main>
     );
@@ -84,59 +84,59 @@ const UserProfilePage = () => {
 
   return (
     <main className="container flex-1 py-8">
-        <div className="space-y-8">
-          <ProfileHeader
-            avatarUrl={profile.avatar_url}
-            displayName={profile.display_name || "Anonymous"}
-            memberSince={profile.member_since || ""}
-            bio={profile.bio}
-            verified={profile.verified}
-          />
+      <div className="space-y-8">
+        <ProfileHeader
+          avatarUrl={profile.avatar_url}
+          displayName={profile.display_name || t("translation:common.anonymous")}
+          memberSince={profile.member_since || ""}
+          bio={profile.bio}
+          verified={profile.verified}
+        />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <StatsCard
-                completedSales={profile.vehicles_sold || 0}
-                activeListings={activeListings.length}
-                pastListings={pastListings.length}
-                totalListings={totalListings}
-              />
-              <FeedbackList feedback={feedback} />
-            </div>
-            <div>
-              <ReputationCard rating={profile.rating} totalFeedback={feedback.length} />
-            </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <StatsCard
+              completedSales={profile.vehicles_sold || 0}
+              activeListings={activeListings.length}
+              pastListings={pastListings.length}
+              totalListings={totalListings}
+            />
+            <FeedbackList feedback={feedback} />
           </div>
-
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="active" className="flex-1 sm:flex-none">
-                Current Listings ({activeListings.length})
-              </TabsTrigger>
-              <TabsTrigger value="past" className="flex-1 sm:flex-none">
-                Past Listings ({pastListings.length})
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="active" className="mt-6">
-              <ListingGrid
-                listings={activeListings}
-                title="Current Listings"
-                description="Active auctions from this seller"
-                emptyMessage="No active listings at the moment"
-                isPast={false}
-              />
-            </TabsContent>
-            <TabsContent value="past" className="mt-6">
-              <ListingGrid
-                listings={pastListings}
-                title="Past Listings"
-                description="Completed auctions from this seller"
-                emptyMessage="No past listings to show"
-                isPast={true}
-              />
-            </TabsContent>
-          </Tabs>
+          <div>
+            <ReputationCard rating={profile.rating} totalFeedback={feedback.length} />
+          </div>
         </div>
+
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="active" className="flex-1 sm:flex-none">
+              {t("translation:profile.currentListings")} ({activeListings.length})
+            </TabsTrigger>
+            <TabsTrigger value="past" className="flex-1 sm:flex-none">
+              {t("translation:profile.pastListings")} ({pastListings.length})
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="active" className="mt-6">
+            <ListingGrid
+              listings={activeListings}
+              title={t("translation:profile.currentListings")}
+              description={t("translation:profile.currentListingsDescription")}
+              emptyMessage={t("translation:profile.currentListingsEmpty")}
+              isPast={false}
+            />
+          </TabsContent>
+          <TabsContent value="past" className="mt-6">
+            <ListingGrid
+              listings={pastListings}
+              title={t("translation:profile.pastListings")}
+              description={t("translation:profile.pastListingsDescriptionTab")}
+              emptyMessage={t("translation:profile.pastListingsEmpty")}
+              isPast
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </main>
   );
 };

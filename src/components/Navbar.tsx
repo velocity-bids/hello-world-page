@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Car, Menu, User, LogOut, Shield, Bell, X, Gavel, Eye, Settings } from "lucide-react";
+import { Car, Menu, User, LogOut, Shield, Bell, Gavel, Eye, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { enGB, pt } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
+
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -14,22 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -37,7 +31,9 @@ const Navbar = () => {
   const { isAdmin } = useIsAdmin();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { openLoginModal } = useAuthModal();
+  const { t, i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const timeLocale = i18n.language.startsWith("pt") ? pt : enGB;
 
   const handleMobileNavigation = (path: string) => {
     navigate(path);
@@ -58,39 +54,31 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <Link
-            to="/auctions"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            Auctions
+          <Link to="/auctions" className="text-sm font-medium transition-colors hover:text-primary">
+            {t("translation:nav.auctions")}
           </Link>
-          <Link
-            to="/sell"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            Sell
+          <Link to="/sell" className="text-sm font-medium transition-colors hover:text-primary">
+            {t("translation:nav.sell")}
           </Link>
-          <Link
-            to="/about"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            About
+          <Link to="/about" className="text-sm font-medium transition-colors hover:text-primary">
+            {t("translation:nav.about")}
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
 
           {user ? (
             <>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex">
+                  <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex" title={t("translation:nav.notifications")}>
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                       <Badge
                         variant="destructive"
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center p-0 text-xs"
                       >
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </Badge>
@@ -99,35 +87,30 @@ const Navbar = () => {
                 </PopoverTrigger>
                 <PopoverContent className="w-96 p-0" align="end">
                   <div className="flex items-center justify-between border-b p-4">
-                    <h3 className="font-semibold">Notifications</h3>
+                    <h3 className="font-semibold">{t("translation:nav.notifications")}</h3>
                     {unreadCount > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={markAllAsRead}
-                        className="h-8 text-xs"
-                      >
-                        Mark all read
+                      <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-8 text-xs">
+                        {t("translation:notifications.markAllRead")}
                       </Button>
                     )}
                   </div>
                   <ScrollArea className="h-[400px]">
                     {notifications.length === 0 ? (
                       <div className="p-8 text-center text-muted-foreground">
-                        <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>No notifications yet</p>
+                        <Bell className="mx-auto mb-2 h-12 w-12 opacity-50" />
+                        <p>{t("translation:notifications.none")}</p>
                       </div>
                     ) : (
                       <div className="divide-y">
                         {notifications.map((notification) => (
                           <div
                             key={notification.id}
-                            className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                            className={`cursor-pointer p-4 transition-colors hover:bg-muted/50 ${
                               !notification.is_read ? "bg-primary/5" : ""
                             }`}
                             onClick={() => {
                               markAsRead(notification.id);
-                              if (notification.type === 'new_listing_submitted') {
+                              if (notification.type === "new_listing_submitted") {
                                 navigate(`/review/${notification.vehicle_id}`);
                               } else {
                                 navigate(`/vehicle/${notification.vehicle_id}`);
@@ -135,9 +118,10 @@ const Navbar = () => {
                             }}
                           >
                             <p className="text-sm">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(notification.created_at), {
                                 addSuffix: true,
+                                locale: timeLocale,
                               })}
                             </p>
                           </div>
@@ -150,41 +134,41 @@ const Navbar = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
+                  <Button variant="ghost" size="icon" className="hidden sm:inline-flex" title={t("translation:nav.account")}>
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("translation:nav.account")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to={`/user/${user.id}`}>
                       <User className="mr-2 h-4 w-4" />
-                      Profile
+                      {t("translation:nav.profile")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings">
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {t("translation:nav.settings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/my-listings">
                       <Car className="mr-2 h-4 w-4" />
-                      My Listings
+                      {t("translation:nav.myListings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/my-bids">
                       <Gavel className="mr-2 h-4 w-4" />
-                      My Bids
+                      {t("translation:nav.myBids")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/watching">
                       <Eye className="mr-2 h-4 w-4" />
-                      Watching
+                      {t("translation:nav.watching")}
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
@@ -193,7 +177,7 @@ const Navbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="flex items-center">
                           <Shield className="mr-2 h-4 w-4" />
-                          Admin Dashboard
+                          {t("translation:nav.adminDashboard")}
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -201,25 +185,28 @@ const Navbar = () => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    {t("translation:nav.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link to="/sell">
-                <Button className="hidden sm:inline-flex">List Vehicle</Button>
+                <Button className="hidden sm:inline-flex">{t("translation:nav.listVehicle")}</Button>
               </Link>
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={openLoginModal} className="hidden sm:inline-flex">Sign In</Button>
-              <Button className="hidden sm:inline-flex" onClick={openLoginModal}>Get Started</Button>
+              <Button variant="ghost" onClick={openLoginModal} className="hidden sm:inline-flex">
+                {t("translation:nav.signIn")}
+              </Button>
+              <Button className="hidden sm:inline-flex" onClick={openLoginModal}>
+                {t("translation:nav.getStarted")}
+              </Button>
             </>
           )}
 
-          {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="md:hidden" title={t("translation:common.menu")}>
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -231,91 +218,55 @@ const Navbar = () => {
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-4">
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={() => handleMobileNavigation("/auctions")}
-                >
+                <div className="flex items-center gap-2">
+                  <LanguageSwitcher />
+                  <ThemeToggle />
+                </div>
+                <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/auctions")}>
                   <Gavel className="mr-2 h-4 w-4" />
-                  Auctions
+                  {t("translation:nav.auctions")}
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={() => handleMobileNavigation("/sell")}
-                >
+                <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/sell")}>
                   <Car className="mr-2 h-4 w-4" />
-                  Sell a Vehicle
+                  {t("translation:nav.sellVehicle")}
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={() => handleMobileNavigation("/about")}
-                >
-                  About
+                <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/about")}>
+                  {t("translation:nav.about")}
                 </Button>
 
                 {user ? (
                   <>
                     <div className="my-2 h-px bg-border" />
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => handleMobileNavigation(`/user/${user.id}`)}
-                    >
+                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation(`/user/${user.id}`)}>
                       <User className="mr-2 h-4 w-4" />
-                      My Profile
+                      {t("translation:nav.myProfile")}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => handleMobileNavigation("/settings")}
-                    >
+                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/settings")}>
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {t("translation:nav.settings")}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => handleMobileNavigation("/my-listings")}
-                    >
+                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/my-listings")}>
                       <Car className="mr-2 h-4 w-4" />
-                      My Listings
+                      {t("translation:nav.myListings")}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => handleMobileNavigation("/my-bids")}
-                    >
+                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/my-bids")}>
                       <Gavel className="mr-2 h-4 w-4" />
-                      My Bids
+                      {t("translation:nav.myBids")}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      onClick={() => handleMobileNavigation("/watching")}
-                    >
+                    <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/watching")}>
                       <Eye className="mr-2 h-4 w-4" />
-                      Watching
+                      {t("translation:nav.watching")}
                     </Button>
                     {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        className="justify-start"
-                        onClick={() => handleMobileNavigation("/admin")}
-                      >
+                      <Button variant="ghost" className="justify-start" onClick={() => handleMobileNavigation("/admin")}>
                         <Shield className="mr-2 h-4 w-4" />
-                        Admin Dashboard
+                        {t("translation:nav.adminDashboard")}
                       </Button>
                     )}
                     <div className="my-2 h-px bg-border" />
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-destructive"
-                      onClick={handleMobileSignOut}
-                    >
+                    <Button variant="ghost" className="justify-start text-destructive" onClick={handleMobileSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
+                      {t("translation:nav.signOut")}
                     </Button>
                   </>
                 ) : (
@@ -327,7 +278,7 @@ const Navbar = () => {
                         setMobileMenuOpen(false);
                       }}
                     >
-                      Sign In
+                      {t("translation:nav.signIn")}
                     </Button>
                   </>
                 )}

@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { enGB, pt } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface Feedback {
   id: string;
@@ -19,19 +21,20 @@ interface FeedbackListProps {
 }
 
 export const FeedbackList = ({ feedback }: FeedbackListProps) => {
+  const { t, i18n } = useTranslation();
+  const timeLocale = i18n.language.startsWith("pt") ? pt : enGB;
+
   if (feedback.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Feedback</CardTitle>
-          <CardDescription>No feedback yet</CardDescription>
+          <CardTitle>{t("translation:profile.feedback")}</CardTitle>
+          <CardDescription>{t("translation:profile.noFeedbackYet")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">
-              This user hasn't received any feedback yet.
-            </p>
+            <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/50" />
+            <p className="text-muted-foreground">{t("translation:profile.noFeedbackDescription")}</p>
           </div>
         </CardContent>
       </Card>
@@ -41,28 +44,28 @@ export const FeedbackList = ({ feedback }: FeedbackListProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Feedback</CardTitle>
-        <CardDescription>{feedback.length} review{feedback.length !== 1 ? 's' : ''}</CardDescription>
+        <CardTitle>{t("translation:profile.feedback")}</CardTitle>
+        <CardDescription>{t("translation:profile.review", { count: feedback.length })}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {feedback.map((item) => {
           const initials = item.reviewer.display_name
-            .split(" ")
+            .split("translation: ")
             .map((n) => n[0])
             .join("")
             .toUpperCase()
             .slice(0, 2);
 
           return (
-            <div key={item.id} className="border-b last:border-0 pb-4 last:pb-0">
+            <div key={item.id} className="border-b pb-4 last:border-0 last:pb-0">
               <div className="flex items-start gap-4">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={item.reviewer.avatar_url || undefined} />
                   <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-semibold">{item.reviewer.display_name}</span>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
@@ -70,24 +73,18 @@ export const FeedbackList = ({ feedback }: FeedbackListProps) => {
                           <Star
                             key={star}
                             className={`h-4 w-4 ${
-                              star <= item.rating
-                                ? "fill-yellow-500 text-yellow-500"
-                                : "fill-muted text-muted"
+                              star <= item.rating ? "fill-yellow-500 text-yellow-500" : "fill-muted text-muted"
                             }`}
                           />
                         ))}
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: timeLocale })}
                       </span>
                     </div>
                   </div>
-                  
-                  {item.comment && (
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {item.comment}
-                    </p>
-                  )}
+
+                  {item.comment && <p className="text-sm leading-relaxed text-muted-foreground">{item.comment}</p>}
                 </div>
               </div>
             </div>

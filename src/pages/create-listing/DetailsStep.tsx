@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { CalendarIcon } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
 
@@ -50,11 +51,7 @@ function BooleanRadioField({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <RadioGroup
-              onValueChange={(value) => field.onChange(value === "true")}
-              value={field.value ? "true" : "false"}
-              className="flex gap-4"
-            >
+            <RadioGroup onValueChange={(value) => field.onChange(value === "true")} value={field.value ? "true" : "false"} className="flex gap-4">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="false" id={falseId} />
                 <Label htmlFor={falseId}>{falseLabel}</Label>
@@ -73,27 +70,23 @@ function BooleanRadioField({
 }
 
 export default function DetailsStep() {
+  const { t } = useTranslation();
   const form = useFormContext<ListingForm>();
   const imported = useWatch({ control: form.control, name: "imported" });
 
   return (
-    <div className="space-y-8 animate-in fade-in-50 duration-500">
-      <div className="bg-card rounded-lg p-6 border space-y-6">
-        <h2 className="text-xl font-semibold mb-4">Vehicle Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="animate-in space-y-8 fade-in-50 duration-500">
+      <div className="space-y-6 rounded-lg border bg-card p-6">
+        <h2 className="mb-4 text-xl font-semibold">{t("translation:createListing.vehicleDetails")}</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="mileage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Mileage</FormLabel>
+                <FormLabel>{t("translation:vehicle.mileage")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 50000"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
+                  <Input type="number" placeholder={t("translation:createListing.mileagePlaceholder")} {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -104,9 +97,9 @@ export default function DetailsStep() {
             name="vin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>VIN (Optional)</FormLabel>
+                <FormLabel>{t("translation:createListing.vinOptional")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Vehicle Identification Number" {...field} />
+                  <Input placeholder={t("translation:createListing.vinPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,9 +110,9 @@ export default function DetailsStep() {
             name="exteriorColor"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Exterior Color</FormLabel>
+                <FormLabel>{t("translation:vehicle.exteriorColor")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Black" {...field} />
+                  <Input placeholder={t("translation:createListing.exteriorColorPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -130,9 +123,9 @@ export default function DetailsStep() {
             name="interiorColor"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Interior Color</FormLabel>
+                <FormLabel>{t("translation:vehicle.interiorColor")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Beige" {...field} />
+                  <Input placeholder={t("translation:createListing.interiorColorPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,16 +136,9 @@ export default function DetailsStep() {
             name="horsepower"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Horsepower (Optional)</FormLabel>
+                <FormLabel>{t("translation:createListing.horsepowerOptional")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 250"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                    }
-                  />
+                  <Input type="number" placeholder={t("translation:createListing.horsepowerPlaceholder")} {...field} onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -163,16 +149,9 @@ export default function DetailsStep() {
             name="engineDisplacement"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Engine Displacement (cm³) (Optional)</FormLabel>
+                <FormLabel>{t("translation:createListing.engineDisplacementOptional")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 2000"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                    }
-                  />
+                  <Input type="number" placeholder={t("translation:createListing.engineDisplacementPlaceholder")} {...field} onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -183,9 +162,9 @@ export default function DetailsStep() {
             name="engineType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Engine Type (Optional)</FormLabel>
+                <FormLabel>{t("translation:createListing.engineTypeOptional")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., V6, Inline-4" {...field} />
+                  <Input placeholder={t("translation:createListing.engineTypePlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -196,9 +175,9 @@ export default function DetailsStep() {
             name="fuelType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fuel Type</FormLabel>
+                <FormLabel>{t("translation:vehicle.fuelType")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Gasoline, Diesel, Electric" {...field} />
+                  <Input placeholder={t("translation:createListing.fuelTypePlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -209,9 +188,9 @@ export default function DetailsStep() {
             name="transmission"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Transmission</FormLabel>
+                <FormLabel>{t("translation:vehicle.transmission")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Automatic, Manual" {...field} />
+                  <Input placeholder={t("translation:createListing.transmissionPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -222,15 +201,9 @@ export default function DetailsStep() {
             name="doors"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Number of Doors</FormLabel>
+                <FormLabel>{t("translation:createListing.doorsLabel")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min="2"
-                    max="6"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
+                  <Input type="number" min="2" max="6" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -243,34 +216,21 @@ export default function DetailsStep() {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t("translation:vehicle.description")}</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Describe the vehicle's condition, features, history..."
-                  className="min-h-[150px]"
-                  {...field}
-                />
+                <Textarea placeholder={t("translation:createListing.descriptionPlaceholder")} className="min-h-[150px]" {...field} />
               </FormControl>
-              <FormDescription>
-                Provide detailed information to help buyers make informed decisions
-              </FormDescription>
+              <FormDescription>{t("translation:createListing.descriptionHelp")}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
 
-      <div className="bg-card rounded-lg p-6 border space-y-6">
-        <h2 className="text-xl font-semibold mb-4">Vehicle History & Condition</h2>
+      <div className="space-y-6 rounded-lg border bg-card p-6">
+        <h2 className="mb-4 text-xl font-semibold">{t("translation:createListing.historyCondition")}</h2>
 
-        <BooleanRadioField
-          name="imported"
-          label="Is this vehicle imported?"
-          falseLabel="No"
-          trueLabel="Yes"
-          falseId="not-imported"
-          trueId="imported"
-        />
+        <BooleanRadioField name="imported" label={t("translation:createListing.importedQuestion")} falseLabel={t("translation:common.no")} trueLabel={t("translation:common.yes")} falseId="not-imported" trueId="imported" />
 
         {imported && (
           <FormField
@@ -278,9 +238,9 @@ export default function DetailsStep() {
             name="importCountry"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Import Country</FormLabel>
+                <FormLabel>{t("translation:createListing.importCountry")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Germany, Japan" {...field} />
+                  <Input placeholder={t("translation:createListing.importCountryPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -288,40 +248,18 @@ export default function DetailsStep() {
           />
         )}
 
-        <BooleanRadioField
-          name="maintenanceBook"
-          label="Does it have maintenance book (livro de revisões)?"
-          falseLabel="No"
-          trueLabel="Yes"
-          falseId="no-book"
-          trueId="has-book"
-        />
+        <BooleanRadioField name="maintenanceBook" label={t("translation:createListing.maintenanceBookQuestion")} falseLabel={t("translation:common.no")} trueLabel={t("translation:common.yes")} falseId="no-book" trueId="has-book" />
 
-        <BooleanRadioField
-          name="smoker"
-          label="Was the owner a smoker?"
-          falseLabel="No"
-          trueLabel="Yes"
-          falseId="non-smoker"
-          trueId="smoker"
-        />
+        <BooleanRadioField name="smoker" label={t("translation:createListing.smokerQuestion")} falseLabel={t("translation:common.no")} trueLabel={t("translation:common.yes")} falseId="non-smoker" trueId="smoker" />
 
         <FormField
           control={form.control}
           name="numberOfOwners"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Number of Known Owners (Optional)</FormLabel>
+              <FormLabel>{t("translation:createListing.numberOfOwnersOptional")}</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min="1"
-                  placeholder="e.g., 1"
-                  {...field}
-                  onChange={(e) =>
-                    field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
-                  }
-                />
+                <Input type="number" min="1" placeholder={t("translation:createListing.numberOfOwnersPlaceholder")} {...field} onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -329,26 +267,19 @@ export default function DetailsStep() {
         />
       </div>
 
-      <div className="bg-card rounded-lg p-6 border space-y-6">
-        <h2 className="text-xl font-semibold mb-4">Auction Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6 rounded-lg border bg-card p-6">
+        <h2 className="mb-4 text-xl font-semibold">{t("translation:createListing.auctionDetails")}</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="reservePrice"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Reserve Price</FormLabel>
+                <FormLabel>{t("translation:myListings.reservePrice")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Minimum acceptable price"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  />
+                  <Input type="number" placeholder={t("translation:createListing.reservePricePlaceholder")} {...field} onChange={(e) => field.onChange(parseFloat(e.target.value))} />
                 </FormControl>
-                <FormDescription>
-                  The minimum price you're willing to accept
-                </FormDescription>
+                <FormDescription>{t("translation:createListing.reservePriceHelp")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -359,20 +290,11 @@ export default function DetailsStep() {
             name="startingBid"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Starting Bid (Optional)</FormLabel>
+                <FormLabel>{t("translation:createListing.startingBidOptional")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Minimum first bid amount"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
-                    }
-                  />
+                  <Input type="number" placeholder={t("translation:createListing.startingBidPlaceholder")} {...field} onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
                 </FormControl>
-                <FormDescription>
-                  The minimum amount for the first bid (defaults to $0)
-                </FormDescription>
+                <FormDescription>{t("translation:createListing.startingBidHelp")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -383,36 +305,21 @@ export default function DetailsStep() {
             name="auctionEndDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Auction End Date</FormLabel>
+                <FormLabel>{t("translation:createListing.auctionEndDate")}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                      <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                        {field.value ? format(field.value, "PPP") : <span>{t("translation:createListing.pickDate")}</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} initialFocus className={cn("pointer-events-auto p-3")} />
                   </PopoverContent>
                 </Popover>
-                <FormDescription>
-                  Select the date when the auction should end
-                </FormDescription>
+                <FormDescription>{t("translation:createListing.auctionEndDateHelp")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -423,13 +330,11 @@ export default function DetailsStep() {
             name="auctionEndTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Auction End Time</FormLabel>
+                <FormLabel>{t("translation:createListing.auctionEndTime")}</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Select the time when the auction should end
-                </FormDescription>
+                <FormDescription>{t("translation:createListing.auctionEndTimeHelp")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +17,7 @@ interface CommentSectionProps {
 }
 
 export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -26,7 +28,6 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
 
     const fetchComments = async () => {
       const { data, error } = await getCommentsForVehicle(vehicleId);
-
       if (cancelled) return;
 
       if (error) {
@@ -39,7 +40,9 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
     };
 
     fetchComments();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [vehicleId]);
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
         { event: "INSERT", schema: "public", table: "comments", filter: `vehicle_id=eq.${vehicleId}` },
         async (payload) => {
           const profileData = await fetchUserProfile((payload.new as Comment).user_id);
-          const newComment = { ...payload.new as Comment, profiles: profileData };
+          const newComment = { ...(payload.new as Comment), profiles: profileData };
           setComments((prev) => [newComment, ...prev]);
         }
       )
@@ -63,16 +66,18 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [vehicleId]);
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error("Please sign in to comment");
+      toast.error(t("translation:errors.signInToComment"));
       return;
     }
     if (!newComment.trim()) {
-      toast.error("Comment cannot be empty");
+      toast.error(t("translation:errors.commentEmpty"));
       return;
     }
 
@@ -84,10 +89,10 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
     });
 
     if (error) {
-      toast.error("Failed to post comment");
+      toast.error(t("translation:errors.commentPostFailed"));
     } else {
-      toast.success("Comment posted!");
-      setNewComment("");
+      toast.success(t("translation:errors.commentPosted"));
+      setNewComment("translation:");
     }
     setSubmitting(false);
   };
@@ -96,39 +101,37 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
     if (!user) return;
     const { error } = await deleteComment(commentId, user.id);
     if (error) {
-      toast.error("Failed to delete comment");
+      toast.error(t("translation:errors.commentDeleteFailed"));
     } else {
-      toast.success("Comment deleted");
+      toast.success(t("translation:errors.commentDeleted"));
     }
   };
 
   return (
     <Card className="p-6">
-      <h2 className="mb-6 text-2xl font-semibold">Comments</h2>
+      <h2 className="mb-6 text-2xl font-semibold">{t("translation:vehicle.comments")}</h2>
 
       {user ? (
         <div className="mb-6 space-y-3">
           <Textarea
-            placeholder="Share your thoughts about this vehicle..."
+            placeholder={t("translation:vehicle.commentPlaceholder")}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             rows={3}
             className="resize-none"
           />
           <Button onClick={handleSubmit} disabled={submitting || !newComment.trim()}>
-            {submitting ? "Posting..." : "Post Comment"}
+            {submitting ? t("translation:bidding.placing") : t("translation:common.submit")}
           </Button>
         </div>
       ) : (
         <div className="mb-6 rounded-lg bg-muted p-4 text-center text-muted-foreground">
-          Please sign in to leave a comment
+          {t("translation:errors.signInToComment")}
         </div>
       )}
 
       {comments.length === 0 ? (
-        <p className="text-center text-muted-foreground">
-          No comments yet. Be the first to share your thoughts!
-        </p>
+        <p className="text-center text-muted-foreground">{t("translation:vehicle.commentsEmpty")}</p>
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => (
@@ -147,6 +150,7 @@ export const CommentSection = ({ vehicleId }: CommentSectionProps) => {
                     size="icon"
                     onClick={() => handleDelete(comment.id)}
                     className="text-destructive hover:bg-destructive/10"
+                    aria-label={t("translation:common.delete")}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

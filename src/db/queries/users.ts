@@ -25,7 +25,7 @@ export async function getAllUsers() {
   return withQueryList(async () => {
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, user_id, display_name, avatar_url, verified, rating, vehicles_sold, member_since, created_at")
+      .select("translation:id, user_id, display_name, avatar_url, verified, rating, vehicles_sold, member_since, created_at")
       .order("created_at", { ascending: false });
 
     if (profilesError) {
@@ -34,7 +34,7 @@ export async function getAllUsers() {
 
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
-      .select("user_id, role");
+      .select("translation:user_id, role");
 
     if (rolesError) {
       return { data: null, error: rolesError };

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -33,6 +34,7 @@ interface VehicleWithProfile extends VehicleType {
 }
 
 const VehicleDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -45,22 +47,12 @@ const VehicleDetail = () => {
   const [watchLoading, setWatchLoading] = useState(false);
   const [showBidHistory, setShowBidHistory] = useState(false);
 
-  const {
-    data: vehicle,
-    isLoading: vehicleLoading,
-    error: vehicleError,
-  } = useQuery<VehicleWithProfile>({
+  const { data: vehicle, isLoading: vehicleLoading, error: vehicleError } = useQuery<VehicleWithProfile>({
     queryKey: id ? vehicleKeys.detail(id) : vehicleKeys.details(),
     queryFn: async () => {
-      if (!id) {
-        throw new Error("Missing vehicle id");
-      }
-
+      if (!id) throw new Error("Missing vehicle id");
       const { data, error } = await getVehicleById(id);
-      if (error || !data) {
-        throw error ?? new Error("Vehicle not found");
-      }
-
+      if (error || !data) throw error ?? new Error("Vehicle not found");
       const sellerProfile = await fetchUserProfile(data.seller_id);
       return { ...data, profiles: sellerProfile };
     },
@@ -71,15 +63,9 @@ const VehicleDetail = () => {
   const { data: bids = [], error: bidsError } = useQuery<Bid[]>({
     queryKey: id ? bidKeys.forVehicle(id) : bidKeys.all,
     queryFn: async () => {
-      if (!id) {
-        throw new Error("Missing vehicle id");
-      }
-
+      if (!id) throw new Error("Missing vehicle id");
       const { data, error } = await getRecentBidsForVehicle(id, 3);
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return enrichWithProfiles(data ?? [], (bid) => bid.bidder_id);
     },
     enabled: !!id,
@@ -89,26 +75,21 @@ const VehicleDetail = () => {
   const winningBidderId = bids[0]?.bidder_id ?? null;
   const { timeLeft, isEnded } = useCountdown(vehicle?.auction_end_time || null);
 
-  const { bidAmount, setBidAmount, submitting, minBid, handlePlaceBid, handleQuickBid } =
-    useBidSubmission({
-      vehicle: vehicle ?? null,
-      userId: user?.id,
-      onSuccess: (amount) => {
-        if (!id) return;
-
-        queryClient.setQueryData<VehicleWithProfile>(vehicleKeys.detail(id), (currentVehicle) =>
-          currentVehicle
-            ? { ...currentVehicle, current_bid: amount, bid_count: (currentVehicle.bid_count || 0) + 1 }
-            : currentVehicle
-        );
-      },
-    });
+  const { bidAmount, setBidAmount, submitting, minBid, handlePlaceBid, handleQuickBid } = useBidSubmission({
+    vehicle: vehicle ?? null,
+    userId: user?.id,
+    onSuccess: (amount) => {
+      if (!id) return;
+      queryClient.setQueryData<VehicleWithProfile>(vehicleKeys.detail(id), (currentVehicle) =>
+        currentVehicle ? { ...currentVehicle, current_bid: amount, bid_count: (currentVehicle.bid_count || 0) + 1 } : currentVehicle
+      );
+    },
+  });
 
   const { adminNotes, setAdminNotes, adminSubmitting, handleAdminAction } = useAdminApproval({
     vehicleId: vehicle?.id,
     onStatusChange: (status, notes) => {
       if (!id) return;
-
       queryClient.setQueryData<VehicleWithProfile>(vehicleKeys.detail(id), (currentVehicle) =>
         currentVehicle ? { ...currentVehicle, approval_status: status, admin_notes: notes } : currentVehicle
       );
@@ -117,17 +98,13 @@ const VehicleDetail = () => {
 
   useEffect(() => {
     if (!vehicleError) return;
-
-    if (import.meta.env.DEV) {
-      console.error("Error fetching vehicle:", vehicleError);
-    }
-    toast.error("Failed to load auction");
+    if (import.meta.env.DEV) console.error("Error fetching vehicle:", vehicleError);
+    toast.error(t("translation:errors.failedLoadAuction"));
     navigate("/");
-  }, [vehicleError, navigate]);
+  }, [vehicleError, navigate, t]);
 
   useEffect(() => {
     if (!bidsError || !import.meta.env.DEV) return;
-
     console.error("Error fetching bids:", bidsError);
   }, [bidsError]);
 
@@ -150,49 +127,29 @@ const VehicleDetail = () => {
 
     const vehicleChannel = supabase
       .channel(`vehicle-${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "vehicles",
-          filter: `id=eq.${id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(id) });
-        }
-      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "vehicles", filter: `id=eq.${id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(id) });
+      })
       .subscribe();
 
     const bidsChannel = supabase
       .channel(`bids-${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "bids",
-          filter: `vehicle_id=eq.${id}`,
-        },
-        (payload) => {
-          queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(id) });
-          queryClient.invalidateQueries({ queryKey: bidKeys.forVehicle(id) });
-          toast.success("New bid placed!", {
-            description: `${formatCurrency((payload.new as Bid).amount)}`,
-          });
-        }
-      )
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bids", filter: `vehicle_id=eq.${id}` }, (payload) => {
+        queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(id) });
+        queryClient.invalidateQueries({ queryKey: bidKeys.forVehicle(id) });
+        toast.success(t("translation:bidding.newBidPlaced"), { description: `${formatCurrency((payload.new as Bid).amount)}` });
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(vehicleChannel);
       supabase.removeChannel(bidsChannel);
     };
-  }, [id, queryClient]);
+  }, [id, queryClient, t]);
 
   const handlePlaceBidWithAuth = async () => {
     if (!user) {
-      toast.error("Please sign in to place a bid");
+      toast.error(t("translation:bidding.pleaseSignInToBid"));
       openLoginModal();
       return;
     }
@@ -201,7 +158,7 @@ const VehicleDetail = () => {
 
   const handleWatchToggle = async () => {
     if (!user) {
-      toast.error("Please sign in to watch auctions");
+      toast.error(t("translation:bidding.pleaseSignInToWatch"));
       openLoginModal();
       return;
     }
@@ -224,7 +181,7 @@ const VehicleDetail = () => {
   if (vehicleLoading) {
     return (
       <main className="flex flex-1 items-center justify-center">
-        <PageLoader message="Loading auction..." />
+        <PageLoader message={t("translation:vehicle.loadingAuction")} />
       </main>
     );
   }
@@ -237,7 +194,7 @@ const VehicleDetail = () => {
   if (!isAdmin && !isOwnListing && approvalStatus !== "approved") {
     return (
       <main className="flex flex-1 items-center justify-center">
-        <p className="text-muted-foreground">This listing is not available.</p>
+        <p className="text-muted-foreground">{t("translation:vehicle.notAvailable")}</p>
       </main>
     );
   }
@@ -247,6 +204,12 @@ const VehicleDetail = () => {
   const vehicleTitle = getVehicleTitle(vehicle);
   const vehicleUrl = typeof window !== "undefined" ? window.location.href : "";
   const showAdminPanel = isAdmin && !isOwnListing;
+  const approvalLabel =
+    approvalStatus === "approved"
+      ? t("translation:myListings.approved")
+      : approvalStatus === "declined"
+      ? t("translation:admin.declinedTab")
+      : t("translation:myListings.pendingReview");
 
   return (
     <>
@@ -256,10 +219,7 @@ const VehicleDetail = () => {
             <div className="lg:col-span-2">
               <div className="mb-6">
                 <VehicleGallery
-                  images={vehicle.images && vehicle.images.length > 0
-                    ? vehicle.images
-                    : [vehicle.image_url || "/placeholder.svg"]
-                  }
+                  images={vehicle.images && vehicle.images.length > 0 ? vehicle.images : [vehicle.image_url || "/placeholder.svg"]}
                   vehicleName={vehicleTitle}
                 />
               </div>
@@ -268,24 +228,17 @@ const VehicleDetail = () => {
                 <ShareButtons
                   url={vehicleUrl}
                   title={vehicleTitle}
-                  description={vehicle.description || `Check out this ${vehicleTitle} auction!`}
+                  description={vehicle.description || t("translation:common.checkOutAuction", { title: vehicleTitle })}
                 />
-                {user && !isOwnListing && (
-                  <ReportModal vehicleId={vehicle.id} vehicleTitle={vehicleTitle} />
-                )}
+                {user && !isOwnListing && <ReportModal vehicleId={vehicle.id} vehicleTitle={vehicleTitle} />}
               </div>
 
-              <VehicleInfo
-                vehicle={vehicle}
-                isActive={vehicle.status === "active"}
-              />
+              <VehicleInfo vehicle={vehicle} isActive={vehicle.status === "active"} />
 
               {vehicle.description && (
                 <Card className="my-6 p-6">
-                  <h2 className="mb-4 text-2xl font-semibold">Description</h2>
-                  <p className="whitespace-pre-wrap text-muted-foreground">
-                    {vehicle.description}
-                  </p>
+                  <h2 className="mb-4 text-2xl font-semibold">{t("translation:vehicle.description")}</h2>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{vehicle.description}</p>
                 </Card>
               )}
 
@@ -322,87 +275,45 @@ const VehicleDetail = () => {
                   <Card className="border-primary/20 bg-primary/5 p-6">
                     <div className="mb-4 flex items-center gap-2">
                       <Shield className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold">Admin Actions</h3>
+                      <h3 className="font-semibold">{t("translation:admin.adminActions")}</h3>
                     </div>
 
                     <div className="mb-4 flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Status:</span>
-                      <Badge
-                        variant={
-                          approvalStatus === "approved" ? "default" :
-                          approvalStatus === "declined" ? "destructive" :
-                          "secondary"
-                        }
-                      >
-                        {approvalStatus.charAt(0).toUpperCase() + approvalStatus.slice(1)}
+                      <span className="text-sm text-muted-foreground">{t("translation:admin.status")}:</span>
+                      <Badge variant={approvalStatus === "approved" ? "default" : approvalStatus === "declined" ? "destructive" : "secondary"}>
+                        {approvalLabel}
                       </Badge>
                     </div>
 
                     {vehicle.admin_notes && (
                       <div className="mb-4 rounded-md bg-muted p-3">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Admin Notes:</p>
+                        <p className="mb-1 text-xs font-medium text-muted-foreground">{t("translation:admin.adminNotes")}:</p>
                         <p className="text-sm">{vehicle.admin_notes}</p>
                       </div>
                     )}
 
                     <div className="space-y-3">
-                      <Textarea
-                        placeholder="Add admin notes..."
-                        value={adminNotes}
-                        onChange={(e) => setAdminNotes(e.target.value)}
-                        rows={3}
-                        className="bg-background"
-                      />
+                      <Textarea placeholder={t("translation:admin.addInternalNotes")} value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={3} className="bg-background" />
 
                       <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleAdminAction("approved")}
-                          disabled={adminSubmitting || approvalStatus === "approved"}
-                          className="flex-1"
-                          size="sm"
-                        >
-                          {adminSubmitting ? (
-                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                          ) : (
-                            <CheckCircle className="mr-1 h-4 w-4" />
-                          )}
-                          Approve
+                        <Button onClick={() => handleAdminAction("approved")} disabled={adminSubmitting || approvalStatus === "approved"} className="flex-1" size="sm">
+                          {adminSubmitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-1 h-4 w-4" />}
+                          {t("translation:admin.approve")}
                         </Button>
-                        <Button
-                          onClick={() => handleAdminAction("declined")}
-                          disabled={adminSubmitting || approvalStatus === "declined"}
-                          variant="destructive"
-                          className="flex-1"
-                          size="sm"
-                        >
-                          {adminSubmitting ? (
-                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                          ) : (
-                            <XCircle className="mr-1 h-4 w-4" />
-                          )}
-                          Decline
+                        <Button onClick={() => handleAdminAction("declined")} disabled={adminSubmitting || approvalStatus === "declined"} variant="destructive" className="flex-1" size="sm">
+                          {adminSubmitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <XCircle className="mr-1 h-4 w-4" />}
+                          {t("translation:admin.decline")}
                         </Button>
                       </div>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => navigate("/admin")}
-                      >
-                        Back to Dashboard
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/admin")}>
+                        {t("translation:admin.backToDashboard")}
                       </Button>
                     </div>
                   </Card>
                 )}
 
-                {canShowFeedback && (
-                  <FeedbackForm
-                    vehicleId={vehicle.id}
-                    sellerId={vehicle.seller_id}
-                    winningBidderId={winningBidderId}
-                  />
-                )}
+                {canShowFeedback && <FeedbackForm vehicleId={vehicle.id} sellerId={vehicle.seller_id} winningBidderId={winningBidderId} />}
 
                 <RecentBidsCard bids={bids} onViewAll={() => setShowBidHistory(true)} />
               </div>
@@ -411,11 +322,7 @@ const VehicleDetail = () => {
         </div>
       </main>
 
-      <BidHistoryModal
-        vehicleId={vehicle.id}
-        isOpen={showBidHistory}
-        onClose={() => setShowBidHistory(false)}
-      />
+      <BidHistoryModal vehicleId={vehicle.id} isOpen={showBidHistory} onClose={() => setShowBidHistory(false)} />
     </>
   );
 };

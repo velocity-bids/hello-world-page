@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/common";
+import { useTranslation } from "react-i18next";
 import type { UserProfile } from "@/types";
 
 interface SellerCardProps {
@@ -8,9 +9,11 @@ interface SellerCardProps {
 }
 
 export const SellerCard = ({ sellerId, profile }: SellerCardProps) => {
+  const { t } = useTranslation();
+
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Seller</h2>
+      <h2 className="text-xl font-semibold mb-4">{t("translation:vehicle.seller")}</h2>
       <div className="p-3 rounded-lg hover:bg-muted/50 transition-colors">
         <UserAvatar
           userId={sellerId}
@@ -19,7 +22,7 @@ export const SellerCard = ({ sellerId, profile }: SellerCardProps) => {
           avatarUrl={profile?.avatar_url}
           size="lg"
           linkToProfile
-          subtitle="View Profile →"
+          subtitle={t("translation:vehicle.viewProfileLink")}
         />
       </div>
     </Card>

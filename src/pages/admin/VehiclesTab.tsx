@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
@@ -29,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { updateVehicleApprovalStatus } from '@/db/mutations';
 import { getAllVehiclesAdmin } from '@/db/queries';
-import { getVehicleTitle } from '@/lib/utils';
+import { formatCurrency, getVehicleTitle } from '@/lib/utils';
 import type { Vehicle } from '@/types';
 
 type AdminVehicle = Vehicle & {
@@ -43,10 +44,10 @@ const paginateData = <T,>(data: T[], page: number) => {
   return data.slice(start, start + PAGE_SIZE);
 };
 
-const getTotalPages = (totalItems: number) =>
-  Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+const getTotalPages = (totalItems: number) => Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
 export function VehiclesTab() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedVehicle, setSelectedVehicle] = useState<AdminVehicle | null>(null);
@@ -67,28 +68,20 @@ export function VehiclesTab() {
   });
 
   const updateVehicleMutation = useMutation({
-    mutationFn: async ({
-      vehicleId,
-      status,
-      notes,
-    }: {
-      vehicleId: string;
-      status: string;
-      notes?: string;
-    }) => {
+    mutationFn: async ({ vehicleId, status, notes }: { vehicleId: string; status: string; notes?: string }) => {
       const { error } = await updateVehicleApprovalStatus(vehicleId, status, notes);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-vehicles'] });
-      toast.success('Vehicle status updated successfully');
+      toast.success(t('translation:admin.vehicleStatusUpdated'));
       setDialogOpen(false);
       setSelectedVehicle(null);
       setAdminNotes('');
     },
     onError: (error) => {
       console.error('Error updating vehicle:', error);
-      toast.error('Failed to update vehicle status');
+      toast.error(t('translation:admin.vehicleStatusFailed'));
     },
   });
 
@@ -117,23 +110,20 @@ export function VehiclesTab() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Vehicle</TableHead>
-          <TableHead>Seller</TableHead>
-          <TableHead>Year</TableHead>
-          <TableHead>Mileage</TableHead>
-          <TableHead>Reserve Price</TableHead>
-          <TableHead>Submitted</TableHead>
-          {showActions && <TableHead>Actions</TableHead>}
+          <TableHead>{t('translation:vehicle.vehicle')}</TableHead>
+          <TableHead>{t('translation:admin.seller')}</TableHead>
+          <TableHead>{t('translation:vehicle.year')}</TableHead>
+          <TableHead>{t('translation:vehicle.mileage')}</TableHead>
+          <TableHead>{t('translation:myListings.reservePrice')}</TableHead>
+          <TableHead>{t('translation:admin.submitted')}</TableHead>
+          {showActions && <TableHead>{t('translation:admin.actions')}</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
         {vehicleList.length === 0 ? (
           <TableRow>
-            <TableCell
-              colSpan={showActions ? 7 : 6}
-              className="text-center text-muted-foreground"
-            >
-              No vehicles found
+            <TableCell colSpan={showActions ? 7 : 6} className="text-center text-muted-foreground">
+              {t('translation:admin.noVehiclesFound')}
             </TableCell>
           </TableRow>
         ) : (
@@ -155,9 +145,7 @@ export function VehiclesTab() {
                     >
                       {getVehicleTitle(vehicle)}
                     </button>
-                    <div className="text-xs text-muted-foreground">
-                      ID: {vehicle.id.slice(0, 8)}
-                    </div>
+                    <div className="text-xs text-muted-foreground">{t('translation:admin.idPrefix', { id: vehicle.id.slice(0, 8) })}</div>
                   </div>
                 </div>
               </TableCell>
@@ -166,33 +154,23 @@ export function VehiclesTab() {
                   onClick={() => navigate(`/user/${vehicle.seller_id}`)}
                   className="text-sm text-primary hover:underline"
                 >
-                  View Profile
+                  {t('translation:admin.viewProfile')}
                 </button>
               </TableCell>
               <TableCell>{vehicle.year}</TableCell>
-              <TableCell>{vehicle.mileage.toLocaleString()} mi</TableCell>
-              <TableCell>${vehicle.reserve_price?.toLocaleString()}</TableCell>
-              <TableCell>
-                {new Date(vehicle.created_at || '').toLocaleDateString()}
-              </TableCell>
+              <TableCell>{vehicle.mileage.toLocaleString()} km</TableCell>
+              <TableCell>{vehicle.reserve_price ? formatCurrency(vehicle.reserve_price) : '-'}</TableCell>
+              <TableCell>{new Date(vehicle.created_at || '').toLocaleDateString()}</TableCell>
               {showActions && (
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => handleAction(vehicle, 'approve')}
-                    >
+                    <Button size="sm" variant="default" onClick={() => handleAction(vehicle, 'approve')}>
                       <CheckCircle className="mr-1 h-4 w-4" />
-                      Approve
+                      {t('translation:admin.approve')}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleAction(vehicle, 'decline')}
-                    >
+                    <Button size="sm" variant="destructive" onClick={() => handleAction(vehicle, 'decline')}>
                       <XCircle className="mr-1 h-4 w-4" />
-                      Decline
+                      {t('translation:admin.decline')}
                     </Button>
                   </div>
                 </TableCell>
@@ -208,11 +186,9 @@ export function VehiclesTab() {
     <>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-semibold">Vehicle Management</h2>
+          <h2 className="text-2xl font-semibold">{t('translation:admin.vehicleManagement')}</h2>
           {pendingVehicles.length > 0 && (
-            <Badge variant="destructive">
-              {pendingVehicles.length} Pending Review{pendingVehicles.length !== 1 ? 's' : ''}
-            </Badge>
+            <Badge variant="destructive">{t('translation:admin.pendingReviews', { count: pendingVehicles.length })}</Badge>
           )}
         </div>
 
@@ -220,25 +196,23 @@ export function VehiclesTab() {
           <TabsList>
             <TabsTrigger value="pending" className="gap-2">
               <Clock className="h-4 w-4" />
-              Pending ({pendingVehicles.length})
+              {t('translation:admin.pending')} ({pendingVehicles.length})
             </TabsTrigger>
             <TabsTrigger value="approved" className="gap-2">
               <CheckCircle className="h-4 w-4" />
-              Approved ({approvedVehicles.length})
+              {t('translation:admin.approvedTab')} ({approvedVehicles.length})
             </TabsTrigger>
             <TabsTrigger value="declined" className="gap-2">
               <XCircle className="h-4 w-4" />
-              Declined ({declinedVehicles.length})
+              {t('translation:admin.declinedTab')} ({declinedVehicles.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Pending Approvals</CardTitle>
-                <CardDescription>
-                  Review and approve or decline vehicle listings
-                </CardDescription>
+                <CardTitle>{t('translation:admin.pendingApprovals')}</CardTitle>
+                <CardDescription>{t('translation:admin.reviewApproveDecline')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {vehiclesLoading ? (
@@ -264,7 +238,7 @@ export function VehiclesTab() {
           <TabsContent value="approved" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Approved Listings</CardTitle>
+                <CardTitle>{t('translation:admin.approvedListings')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {vehiclesLoading ? (
@@ -290,7 +264,7 @@ export function VehiclesTab() {
           <TabsContent value="declined" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Declined Listings</CardTitle>
+                <CardTitle>{t('translation:admin.declinedListings')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {vehiclesLoading ? (
@@ -319,28 +293,20 @@ export function VehiclesTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialogAction === 'approve' ? 'Approve' : 'Decline'} Vehicle Listing
+              {dialogAction === 'approve' ? t('translation:admin.approveVehicleListing') : t('translation:admin.declineVehicleListing')}
             </DialogTitle>
             <DialogDescription>
-              {selectedVehicle && (
-                <>
-                  {selectedVehicle.make} {selectedVehicle.model} ({selectedVehicle.year})
-                </>
-              )}
+              {selectedVehicle && `${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.year})`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="vehicle-admin-notes">
-                Admin Notes {dialogAction === 'decline' && '(Required)'}
+                {dialogAction === 'decline' ? t('translation:admin.adminNotesRequired') : t('translation:admin.adminNotes')}
               </Label>
               <Textarea
                 id="vehicle-admin-notes"
-                placeholder={
-                  dialogAction === 'decline'
-                    ? 'Please provide a reason for declining this listing...'
-                    : 'Add any notes about this approval...'
-                }
+                placeholder={dialogAction === 'decline' ? t('translation:admin.declineReasonPlaceholder') : t('translation:admin.approvalNotesPlaceholder')}
                 value={adminNotes}
                 onChange={(event) => setAdminNotes(event.target.value)}
                 rows={4}
@@ -349,20 +315,15 @@ export function VehiclesTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t('translation:common.cancel')}
             </Button>
             <Button
               onClick={handleConfirm}
               variant={dialogAction === 'approve' ? 'default' : 'destructive'}
-              disabled={
-                updateVehicleMutation.isPending ||
-                (dialogAction === 'decline' && !adminNotes.trim())
-              }
+              disabled={updateVehicleMutation.isPending || (dialogAction === 'decline' && !adminNotes.trim())}
             >
-              {updateVehicleMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Confirm {dialogAction === 'approve' ? 'Approval' : 'Decline'}
+              {updateVehicleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {dialogAction === 'approve' ? t('translation:admin.confirmApproval') : t('translation:admin.confirmDecline')}
             </Button>
           </DialogFooter>
         </DialogContent>

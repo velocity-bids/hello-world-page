@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export interface VehicleCardBaseProps {
@@ -34,13 +34,15 @@ export const VehicleCardBase = ({
   overlay,
   children,
   footer,
-  ctaText = "View Auction",
+  ctaText,
   ctaVariant = "default",
   showCta = true,
   onClick,
   horizontal = false,
 }: VehicleCardBaseProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const buttonText = ctaText || t("translation:vehicle.viewAuction");
 
   const handleClick = () => {
     if (onClick) {
@@ -57,26 +59,10 @@ export const VehicleCardBase = ({
   }[aspectRatio];
 
   const imageSection = (
-    <div
-      className={cn(
-        "relative overflow-hidden bg-muted",
-        !horizontal && aspectRatioClass,
-        horizontal && "aspect-[4/3] md:aspect-square",
-        imageClassName
-      )}
-    >
-      <img
-        src={image}
-        alt={title}
-        loading="lazy"
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      {badge && (
-        <div className="absolute left-4 top-4">{badge}</div>
-      )}
-      {overlay && (
-        <div className="absolute right-3 top-3">{overlay}</div>
-      )}
+    <div className={cn("relative overflow-hidden bg-muted", !horizontal && aspectRatioClass, horizontal && "aspect-[4/3] md:aspect-square", imageClassName)}>
+      <img src={image} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      {badge && <div className="absolute left-4 top-4">{badge}</div>}
+      {overlay && <div className="absolute right-3 top-3">{overlay}</div>}
     </div>
   );
 
@@ -90,25 +76,20 @@ export const VehicleCardBase = ({
       variant={ctaVariant}
       className={cn(
         "w-full font-semibold transition-all duration-300",
-        ctaVariant === "default" && "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+        ctaVariant === "default" && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
       )}
-      aria-label={`${ctaText} for ${title}`}
+      aria-label={t("translation:common.viewAuctionFor", { title, defaultValue: `${buttonText} for ${title}` })}
     >
-      {ctaText}
+      {buttonText}
     </Button>
   );
 
   if (horizontal) {
     return (
-      <Card
-        className={cn(
-          "overflow-hidden transition-shadow duration-300 hover:shadow-elevated group",
-          className
-        )}
-      >
-        <div className="grid md:grid-cols-[280px_1fr] gap-0">
+      <Card className={cn("group overflow-hidden transition-shadow duration-300 hover:shadow-elevated", className)}>
+        <div className="grid gap-0 md:grid-cols-[280px_1fr]">
           {imageSection}
-          <div className="p-6 flex flex-col justify-between">
+          <div className="flex flex-col justify-between p-6">
             {children}
             {footer && <div className="mt-4">{footer}</div>}
           </div>
@@ -118,16 +99,11 @@ export const VehicleCardBase = ({
   }
 
   return (
-    <Card
-      className={cn(
-        "group overflow-hidden transition-all duration-300 hover:shadow-elevated",
-        className
-      )}
-    >
+    <Card className={cn("group overflow-hidden transition-all duration-300 hover:shadow-elevated", className)}>
       {imageSection}
       {children}
       {(showCta || footer) && (
-        <div className="px-4 pb-4 pt-2 space-y-2">
+        <div className="space-y-2 px-4 pb-4 pt-2">
           {footer}
           {ctaButton}
         </div>

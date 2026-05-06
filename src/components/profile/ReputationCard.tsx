@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ReputationCardProps {
   rating: number | null;
@@ -7,6 +8,7 @@ interface ReputationCardProps {
 }
 
 export const ReputationCard = ({ rating, totalFeedback }: ReputationCardProps) => {
+  const { t } = useTranslation();
   const displayRating = rating || 0;
   const fullStars = Math.floor(displayRating);
   const hasHalfStar = displayRating % 1 >= 0.5;
@@ -14,8 +16,8 @@ export const ReputationCard = ({ rating, totalFeedback }: ReputationCardProps) =
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Reputation</CardTitle>
-        <CardDescription>Based on {totalFeedback} review{totalFeedback !== 1 ? 's' : ''}</CardDescription>
+        <CardTitle>{t("translation:profile.reputation")}</CardTitle>
+        <CardDescription>{t("translation:profile.basedOnReviews", { count: totalFeedback })}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3">
@@ -27,14 +29,14 @@ export const ReputationCard = ({ rating, totalFeedback }: ReputationCardProps) =
                   star <= fullStars
                     ? "fill-yellow-500 text-yellow-500"
                     : star === fullStars + 1 && hasHalfStar
-                    ? "fill-yellow-500/50 text-yellow-500"
-                    : "fill-muted text-muted"
+                      ? "fill-yellow-500/50 text-yellow-500"
+                      : "fill-muted text-muted"
                 }`}
               />
             ))}
           </div>
           <span className="text-2xl font-bold">
-            {displayRating > 0 ? displayRating.toFixed(1) : "No ratings yet"}
+            {displayRating > 0 ? displayRating.toFixed(1) : t("translation:profile.noRatingsYet")}
           </span>
         </div>
       </CardContent>

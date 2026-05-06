@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -25,13 +26,9 @@ interface ListingGridProps {
   isPast?: boolean;
 }
 
-export const ListingGrid = ({
-  listings,
-  title,
-  description,
-  emptyMessage,
-  isPast = false,
-}: ListingGridProps) => {
+export const ListingGrid = ({ listings, title, description, emptyMessage, isPast = false }: ListingGridProps) => {
+  const { t } = useTranslation();
+
   if (listings.length === 0) {
     return (
       <Card>
@@ -41,7 +38,7 @@ export const ListingGrid = ({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <Package className="mb-4 h-12 w-12 text-muted-foreground/50" />
             <p className="text-muted-foreground">{emptyMessage}</p>
           </div>
         </CardContent>
@@ -51,9 +48,9 @@ export const ListingGrid = ({
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: "Active", variant: "default" as const },
-      ended: { label: "Ended", variant: "secondary" as const },
-      sold: { label: "Sold", variant: "default" as const },
+      active: { label: t("translation:vehicle.active"), variant: "default" as const },
+      ended: { label: t("translation:common.ended"), variant: "secondary" as const },
+      sold: { label: t("translation:vehicle.sold"), variant: "default" as const },
     };
     return statusConfig[status as keyof typeof statusConfig] || statusConfig.ended;
   };
@@ -61,11 +58,7 @@ export const ListingGrid = ({
   const getTimeRemaining = (endTime: string) => {
     const end = new Date(endTime);
     const now = new Date();
-    
-    if (end <= now) {
-      return "Ended";
-    }
-    
+    if (end <= now) return t("translation:common.ended");
     return formatDistanceToNow(end, { addSuffix: true });
   };
 
@@ -76,70 +69,53 @@ export const ListingGrid = ({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => {
             const statusBadge = getStatusBadge(listing.status);
-            
+
             return (
-              <Link
-                key={listing.id}
-                to={`/vehicles/${listing.id}`}
-                className="group block"
-              >
-                <Card className="overflow-hidden h-full transition-all hover:shadow-lg hover:-translate-y-1">
+              <Link key={listing.id} to={`/vehicles/${listing.id}`} className="group block">
+                <Card className="h-full overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg">
                   <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                     {listing.image_url ? (
-                      <img
-                        src={listing.image_url}
-                        alt={getVehicleTitle(listing)}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      />
+                      <img src={listing.image_url} alt={getVehicleTitle(listing)} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="flex h-full w-full items-center justify-center">
                         <Package className="h-12 w-12 text-muted-foreground/50" />
                       </div>
                     )}
-                    
-                    <Badge
-                      variant={statusBadge.variant}
-                      className="absolute top-3 right-3"
-                    >
+
+                    <Badge variant={statusBadge.variant} className="absolute right-3 top-3">
                       {statusBadge.label}
                     </Badge>
                   </div>
-                  
-                  <CardContent className="p-4 space-y-3">
+
+                  <CardContent className="space-y-3 p-4">
                     <div>
-                      <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
+                      <h3 className="line-clamp-1 text-lg font-semibold transition-colors group-hover:text-primary">
                         {getVehicleTitle(listing)}
                       </h3>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-muted-foreground">
                           <Gavel className="h-3.5 w-3.5" />
-                          Current Bid
+                          {t("translation:vehicle.currentBid")}
                         </span>
-                        <span className="font-bold">
-                          {formatCurrency(listing.current_bid)}
-                        </span>
+                        <span className="font-bold">{formatCurrency(listing.current_bid)}</span>
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-muted-foreground">
                           <Clock className="h-3.5 w-3.5" />
-                          {isPast ? "Ended" : "Time Left"}
+                          {isPast ? t("translation:common.ended") : t("translation:vehicle.timeLeft")}
                         </span>
-                        <span className="text-muted-foreground">
-                          {getTimeRemaining(listing.auction_end_time)}
-                        </span>
+                        <span className="text-muted-foreground">{getTimeRemaining(listing.auction_end_time)}</span>
                       </div>
-                      
-                      <div className="pt-2 border-t">
-                        <span className="text-xs text-muted-foreground">
-                          {listing.bid_count} bid{listing.bid_count !== 1 ? 's' : ''}
-                        </span>
+
+                      <div className="border-t pt-2">
+                        <span className="text-xs text-muted-foreground">{t("translation:bidding.bid", { count: listing.bid_count })}</span>
                       </div>
                     </div>
                   </CardContent>

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { VehicleCardBase } from "@/components/common";
 import { CheckCircle2, Clock, Gauge, Calendar, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { formatCurrency } from "@/lib/utils";
 
 interface VehicleCardProps {
@@ -27,41 +28,26 @@ const VehicleCard = ({
   featured = false,
   reserveMet = true,
 }: VehicleCardProps) => {
+  const { t } = useTranslation();
   const displayTitle = title.startsWith(`${year} `) ? title : `${year} ${title}`;
-  const isEnded = timeLeft === "Ended";
+  const isEnded = timeLeft === t("translation:common.ended");
 
   return (
     <VehicleCardBase
       id={id}
       image={image ? `${image}-/resize/322x/` : "/placeholder.svg"}
       title={displayTitle}
-      badge={
-        featured ? (
-          <Badge className="bg-accent text-accent-foreground">Featured</Badge>
-        ) : undefined
-      }
-      ctaText="View Auction"
+      badge={featured ? <Badge className="bg-accent text-accent-foreground">{t("translation:vehicle.featured")}</Badge> : undefined}
+      ctaText={t("translation:vehicle.viewAuction")}
     >
       <Link to={`/vehicle/${id}`} className="block">
         <div className="mx-4 mt-4 flex items-center justify-between rounded-lg border bg-card px-3 py-2">
           <div className="flex items-center gap-1 text-sm">
-            {isEnded ? (
-              reserveMet ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-              ) : (
-                <XCircle className="h-4 w-4 text-destructive" />
-              )
-            ) : (
-              <Clock className="h-4 w-4 text-timer-warning" />
-            )}
-            <span className="font-medium">
-              {isEnded ? (reserveMet ? "Sold" : "Reserve Not Met") : timeLeft}
-            </span>
+            {isEnded ? reserveMet ? <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" /> : <XCircle className="h-4 w-4 text-destructive" /> : <Clock className="h-4 w-4 text-timer-warning" />}
+            <span className="font-medium">{isEnded ? (reserveMet ? t("translation:vehicle.sold") : t("translation:vehicle.reserveNotMet")) : timeLeft}</span>
           </div>
           <div className="text-sm font-medium">
-            <span className="text-muted-foreground">
-              {isEnded ? "Final price:" : "Current Bid:"}
-            </span>{" "}
+            <span className="text-muted-foreground">{isEnded ? `${t("translation:vehicle.finalPrice")}:` : `${t("translation:vehicle.currentBid")}:`}</span>{" "}
             <span className={isEnded ? (reserveMet ? "text-green-600 dark:text-green-400" : "text-muted-foreground") : "text-bid-active"}>
               {formatCurrency(currentBid)}
             </span>
@@ -70,9 +56,7 @@ const VehicleCard = ({
 
         <div className="space-y-3 p-4 pt-3">
           <div>
-            <h3 className="font-semibold transition-colors group-hover:text-accent">
-              {displayTitle}
-            </h3>
+            <h3 className="font-semibold transition-colors group-hover:text-accent">{displayTitle}</h3>
           </div>
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +14,7 @@ import { Gavel } from "lucide-react";
 import type { BidWithVehicle } from "@/types";
 
 const MyBids = () => {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { openLoginModal } = useAuthModal();
@@ -41,7 +43,6 @@ const MyBids = () => {
 
   useEffect(() => {
     if (!error || !import.meta.env.DEV) return;
-
     console.error("Error fetching bids:", error);
   }, [error]);
 
@@ -54,11 +55,16 @@ const MyBids = () => {
         const isEnded = new Date(bid.vehicle.auction_end_time) < new Date();
 
         switch (statusFilter) {
-          case "leading": return !isEnded && isWinning;
-          case "outbid": return !isEnded && !isWinning;
-          case "won": return isEnded && isWinning;
-          case "lost": return isEnded && !isWinning;
-          default: return true;
+          case "leading":
+            return !isEnded && isWinning;
+          case "outbid":
+            return !isEnded && !isWinning;
+          case "won":
+            return isEnded && isWinning;
+          case "lost":
+            return isEnded && !isWinning;
+          default:
+            return true;
         }
       });
     }
@@ -83,7 +89,7 @@ const MyBids = () => {
   if (authLoading || isLoading) {
     return (
       <main className="container mx-auto flex-1 px-4 py-8">
-        <PageLoader message="Loading your bids..." />
+        <PageLoader message={t("translation:myBids.loading")} />
       </main>
     );
   }
@@ -92,54 +98,52 @@ const MyBids = () => {
 
   return (
     <main className="flex-1 bg-background">
-        <div className="bg-gradient-hero border-b border-border">
-          <div className="container mx-auto px-4 py-12">
-            <div className="flex items-center gap-3 mb-2">
-              <Gavel className="w-8 h-8 text-primary-foreground" />
-              <h1 className="text-4xl font-bold text-primary-foreground">My Bids</h1>
-            </div>
-            <p className="text-muted-foreground text-lg">
-              Track your auction activity and manage your bids
-            </p>
+      <div className="border-b border-border bg-gradient-hero">
+        <div className="container mx-auto px-4 py-12">
+          <div className="mb-2 flex items-center gap-3">
+            <Gavel className="h-8 w-8 text-primary-foreground" />
+            <h1 className="text-4xl font-bold text-primary-foreground">{t("translation:myBids.title")}</h1>
           </div>
+          <p className="text-lg text-muted-foreground">{t("translation:myBids.description")}</p>
         </div>
+      </div>
 
-        {bids.length > 0 && (
-          <BidFilters
-            statusFilter={statusFilter}
-            sortBy={sortBy}
-            onStatusFilterChange={setStatusFilter}
-            onSortByChange={setSortBy}
-            totalBids={filteredBids.length}
+      {bids.length > 0 && (
+        <BidFilters
+          statusFilter={statusFilter}
+          sortBy={sortBy}
+          onStatusFilterChange={setStatusFilter}
+          onSortByChange={setSortBy}
+          totalBids={filteredBids.length}
+        />
+      )}
+
+      <div className="container mx-auto px-4 py-8">
+        {bids.length === 0 ? (
+          <EmptyState
+            icon={Gavel}
+            title={t("translation:myBids.noBidsTitle")}
+            description={t("translation:myBids.noBidsDescription")}
+            action={{ label: t("translation:myBids.browseAuctionsAction"), onClick: () => navigate("/auctions") }}
           />
+        ) : filteredBids.length === 0 ? (
+          <EmptyState
+            icon={Gavel}
+            title={t("translation:myBids.noMatchingTitle")}
+            description={t("translation:myBids.noMatchingDescription")}
+          >
+            <Button variant="outline" onClick={() => { setStatusFilter("all"); setSortBy("recent"); }}>
+              {t("translation:myBids.clearFilters")}
+            </Button>
+          </EmptyState>
+        ) : (
+          <div className="space-y-6">
+            {filteredBids.map((bid) => (
+              <BidCard key={bid.id} bid={bid} />
+            ))}
+          </div>
         )}
-
-        <div className="container mx-auto px-4 py-8">
-          {bids.length === 0 ? (
-            <EmptyState
-              icon={Gavel}
-              title="No bids placed yet"
-              description="Start bidding on auctions to see your activity here. Browse our current listings to find your next vehicle."
-              action={{ label: "Browse Auctions", onClick: () => navigate("/auctions") }}
-            />
-          ) : filteredBids.length === 0 ? (
-            <EmptyState
-              icon={Gavel}
-              title="No matching bids"
-              description="No bids match your current filters"
-            >
-              <Button variant="outline" onClick={() => { setStatusFilter("all"); setSortBy("recent"); }}>
-                Clear Filters
-              </Button>
-            </EmptyState>
-          ) : (
-            <div className="space-y-6">
-              {filteredBids.map((bid) => (
-                <BidCard key={bid.id} bid={bid} />
-              ))}
-            </div>
-          )}
-        </div>
+      </div>
     </main>
   );
 };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { updateVehicleApprovalStatus } from "@/db/mutations";
 import { toast } from "sonner";
 
@@ -8,6 +9,7 @@ interface UseAdminApprovalOptions {
 }
 
 export const useAdminApproval = ({ vehicleId, onStatusChange }: UseAdminApprovalOptions) => {
+  const { t } = useTranslation();
   const [adminNotes, setAdminNotes] = useState("");
   const [adminSubmitting, setAdminSubmitting] = useState(false);
 
@@ -18,9 +20,9 @@ export const useAdminApproval = ({ vehicleId, onStatusChange }: UseAdminApproval
     const { error } = await updateVehicleApprovalStatus(vehicleId, action, adminNotes || null);
 
     if (error) {
-      toast.error(`Failed to ${action === "approved" ? "approve" : "decline"} listing`);
+      toast.error(t(action === "approved" ? "admin.approveFailed" : "admin.declineFailed"));
     } else {
-      toast.success(`Listing ${action === "approved" ? "approved" : "declined"} successfully`);
+      toast.success(t(action === "approved" ? "admin.listingApproved" : "admin.listingDeclined"));
       onStatusChange?.(action, adminNotes);
       setAdminNotes("");
     }

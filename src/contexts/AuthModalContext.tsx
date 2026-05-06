@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 interface AuthModalContextType {
   isOpen: boolean;
@@ -19,8 +19,8 @@ export const useAuthModal = () => {
 export const AuthModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const openLoginModal = () => setIsOpen(true);
-  const closeLoginModal = () => setIsOpen(false);
+  const openLoginModal = useCallback(() => setIsOpen(true), []);
+  const closeLoginModal = useCallback(() => setIsOpen(false), []);
 
   return (
     <AuthModalContext.Provider value={{ isOpen, openLoginModal, closeLoginModal }}>

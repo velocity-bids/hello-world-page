@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Trash2 } from 'lucide-react';
@@ -41,18 +42,16 @@ const paginateData = <T,>(data: T[], page: number) => {
   return data.slice(start, start + PAGE_SIZE);
 };
 
-const getTotalPages = (totalItems: number) =>
-  Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+const getTotalPages = (totalItems: number) => Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
 export function ReportsTab() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [reportFilter, setReportFilter] = useState('pending');
   const [reportsPage, setReportsPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; title: string } | null>(
-    null
-  );
+  const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; title: string } | null>(null);
 
   const { data: reports = [], isLoading: reportsLoading } = useQuery<Report[]>({
     queryKey: ['admin-reports', reportFilter],
@@ -64,25 +63,17 @@ export function ReportsTab() {
   });
 
   const updateReportMutation = useMutation({
-    mutationFn: async ({
-      reportId,
-      status,
-      notes,
-    }: {
-      reportId: string;
-      status: string;
-      notes?: string;
-    }) => {
+    mutationFn: async ({ reportId, status, notes }: { reportId: string; status: string; notes?: string }) => {
       const { error } = await updateReportStatus(reportId, status, notes);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
-      toast.success('Report status updated');
+      toast.success(t('translation:admin.reportStatusUpdated'));
     },
     onError: (error) => {
       console.error('Error updating report:', error);
-      toast.error('Failed to update report');
+      toast.error(t('translation:admin.reportStatusFailed'));
     },
   });
 
@@ -94,13 +85,13 @@ export function ReportsTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
-      toast.success('Vehicle deleted successfully');
+      toast.success(t('translation:admin.vehicleDeleted'));
       setDeleteDialogOpen(false);
       setVehicleToDelete(null);
     },
     onError: (error) => {
       console.error('Error deleting vehicle:', error);
-      toast.error('Failed to delete vehicle');
+      toast.error(t('translation:admin.vehicleDeleteFailed'));
     },
   });
 
@@ -114,9 +105,7 @@ export function ReportsTab() {
   };
 
   const confirmDelete = () => {
-    if (vehicleToDelete) {
-      deleteVehicleMutation.mutate(vehicleToDelete.id);
-    }
+    if (vehicleToDelete) deleteVehicleMutation.mutate(vehicleToDelete.id);
   };
 
   const paginatedReports = paginateData(reports, reportsPage);
@@ -127,19 +116,19 @@ export function ReportsTab() {
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Reported Listings</CardTitle>
-              <CardDescription>Review reports from users</CardDescription>
+              <CardTitle>{t('translation:admin.reportedListings')}</CardTitle>
+              <CardDescription>{t('translation:admin.reviewReports')}</CardDescription>
             </div>
             <Select value={reportFilter} onValueChange={setReportFilter}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="reviewed">Reviewed</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
-                <SelectItem value="dismissed">Dismissed</SelectItem>
+                <SelectItem value="all">{t('translation:admin.all')}</SelectItem>
+                <SelectItem value="pending">{t('translation:admin.pending')}</SelectItem>
+                <SelectItem value="reviewed">{t('translation:admin.reviewed')}</SelectItem>
+                <SelectItem value="resolved">{t('translation:admin.resolved')}</SelectItem>
+                <SelectItem value="dismissed">{t('translation:admin.dismissed')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -154,19 +143,19 @@ export function ReportsTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Vehicle ID</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Reported</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{t('translation:admin.vehicleId')}</TableHead>
+                    <TableHead>{t('translation:admin.reason')}</TableHead>
+                    <TableHead>{t('translation:admin.reportDescription')}</TableHead>
+                    <TableHead>{t('translation:admin.reported')}</TableHead>
+                    <TableHead>{t('translation:admin.status')}</TableHead>
+                    <TableHead>{t('translation:admin.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedReports.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        No reports found
+                        {t('translation:admin.noReportsFound')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -185,12 +174,8 @@ export function ReportsTab() {
                             {report.reason}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {report.description || '-'}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(report.created_at).toLocaleDateString()}
-                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">{report.description || '-'}</TableCell>
+                        <TableCell>{new Date(report.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <Badge
                             variant={
@@ -201,7 +186,7 @@ export function ReportsTab() {
                                   : 'outline'
                             }
                           >
-                            {report.status}
+                            {t(`admin.${report.status}` as const)}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -211,33 +196,23 @@ export function ReportsTab() {
                                 <Button
                                   size="sm"
                                   variant="default"
-                                  onClick={() =>
-                                    updateReportMutation.mutate({
-                                      reportId: report.id,
-                                      status: 'resolved',
-                                    })
-                                  }
+                                  onClick={() => updateReportMutation.mutate({ reportId: report.id, status: 'resolved' })}
                                 >
-                                  Resolve
+                                  {t('translation:admin.resolve')}
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() =>
-                                    updateReportMutation.mutate({
-                                      reportId: report.id,
-                                      status: 'dismissed',
-                                    })
-                                  }
+                                  onClick={() => updateReportMutation.mutate({ reportId: report.id, status: 'dismissed' })}
                                 >
-                                  Dismiss
+                                  {t('translation:admin.dismiss')}
                                 </Button>
                               </>
                             )}
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => handleDeleteVehicle(report.vehicle_id, 'Reported Vehicle')}
+                              onClick={() => handleDeleteVehicle(report.vehicle_id, t('translation:admin.reportedListings'))}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -263,30 +238,22 @@ export function ReportsTab() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Vehicle</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this vehicle? This action cannot be undone and will remove all associated bids and reports.
-            </DialogDescription>
+            <DialogTitle>{t('translation:admin.deleteVehicle')}</DialogTitle>
+            <DialogDescription>{t('translation:admin.deleteVehicleDescription')}</DialogDescription>
           </DialogHeader>
           {vehicleToDelete && (
             <div className="py-4">
               <p className="text-sm font-medium">{vehicleToDelete.title}</p>
-              <p className="text-xs text-muted-foreground">ID: {vehicleToDelete.id}</p>
+              <p className="text-xs text-muted-foreground">{t('translation:admin.idPrefix', { id: vehicleToDelete.id })}</p>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t('translation:common.cancel')}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleteVehicleMutation.isPending}
-            >
-              {deleteVehicleMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Delete Vehicle
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteVehicleMutation.isPending}>
+              {deleteVehicleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('translation:admin.deleteVehicle')}
             </Button>
           </DialogFooter>
         </DialogContent>

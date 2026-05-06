@@ -117,7 +117,7 @@ export const getOwnProfile = async (userId: string): Promise<QueryResult<FullPro
   return withQuery(() =>
     supabase
       .from("profiles")
-      .select("*")
+      .select("translation:*")
       .eq("user_id", userId)
       .maybeSingle()
   );

@@ -1,7 +1,10 @@
 import { Car } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-4 py-12">
@@ -11,69 +14,67 @@ const Footer = () => {
               <Car className="h-6 w-6" />
               <span className="text-xl font-bold">BidWheels</span>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              The premier online auction platform for enthusiast vehicles.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("translation:translation:footer.tagline")}</p>
           </div>
 
           <div>
-            <h3 className="mb-4 font-semibold">Company</h3>
+            <h3 className="mb-4 font-semibold">{t("translation:footer.company")}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link to="/about" className="transition-colors hover:text-foreground">
-                  About Us
+                  {t("translation:footer.aboutUs")}
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="transition-colors hover:text-foreground">
-                  Contact
+                  {t("translation:footer.contact")}
                 </Link>
               </li>
               <li>
                 <Link to="/careers" className="transition-colors hover:text-foreground">
-                  Careers
+                  {t("translation:footer.careers")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="mb-4 font-semibold">Resources</h3>
+            <h3 className="mb-4 font-semibold">{t("translation:footer.resources")}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link to="/how-it-works" className="transition-colors hover:text-foreground">
-                  How It Works
+                  {t("translation:footer.howItWorks")}
                 </Link>
               </li>
               <li>
                 <Link to="/seller-guide" className="transition-colors hover:text-foreground">
-                  Seller Guide
+                  {t("translation:footer.sellerGuide")}
                 </Link>
               </li>
               <li>
                 <Link to="/buyer-guide" className="transition-colors hover:text-foreground">
-                  Buyer Guide
+                  {t("translation:footer.buyerGuide")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="mb-4 font-semibold">Legal</h3>
+            <h3 className="mb-4 font-semibold">{t("translation:footer.legal")}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link to="/terms" className="transition-colors hover:text-foreground">
-                  Terms of Service
+                  {t("translation:footer.terms")}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy" className="transition-colors hover:text-foreground">
-                  Privacy Policy
+                  {t("translation:footer.privacy")}
                 </Link>
               </li>
               <li>
                 <Link to="/cookies" className="transition-colors hover:text-foreground">
-                  Cookie Policy
+                  {t("translation:footer.cookies")}
                 </Link>
               </li>
             </ul>
@@ -81,7 +82,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 BidWheels. All rights reserved.</p>
+          <p>{t("translation:footer.rightsReserved")}</p>
         </div>
       </div>
     </footer>

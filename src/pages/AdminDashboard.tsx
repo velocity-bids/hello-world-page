@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Car, Flag, Loader2, Users } from 'lucide-react';
 
@@ -12,6 +13,7 @@ import { UsersTab } from './admin/UsersTab';
 import { VehiclesTab } from './admin/VehiclesTab';
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
@@ -30,14 +32,12 @@ const AdminDashboard = () => {
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>
-              You don't have permission to access the admin dashboard.
-            </CardDescription>
+            <CardTitle>{t('translation:admin.accessDenied')}</CardTitle>
+            <CardDescription>{t('translation:admin.noPermission')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => navigate('/')} className="w-full">
-              Return to Home
+              {t('translation:admin.returnHome')}
             </Button>
           </CardContent>
         </Card>
@@ -51,27 +51,25 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <Button variant="ghost" onClick={() => navigate('/')} className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            {t('translation:admin.backHome')}
           </Button>
-          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">
-            Manage listings, users, and reports
-          </p>
+          <h1 className="text-4xl font-bold">{t('translation:admin.title')}</h1>
+          <p className="mt-2 text-muted-foreground">{t('translation:admin.description')}</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="vehicles" className="gap-2">
               <Car className="h-4 w-4" />
-              Vehicles
+              {t('translation:admin.vehicles')}
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
-              Users
+              {t('translation:admin.users')}
             </TabsTrigger>
             <TabsTrigger value="reports" className="gap-2">
               <Flag className="h-4 w-4" />
-              Reports
+              {t('translation:admin.reports')}
             </TabsTrigger>
           </TabsList>
 

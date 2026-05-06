@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { formatCurrency } from "@/lib/utils";
@@ -6,51 +7,47 @@ import { formatCurrency } from "@/lib/utils";
 import type { ListingForm } from "./schema";
 
 export default function ReviewStep() {
+  const { t } = useTranslation();
   const { control } = useFormContext<ListingForm>();
   const values = useWatch({ control });
   const photos = values.photos ?? [];
 
   return (
-    <div className="space-y-8 animate-in fade-in-50 duration-500">
-      <div className="bg-card rounded-lg p-6 border space-y-8">
-        <h2 className="text-2xl font-semibold mb-4">Review Your Listing</h2>
+    <div className="animate-in space-y-8 fade-in-50 duration-500">
+      <div className="space-y-8 rounded-lg border bg-card p-6">
+        <h2 className="mb-4 text-2xl font-semibold">{t("translation:createListing.reviewYourListing")}</h2>
 
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-primary">Images</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h3 className="mb-3 text-lg font-semibold text-primary">{t("translation:vehicle.images")}</h3>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {photos.map((url, index) => (
-              <img
-                key={url}
-                src={url}
-                alt={`Vehicle ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg border"
-              />
+              <img key={url} src={url} alt={t("translation:createListing.photo", { count: index + 1 })} className="h-32 w-full rounded-lg border object-cover" />
             ))}
           </div>
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-primary">Basic Information</h3>
+          <h3 className="mb-3 text-lg font-semibold text-primary">{t("translation:createListing.basicInformation")}</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Make:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.make")}:</span>
               <p className="font-medium">{values.make}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Model:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.model")}:</span>
               <p className="font-medium">{values.model}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Year:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.year")}:</span>
               <p className="font-medium">{values.year}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Mileage:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.mileage")}:</span>
               <p className="font-medium">{values.mileage?.toLocaleString()} km</p>
             </div>
             {values.vin && (
               <div className="col-span-2">
-                <span className="text-muted-foreground">VIN:</span>
+                <span className="text-muted-foreground">{t("translation:vehicle.vin")}:</span>
                 <p className="font-medium">{values.vin}</p>
               </div>
             )}
@@ -58,79 +55,79 @@ export default function ReviewStep() {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-primary">Specifications</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <h3 className="mb-3 text-lg font-semibold text-primary">{t("translation:createListing.specifications")}</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
             <div>
-              <span className="text-muted-foreground">Exterior Color:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.exteriorColor")}:</span>
               <p className="font-medium">{values.exteriorColor}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Interior Color:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.interiorColor")}:</span>
               <p className="font-medium">{values.interiorColor}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Fuel Type:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.fuelType")}:</span>
               <p className="font-medium">{values.fuelType}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Transmission:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.transmission")}:</span>
               <p className="font-medium">{values.transmission}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Doors:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.doors")}:</span>
               <p className="font-medium">{values.doors}</p>
             </div>
             {values.horsepower ? (
               <div>
-                <span className="text-muted-foreground">Horsepower:</span>
+                <span className="text-muted-foreground">{t("translation:vehicle.horsepower")}:</span>
                 <p className="font-medium">{values.horsepower} HP</p>
               </div>
             ) : null}
             {values.engineDisplacement ? (
               <div>
-                <span className="text-muted-foreground">Engine:</span>
+                <span className="text-muted-foreground">{t("translation:vehicle.engine")}:</span>
                 <p className="font-medium">{values.engineDisplacement} cm³</p>
               </div>
             ) : null}
             {values.engineType ? (
               <div>
-                <span className="text-muted-foreground">Engine Type:</span>
+                <span className="text-muted-foreground">{t("translation:vehicle.engineType")}:</span>
                 <p className="font-medium">{values.engineType}</p>
               </div>
             ) : null}
           </div>
           {values.description && (
             <div className="mt-4">
-              <span className="text-muted-foreground">Description:</span>
-              <p className="font-medium mt-1 whitespace-pre-wrap">{values.description}</p>
+              <span className="text-muted-foreground">{t("translation:vehicle.description")}:</span>
+              <p className="mt-1 whitespace-pre-wrap font-medium">{values.description}</p>
             </div>
           )}
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-primary">History & Condition</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <h3 className="mb-3 text-lg font-semibold text-primary">{t("translation:createListing.historyCondition")}</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
             <div>
-              <span className="text-muted-foreground">Imported:</span>
-              <p className="font-medium">{values.imported ? "Yes" : "No"}</p>
+              <span className="text-muted-foreground">{t("translation:createListing.imported")}:</span>
+              <p className="font-medium">{values.imported ? t("translation:common.yes") : t("translation:common.no")}</p>
             </div>
             {values.imported && values.importCountry ? (
               <div>
-                <span className="text-muted-foreground">Import Country:</span>
+                <span className="text-muted-foreground">{t("translation:createListing.importCountry")}:</span>
                 <p className="font-medium">{values.importCountry}</p>
               </div>
             ) : null}
             <div>
-              <span className="text-muted-foreground">Maintenance Book:</span>
-              <p className="font-medium">{values.maintenanceBook ? "Yes" : "No"}</p>
+              <span className="text-muted-foreground">{t("translation:createListing.maintenanceBook")}:</span>
+              <p className="font-medium">{values.maintenanceBook ? t("translation:common.yes") : t("translation:common.no")}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Smoker:</span>
-              <p className="font-medium">{values.smoker ? "Yes" : "No"}</p>
+              <span className="text-muted-foreground">{t("translation:createListing.smoker")}:</span>
+              <p className="font-medium">{values.smoker ? t("translation:common.yes") : t("translation:common.no")}</p>
             </div>
             {values.numberOfOwners ? (
               <div>
-                <span className="text-muted-foreground">Number of Owners:</span>
+                <span className="text-muted-foreground">{t("translation:createListing.numberOfOwners")}:</span>
                 <p className="font-medium">{values.numberOfOwners}</p>
               </div>
             ) : null}
@@ -138,16 +135,21 @@ export default function ReviewStep() {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-primary">Auction Details</h3>
+          <h3 className="mb-3 text-lg font-semibold text-primary">{t("translation:createListing.auctionDetails")}</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Reserve Price:</span>
+              <span className="text-muted-foreground">{t("translation:myListings.reservePrice")}:</span>
               <p className="font-medium">{formatCurrency(values.reservePrice ?? 0)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Auction Ends:</span>
+              <span className="text-muted-foreground">{t("translation:vehicle.auctionEnds")}:</span>
               <p className="font-medium">
-                {values.auctionEndDate ? format(values.auctionEndDate, "PPP") : ""} at {values.auctionEndTime}
+                {values.auctionEndDate
+                  ? t("translation:createListing.auctionEndsAt", {
+                      date: format(values.auctionEndDate, "PPP"),
+                      time: values.auctionEndTime,
+                    })
+                  : ""}
               </p>
             </div>
           </div>

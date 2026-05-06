@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,12 +16,13 @@ import { AvatarUpload } from "@/components/AvatarUpload";
 import { isAtLeastAge } from "@/lib/age-utils";
 
 const ProfileSettings = () => {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { openLoginModal } = useAuthModal();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [address, setAddress] = useState("");
@@ -43,7 +45,6 @@ const ProfileSettings = () => {
   const fetchProfile = async () => {
     try {
       const { data, error } = await getOwnProfile(user?.id || "");
-
       if (error) throw error;
 
       if (data) {
@@ -55,7 +56,7 @@ const ProfileSettings = () => {
         setAvatarUrl((data as any).avatar_url || "");
       }
     } catch (error: unknown) {
-      toast.error("Failed to load profile");
+      toast.error(t("translation:profile.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,7 @@ const ProfileSettings = () => {
     if (!file || !user) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+      toast.error(t("translation:profile.fileTooLarge"));
       return;
     }
 
@@ -75,18 +76,13 @@ const ProfileSettings = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Math.random()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("id-documents")
-        .upload(fileName, file);
-
+      const { error: uploadError } = await supabase.storage.from("id-documents").upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      // Store only the file path (not a public URL) so the document stays private.
-      // Access requires a signed URL generated server-side.
       setIdDocumentUrl(fileName);
-      toast.success("ID document uploaded successfully");
+      toast.success(t("translation:profile.idUploaded"));
     } catch (error: unknown) {
-      toast.error("Failed to upload ID document");
+      toast.error(t("translation:profile.idUploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -94,30 +90,27 @@ const ProfileSettings = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (dateOfBirth) {
-      if (!isAtLeastAge(dateOfBirth, 18)) {
-        toast.error("You must be at least 18 years old");
-        return;
-      }
+
+    if (dateOfBirth && !isAtLeastAge(dateOfBirth, 18)) {
+      toast.error(t("translation:profile.mustBeAdultError"));
+      return;
     }
 
     setSaving(true);
     try {
       const { error } = await updateProfile(user?.id || "", {
         display_name: displayName,
-        bio: bio,
-        address: address,
+        bio,
+        address,
         date_of_birth: dateOfBirth || null,
         id_document_url: idDocumentUrl || null,
         avatar_url: avatarUrl || null,
       });
 
       if (error) throw error;
-
-      toast.success("Profile updated successfully");
+      toast.success(t("translation:profile.updated"));
     } catch (error: unknown) {
-      toast.error("Failed to update profile");
+      toast.error(t("translation:profile.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -133,122 +126,74 @@ const ProfileSettings = () => {
 
   return (
     <main className="container mx-auto flex-1 px-4 py-12">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="mb-8 text-3xl font-bold">Profile Settings</h1>
+      <div className="mx-auto max-w-2xl">
+        <h1 className="mb-8 text-3xl font-bold">{t("translation:profile.title")}</h1>
 
-          <Card className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label>Profile Photo</Label>
-                <AvatarUpload
-                  userId={user?.id || ""}
-                  currentAvatarUrl={avatarUrl}
-                  displayName={displayName}
-                  onAvatarChange={setAvatarUrl}
-                />
+        <Card className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label>{t("translation:profile.profilePhoto")}</Label>
+              <AvatarUpload
+                userId={user?.id || ""}
+                currentAvatarUrl={avatarUrl}
+                displayName={displayName}
+                onAvatarChange={setAvatarUrl}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="displayName">{t("translation:profile.displayName")}</Label>
+              <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t("translation:profile.yourName")} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">{t("translation:profile.email")}</Label>
+              <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
+              <p className="text-sm text-muted-foreground">{t("translation:profile.emailImmutable")}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">{t("translation:profile.dateOfBirth")}</Label>
+              <Input id="dateOfBirth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} max={new Date().toISOString().split('T')[0]} required />
+              <p className="text-sm text-muted-foreground">{t("translation:profile.mustBeAdult")}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">{t("translation:profile.address")}</Label>
+              <Textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("translation:profile.yourAddress")} rows={3} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bio">{t("translation:profile.bio")}</Label>
+              <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("translation:profile.tellUsAboutYourself")} rows={4} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="idDocument">{t("translation:profile.idDocument")}</Label>
+              <div className="flex items-center gap-4">
+                <Button type="button" variant="outline" disabled={uploading} onClick={() => document.getElementById('idDocument')?.click()}>
+                  {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {t("translation:profile.uploadId")}
+                </Button>
+                <Input id="idDocument" type="file" accept="image/*,.pdf" onChange={handleIdUpload} className="hidden" />
+                {idDocumentUrl && <span className="text-sm text-muted-foreground">✓ {t("translation:profile.documentUploaded")}</span>}
               </div>
+              <p className="text-sm text-muted-foreground">{t("translation:profile.idDocumentHelp")}</p>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  value={user?.email || ""}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-sm text-muted-foreground">Email cannot be changed</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  required
-                />
-                <p className="text-sm text-muted-foreground">Must be 18 or older</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Your address"
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself"
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="idDocument">ID Document</Label>
-                <div className="flex items-center gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={uploading}
-                    onClick={() => document.getElementById('idDocument')?.click()}
-                  >
-                    {uploading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="mr-2 h-4 w-4" />
-                    )}
-                    Upload ID
-                  </Button>
-                  <Input
-                    id="idDocument"
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={handleIdUpload}
-                    className="hidden"
-                  />
-                  {idDocumentUrl && (
-                    <span className="text-sm text-muted-foreground">✓ Document uploaded</span>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Required for bidding and creating listings. Max 5MB.
-                </p>
-              </div>
-
-              <Button type="submit" disabled={saving} className="w-full">
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-            </form>
-          </Card>
-        </div>
+            <Button type="submit" disabled={saving} className="w-full">
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("translation:profile.saving")}
+                </>
+              ) : (
+                t("translation:profile.saveChanges")
+              )}
+            </Button>
+          </form>
+        </Card>
+      </div>
     </main>
   );
 };

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Eye, Mail, Bell, Trash2 } from "lucide-react";
 import { formatCurrency, getVehicleTitle } from "@/lib/utils";
 
 const Watching = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { openLoginModal } = useAuthModal();
@@ -29,7 +31,7 @@ const Watching = () => {
     return (
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="mb-8 text-3xl font-bold">Watching</h1>
+          <h1 className="mb-8 text-3xl font-bold">{t("translation:watching.title")}</h1>
           <PageLoader />
         </div>
       </main>
@@ -43,27 +45,25 @@ const Watching = () => {
           <div>
             <h1 className="flex items-center gap-2 text-3xl font-bold">
               <Eye className="h-8 w-8" />
-              Watching
+              {t("translation:watching.title")}
             </h1>
-            <p className="mt-2 text-muted-foreground">
-              {watchedVehicles.length} {watchedVehicles.length === 1 ? "auction" : "auctions"} you're watching
-            </p>
+            <p className="mt-2 text-muted-foreground">{t("translation:watching.subtitle", { count: watchedVehicles.length })}</p>
           </div>
         </div>
 
         {watchedVehicles.length === 0 ? (
           <EmptyState
             icon={Eye}
-            title="No watched auctions yet"
-            description="Start watching auctions to get notified about updates"
-            action={{ label: "Browse Auctions", onClick: () => navigate("/auctions") }}
+            title={t("translation:watching.noneTitle")}
+            description={t("translation:watching.noneDescription")}
+            action={{ label: t("translation:watching.browseAuctionsAction"), onClick: () => navigate("/auctions") }}
           />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {watchedVehicles.map((watched) => {
               const vehicle = watched.vehicles;
               const timeLeft = formatTimeRemaining(vehicle.auction_end_time);
-              const isEnded = timeLeft === "Ended";
+              const isEnded = timeLeft === t("translation:common.ended");
 
               return (
                 <Card key={watched.id} className="group overflow-hidden transition-all hover:shadow-lg">
@@ -78,53 +78,43 @@ const Watching = () => {
                     </Badge>
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="mb-1 text-lg font-semibold">
-                      {getVehicleTitle(vehicle)}
-                    </h3>
-                    <p className="mb-3 text-sm text-muted-foreground">
-                      {vehicle.mileage.toLocaleString()} km
-                    </p>
+                    <h3 className="mb-1 text-lg font-semibold">{getVehicleTitle(vehicle)}</h3>
+                    <p className="mb-3 text-sm text-muted-foreground">{vehicle.mileage.toLocaleString()} km</p>
                     <div className="mb-4">
-                      <p className="text-sm text-muted-foreground">Current Bid</p>
-                      <p className="text-2xl font-bold text-primary">
-                        {formatCurrency(vehicle.current_bid)}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{t("translation:vehicle.currentBid")}</p>
+                      <p className="text-2xl font-bold text-primary">{formatCurrency(vehicle.current_bid)}</p>
                     </div>
 
                     <div className="mb-4 space-y-3 rounded-lg bg-muted/50 p-3">
                       <div className="flex items-center justify-between">
                         <Label htmlFor={`notify-sale-${watched.id}`} className="flex cursor-pointer items-center gap-2 text-sm">
                           <Mail className="h-4 w-4" />
-                          Notify on sale
+                          {t("translation:watching.notifyOnSale")}
                         </Label>
                         <Switch
                           id={`notify-sale-${watched.id}`}
                           checked={watched.notify_on_sale}
-                          onCheckedChange={(checked) =>
-                            updateNotificationPreferences(vehicle.id, checked, watched.notify_on_bid)
-                          }
+                          onCheckedChange={(checked) => updateNotificationPreferences(vehicle.id, checked, watched.notify_on_bid)}
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor={`notify-bid-${watched.id}`} className="flex cursor-pointer items-center gap-2 text-sm">
                           <Bell className="h-4 w-4" />
-                          Notify on bids
+                          {t("translation:watching.notifyOnBids")}
                         </Label>
                         <Switch
                           id={`notify-bid-${watched.id}`}
                           checked={watched.notify_on_bid}
-                          onCheckedChange={(checked) =>
-                            updateNotificationPreferences(vehicle.id, watched.notify_on_sale, checked)
-                          }
+                          onCheckedChange={(checked) => updateNotificationPreferences(vehicle.id, watched.notify_on_sale, checked)}
                         />
                       </div>
                     </div>
 
                     <div className="flex gap-2">
                       <Button className="flex-1" onClick={() => navigate(`/vehicle/${vehicle.id}`)}>
-                        View Auction
+                        {t("translation:vehicle.viewAuction")}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => removeFromWatchlist(vehicle.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => removeFromWatchlist(vehicle.id)} aria-label={t("translation:common.delete")}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

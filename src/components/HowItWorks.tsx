@@ -1,28 +1,31 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Search, FileText, Gavel, Car } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const HowItWorks = () => {
+  const { t } = useTranslation();
+
   const steps = [
     {
       icon: Search,
-      title: "Browse & Search",
-      description: "Explore our curated collection of enthusiast vehicles with detailed photos and specifications.",
+      title: t("translation:about.browseSearchTitle"),
+      description: t("translation:about.browseSearchDescription"),
     },
     {
       icon: FileText,
-      title: "Review Details",
-      description: "Access comprehensive vehicle history, seller information, and condition reports.",
+      title: t("translation:about.reviewDetailsTitle"),
+      description: t("translation:about.reviewDetailsDescription"),
     },
     {
       icon: Gavel,
-      title: "Place Your Bid",
-      description: "Bid with confidence knowing all transactions are secure and transparent.",
+      title: t("translation:about.placeBidTitle"),
+      description: t("translation:about.placeBidDescription"),
     },
     {
       icon: Car,
-      title: "Win & Arrange",
-      description: "Complete the purchase and arrange secure delivery or pickup of your dream car.",
+      title: t("translation:about.winArrangeTitle"),
+      description: t("translation:about.winArrangeDescription"),
     },
   ];
 
@@ -30,10 +33,10 @@ const HowItWorks = () => {
     <section className="bg-muted/50 py-16">
       <div className="container mx-auto px-4">
         <div className="mb-12 text-center">
-          <Badge className="mb-4">Simple Process</Badge>
-          <h2 className="text-3xl font-bold sm:text-4xl">How It Works</h2>
+          <Badge className="mb-4">{t("translation:about.simpleProcess")}</Badge>
+          <h2 className="text-3xl font-bold sm:text-4xl">{t("translation:about.howItWorks")}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Four easy steps to buying or selling your enthusiast vehicle
+            {t("translation:about.howItWorksDescription")}
           </p>
         </div>
 

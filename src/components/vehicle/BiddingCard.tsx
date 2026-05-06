@@ -1,5 +1,5 @@
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, Heart, XCircle } from "lucide-react";
@@ -48,8 +48,9 @@ export const BiddingCard = ({
   minBid,
   isActive,
 }: BiddingCardProps) => {
+  const { t } = useTranslation();
   const canBid = !isOwnListing && !isAdmin && isApproved;
-  
+
   return (
     <Card className="p-6">
       <div className="mb-6 space-y-4">
@@ -59,37 +60,27 @@ export const BiddingCard = ({
               {bidCount === 0 ? (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <XCircle className="h-5 w-5" />
-                  <span className="text-lg font-semibold">No Bids</span>
+                  <span className="text-lg font-semibold">{t("translation:bidding.noBids")}</span>
                 </div>
               ) : reserveMet ? (
                 <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                   <CheckCircle2 className="h-5 w-5" />
-                  <span className="text-lg font-semibold">Sold</span>
+                  <span className="text-lg font-semibold">{t("translation:vehicle.sold")}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-destructive">
                   <XCircle className="h-5 w-5" />
-                  <span className="text-lg font-semibold">Reserve Not Met</span>
+                  <span className="text-lg font-semibold">{t("translation:vehicle.reserveNotMet")}</span>
                 </div>
               )}
-              <div className="text-3xl font-bold text-foreground mt-1">
-                {formatCurrency(currentBid)}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {bidCount} {bidCount === 1 ? "bid" : "bids"} • Final price
-              </div>
+              <div className="mt-1 text-3xl font-bold text-foreground">{formatCurrency(currentBid)}</div>
+              <div className="text-sm text-muted-foreground">{t("translation:bidding.finalPriceWithCount", { count: bidCount })}</div>
             </>
           ) : (
             <>
-              <div className="text-sm text-muted-foreground">Current Bid</div>
-              <div className="text-3xl font-bold text-bid-active">
-                {formatCurrency(currentBid)}
-              </div>
-              {bidCount > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {bidCount} {bidCount === 1 ? "bid" : "bids"}
-                </div>
-              )}
+              <div className="text-sm text-muted-foreground">{t("translation:vehicle.currentBid")}</div>
+              <div className="text-3xl font-bold text-bid-active">{formatCurrency(currentBid)}</div>
+              {bidCount > 0 && <div className="text-sm text-muted-foreground">{t("translation:bidding.bid", { count: bidCount })}</div>}
             </>
           )}
         </div>
@@ -97,22 +88,16 @@ export const BiddingCard = ({
         <div className="rounded-lg bg-muted p-4">
           <div className="mb-2 flex items-center gap-2 text-timer-warning">
             <Clock className="h-5 w-5" />
-            <span className="font-semibold">
-              {isEnded ? "Auction Ended" : "Ends In"}
-            </span>
+            <span className="font-semibold">{isEnded ? t("translation:bidding.auctionEnded") : t("translation:bidding.endsIn")}</span>
           </div>
           <div className="text-2xl font-bold">{timeLeft}</div>
         </div>
 
         {!isEnded && reservePrice && (
           <div>
-            <div className="text-sm text-muted-foreground">Reserve Status</div>
-            <div
-              className={`font-medium ${
-                reserveMet ? "text-bid-active" : "text-muted-foreground"
-              }`}
-            >
-              {reserveMet ? "Reserve Met" : "Reserve Not Met"}
+            <div className="text-sm text-muted-foreground">{t("translation:bidding.reserveStatus")}</div>
+            <div className={`font-medium ${reserveMet ? "text-bid-active" : "text-muted-foreground"}`}>
+              {reserveMet ? t("translation:vehicle.reserveMet") : t("translation:vehicle.reserveNotMet")}
             </div>
           </div>
         )}
@@ -123,16 +108,16 @@ export const BiddingCard = ({
           {!canBid ? (
             <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
               {isOwnListing
-                ? "You cannot bid on your own listing"
+                ? t("translation:bidding.cannotBidOwn")
                 : isAdmin
-                ? "Administrators cannot place bids"
-                : "This vehicle is pending approval"}
+                ? t("translation:bidding.adminsCannotBid")
+                : t("translation:bidding.pendingApproval")}
             </div>
           ) : (
             <>
               <div className="flex gap-2">
                 <Input
-                  placeholder={`Min: $${minBid.toLocaleString()}`}
+                  placeholder={t("translation:bidding.minimumBid", { amount: formatCurrency(minBid) })}
                   type="number"
                   value={bidAmount}
                   onChange={(e) => onBidAmountChange(e.target.value)}
@@ -140,52 +125,28 @@ export const BiddingCard = ({
                   step="100"
                 />
                 <Button onClick={onPlaceBid} disabled={submitting}>
-                  {submitting ? "Placing..." : "Bid"}
+                  {submitting ? t("translation:bidding.placing") : t("translation:bidding.placeBid")}
                 </Button>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onQuickBid(100)}
-                >
-                  +$100
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onQuickBid(500)}
-                >
-                  +$500
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onQuickBid(1000)}
-                >
-                  +$1000
-                </Button>
+                {[100, 500, 1000].map((increment) => (
+                  <Button key={increment} variant="outline" size="sm" onClick={() => onQuickBid(increment)}>
+                    {t("translation:bidding.quickBidIncrement", { amount: formatCurrency(increment) })}
+                  </Button>
+                ))}
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Minimum bid: ${minBid.toLocaleString()}
-              </p>
+              <p className="text-xs text-muted-foreground">{t("translation:bidding.minimumBid", { amount: formatCurrency(minBid) })}</p>
             </>
           )}
         </div>
       )}
 
-      {/* Watch button is always available regardless of auction status */}
       <div className="mt-3">
-        <Button
-          variant={watching ? "default" : "outline"}
-          className="w-full"
-          onClick={onWatchToggle}
-          disabled={watchLoading}
-        >
-          <Heart className={`h-4 w-4 mr-2 ${watching ? "fill-current" : ""}`} />
-          {watchLoading ? "Loading..." : watching ? "Watching" : "Watch Auction"}
+        <Button variant={watching ? "default" : "outline"} className="w-full" onClick={onWatchToggle} disabled={watchLoading}>
+          <Heart className={`mr-2 h-4 w-4 ${watching ? "fill-current" : ""}`} />
+          {watchLoading ? t("translation:bidding.loadingWatch") : watching ? t("translation:vehicle.watching") : t("translation:vehicle.watch")}
         </Button>
       </div>
     </Card>

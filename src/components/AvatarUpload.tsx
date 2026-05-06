@@ -45,7 +45,7 @@ export function AvatarUpload({
       setPreviewUrl(objectUrl);
 
       // Upload to Supabase storage
-      const fileExt = file.name.split(".").pop();
+      const fileExt = file.name.split("translation:.").pop();
       const fileName = `${userId}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -79,9 +79,9 @@ export function AvatarUpload({
     setIsUploading(true);
     try {
       // Extract file path from URL
-      const urlParts = currentAvatarUrl.split("/avatars/");
+      const urlParts = currentAvatarUrl.split("translation:/avatars/");
       if (urlParts[1]) {
-        const filePath = urlParts[1].split("?")[0];
+        const filePath = urlParts[1].split("translation:?")[0];
         await supabase.storage.from("avatars").remove([filePath]);
       }
 
@@ -98,7 +98,7 @@ export function AvatarUpload({
 
   const initials = displayName
     ? displayName
-        .split(" ")
+        .split("translation: ")
         .map((n) => n[0])
         .join("")
         .toUpperCase()

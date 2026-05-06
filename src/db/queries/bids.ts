@@ -8,7 +8,7 @@ export const getRecentBidsForVehicle = async (vehicleId: string, limit = 3): Pro
   return withQueryList(() =>
     supabase
       .from("bids")
-      .select("*")
+      .select("translation:*")
       .eq("vehicle_id", vehicleId)
       .order("created_at", { ascending: false })
       .limit(limit)
@@ -20,7 +20,7 @@ export const getAllBidsForVehicle = async (vehicleId: string): Promise<QueryList
   return withQueryList(() =>
     supabase
       .from("bids")
-      .select("*")
+      .select("translation:*")
       .eq("vehicle_id", vehicleId)
       .order("created_at", { ascending: false })
   );

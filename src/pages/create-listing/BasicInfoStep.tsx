@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
@@ -12,21 +13,22 @@ import {
 import type { ListingForm } from "./schema";
 
 export default function BasicInfoStep() {
+  const { t } = useTranslation();
   const form = useFormContext<ListingForm>();
 
   return (
-    <div className="space-y-8 animate-in fade-in-50 duration-500">
-      <div className="bg-card rounded-lg p-6 border space-y-6">
-        <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="animate-in space-y-8 fade-in-50 duration-500">
+      <div className="space-y-6 rounded-lg border bg-card p-6">
+        <h2 className="mb-4 text-xl font-semibold">{t("translation:createListing.basicInformation")}</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="make"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Make</FormLabel>
+                <FormLabel>{t("translation:vehicle.make")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Toyota" {...field} />
+                  <Input placeholder={t("translation:createListing.makePlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -37,9 +39,9 @@ export default function BasicInfoStep() {
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Model</FormLabel>
+                <FormLabel>{t("translation:vehicle.model")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Camry" {...field} />
+                  <Input placeholder={t("translation:createListing.modelPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -50,13 +52,9 @@ export default function BasicInfoStep() {
             name="year"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Year</FormLabel>
+                <FormLabel>{t("translation:vehicle.year")}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
+                  <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

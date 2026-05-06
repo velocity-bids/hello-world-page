@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,20 +24,15 @@ import { createReport } from "@/db/mutations";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
+const REPORT_REASONS = ["fraudulent", "inappropriate", "duplicate", "misleading", "other"] as const;
+
 interface ReportModalProps {
   vehicleId: string;
   vehicleTitle: string;
 }
 
-const REPORT_REASONS = [
-  { value: "fraudulent", label: "Fraudulent listing" },
-  { value: "inappropriate", label: "Inappropriate content" },
-  { value: "duplicate", label: "Duplicate listing" },
-  { value: "misleading", label: "Misleading information" },
-  { value: "other", label: "Other" },
-];
-
 export function ReportModal({ vehicleId, vehicleTitle }: ReportModalProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string>("");
@@ -45,12 +41,12 @@ export function ReportModal({ vehicleId, vehicleTitle }: ReportModalProps) {
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error("You must be logged in to report a listing");
+      toast.error(t("translation:report.mustLogin"));
       return;
     }
 
     if (!reason) {
-      toast.error("Please select a reason for reporting");
+      toast.error(t("translation:report.selectReasonError"));
       return;
     }
 
@@ -65,13 +61,13 @@ export function ReportModal({ vehicleId, vehicleTitle }: ReportModalProps) {
 
       if (error) throw error;
 
-      toast.success("Report submitted successfully. Our team will review it.");
+      toast.success(t("translation:report.submitted"));
       setOpen(false);
       setReason("");
       setDescription("");
     } catch (error) {
       console.error("Error submitting report:", error);
-      toast.error("Failed to submit report. Please try again.");
+      toast.error(t("translation:report.submitFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -88,49 +84,41 @@ export function ReportModal({ vehicleId, vehicleTitle }: ReportModalProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Flag className="h-4 w-4" />
-          Report
+          {t("translation:report.button")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Report Listing</DialogTitle>
-          <DialogDescription>
-            Report "{vehicleTitle}" if you believe it violates our policies.
-          </DialogDescription>
+          <DialogTitle>{t("translation:report.title")}</DialogTitle>
+          <DialogDescription>{t("translation:report.description", { title: vehicleTitle })}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="reason">Reason for reporting *</Label>
+            <Label htmlFor="reason">{t("translation:report.reason")}</Label>
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger id="reason">
-                <SelectValue placeholder="Select a reason" />
+                <SelectValue placeholder={t("translation:report.selectReason")} />
               </SelectTrigger>
               <SelectContent>
-                {REPORT_REASONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
+                {REPORT_REASONS.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {t(`report.${value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="description">Additional details (optional)</Label>
-            <Textarea
-              id="description"
-              placeholder="Provide more details about the issue..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-            />
+            <Label htmlFor="description">{t("translation:report.additionalDetails")}</Label>
+            <Textarea id="description" placeholder={t("translation:report.additionalDetailsPlaceholder")} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("translation:common.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !reason}>
-            {isSubmitting ? "Submitting..." : "Submit Report"}
+            {isSubmitting ? t("translation:feedback.submitting") : t("translation:report.submitReport")}
           </Button>
         </DialogFooter>
       </DialogContent>

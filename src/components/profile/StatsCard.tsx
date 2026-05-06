@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Package, CheckCircle, BarChart3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface StatsCardProps {
   completedSales: number;
@@ -8,69 +9,56 @@ interface StatsCardProps {
   totalListings: number;
 }
 
-export const StatsCard = ({
-  completedSales,
-  activeListings,
-  pastListings,
-  totalListings,
-}: StatsCardProps) => {
-  const sellThroughRate = totalListings > 0 
-    ? ((completedSales / totalListings) * 100).toFixed(1)
-    : "0.0";
+export const StatsCard = ({ completedSales, activeListings, pastListings, totalListings }: StatsCardProps) => {
+  const { t } = useTranslation();
+  const sellThroughRate = totalListings > 0 ? ((completedSales / totalListings) * 100).toFixed(1) : "0.0";
 
   const stats = [
     {
-      label: "Completed Sales",
+      label: t("translation:profile.completedSales"),
       value: completedSales,
       icon: CheckCircle,
-      description: "Successfully sold vehicles",
+      description: t("translation:profile.completedSalesDescription"),
     },
     {
-      label: "Active Listings",
+      label: t("translation:profile.activeListings"),
       value: activeListings,
       icon: TrendingUp,
-      description: "Currently available",
+      description: t("translation:profile.activeListingsDescription"),
     },
     {
-      label: "Past Listings",
+      label: t("translation:profile.pastListings"),
       value: pastListings,
       icon: Package,
-      description: "Ended auctions",
+      description: t("translation:profile.pastListingsDescription"),
     },
     {
-      label: "Sell-Through Rate",
+      label: t("translation:profile.sellThroughRate"),
       value: `${sellThroughRate}%`,
       icon: BarChart3,
-      description: `${completedSales} of ${totalListings} sold`,
+      description: t("translation:profile.sellThroughRateDescription", { completed: completedSales, total: totalListings }),
     },
   ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Marketplace Activity</CardTitle>
-        <CardDescription>Performance metrics and statistics</CardDescription>
+        <CardTitle>{t("translation:profile.marketplaceActivity")}</CardTitle>
+        <CardDescription>{t("translation:profile.performanceMetrics")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div
-                key={stat.label}
-                className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-              >
-                <div className="p-2 rounded-lg bg-primary/10">
+              <div key={stat.label} className="flex items-start gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-accent/5">
+                <div className="rounded-lg bg-primary/10 p-2">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.label}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stat.description}
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                  <p className="mt-1 text-2xl font-bold">{stat.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.description}</p>
                 </div>
               </div>
             );

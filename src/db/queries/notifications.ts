@@ -19,7 +19,7 @@ export const getNotificationsForUser = async (userId: string, limit = 20): Promi
   return withQueryList(() =>
     supabase
       .from("notifications")
-      .select("*")
+      .select("translation:*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(limit)

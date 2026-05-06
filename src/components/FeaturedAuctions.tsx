@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+
 import VehicleCard from "./VehicleCard";
 import { useVehicles } from "@/hooks/useVehicles";
 import { Skeleton } from "./ui/skeleton";
@@ -6,11 +8,11 @@ import { getVehicleTitle } from "@/lib/utils";
 
 const FeaturedAuctions = () => {
   const { vehicles, loading } = useVehicles();
+  const { t } = useTranslation();
   const [, setTick] = useState(0);
 
-  // Re-render every minute so countdown strings stay fresh
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 60_000);
+    const interval = setInterval(() => setTick((tick) => tick + 1), 60_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -19,13 +21,13 @@ const FeaturedAuctions = () => {
     const now = new Date();
     const diff = end.getTime() - now.getTime();
 
-    if (diff <= 0) return "Ended";
+    if (diff <= 0) return t("translation:common.ended");
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (days > 0) return `${days}d ${hours}h`;
-    return `${hours}h`;
+    if (days > 0) return t("common.timeDaysHours", { days, hours });
+    return t("translation:common.timeHours", { hours });
   };
 
   const featuredVehicles = vehicles.slice(0, 4);
@@ -34,10 +36,8 @@ const FeaturedAuctions = () => {
     <section className="container mx-auto px-4 py-16">
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <h2 className="text-3xl font-bold sm:text-4xl">Featured Auctions</h2>
-          <p className="mt-2 text-muted-foreground">
-            Curated collection of exceptional vehicles available now
-          </p>
+          <h2 className="text-3xl font-bold sm:text-4xl">{t("translation:auctions.featuredTitle")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("translation:auctions.featuredDescription")}</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ const FeaturedAuctions = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">No auctions available at the moment</p>
+          <p className="text-muted-foreground">{t("translation:auctions.noneAvailable")}</p>
         </div>
       )}
     </section>
